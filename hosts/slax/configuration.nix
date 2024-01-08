@@ -66,17 +66,21 @@
   services.greetd = {
     enable = true;
     settings = {
-      default_session.command = ''
-        ${pkgs.greetd.tuigreet}/bin/tuigreet \
-        --time \
-        --asterisks \
-        --user-menu \ 
-        --cmd sway
-      '';
+      default_session = {
+        command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --remember --cmd sway";
+        user = "greeter";
+      };
     };
   };
 
   programs.sway.enable = true;
+  services.dbus.enable = true;
+  xdg.portal = {
+    enable = true;
+    wlr.enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  };
+
   environment.systemPackages = with pkgs; [
     wget
     vim
