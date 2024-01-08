@@ -1,5 +1,3 @@
-# This is your system's configuration file.
-# Use this to configure your system environment (it replaces /etc/nixos/configuration.nix)
 {
   inputs,
   lib,
@@ -7,27 +5,15 @@
   pkgs,
   ...
 }: {
-  # You can import other NixOS modules here
+
   imports = [
     ./hardware-configuration.nix
   ];
 
   nixpkgs = {
-    # You can add overlays here
     overlays = [
-      # If you want to use overlays exported from other flakes:
-      # neovim-nightly-overlay.overlays.default
-
-      # Or define it inline, for example:
-      # (final: prev: {
-      #   hi = final.hello.overrideAttrs (oldAttrs: {
-      #     patches = [ ./change-hello-to-hi.patch ];
-      #   });
-      # })
     ];
-    # Configure your nixpkgs instance
     config = {
-      # Disable if you don't want unfree packages
       allowUnfree = true;
     };
   };
@@ -48,26 +34,24 @@
     config.nix.registry;
 
   nix.settings = {
-    # Enable flakes and new 'nix' command
     experimental-features = "nix-command flakes";
-    # Deduplicate and optimize nix store
     auto-optimise-store = true;
   };
-
+  
+  ## Networking
   networking.hostName = "slax";
   networking.networkmanager.enable = true;
+  
   time.timeZone = "America/Chicago";
+
+  # Boot Parameters
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.initrd.luks.devices."luks-7e440f75-4329-441c-91e1-e131810f2b3a".device = "/dev/disk/by-uuid/7e440f75-4329-441c-91e1-e131810f2b3a";
-
+  
   users.users = {
     user = {
-      # TODO: You can set an initial password for your user.
-      # If you do, you can skip setting a root password by passing '--no-root-passwd' to nixos-install.
-      # Be sure to change it (using passwd) after rebooting!
-      initialPassword = "temp";
       isNormalUser = true;
       extraGroups = ["wheel" "networkmanager" "video"];
     };
@@ -85,13 +69,13 @@
     };
   };
   programs.sway.enable = true;
-  # This setups a SSH server. Very important if you're setting up a headless system.
-  # Feel free to remove if you don't need it.
+  
   environment.systemPackages = with pkgs; [
-  wget
-  vim
-  git
+    wget
+    vim
+    git
   ];
+  
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   system.stateVersion = "23.11";
 }

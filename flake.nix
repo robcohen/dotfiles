@@ -1,5 +1,5 @@
 {
-  description = "Your new nix config";
+  description = "Rob Cohen's nix config";
 
   inputs = {
     # Nixpkgs
@@ -20,24 +20,21 @@
   } @ inputs: let
     inherit (self) outputs;
   in {
-    # NixOS configuration entrypoint
     # Available through 'nixos-rebuild --flake .#your-hostname'
     nixosConfigurations = {
       slax = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs;};
         # > Our main nixos configuration file <
-        modules = [./nixos/configuration.nix];
+        modules = [./hosts/slax/configuration.nix];
       };
     };
 
-    # Standalone home-manager configuration entrypoint
     # Available through 'home-manager --flake .#your-username@your-hostname'
     homeConfigurations = {
       "user@slax" = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
         extraSpecialArgs = {inherit inputs outputs;};
-        # > Our main home-manager configuration file <
-        modules = [./home-manager/home.nix];
+        modules = [./profiles/user.nix];
       };
     };
   };
