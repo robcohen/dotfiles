@@ -45,13 +45,19 @@
   
   time.timeZone = "America/Chicago";
 
+  ## Sound
+
+  sound.enable = true;
+  hardware.pulseaudio.enable = true;
+
   # Boot Parameters
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   virtualisation.libvirtd.enable = true;
   programs.virt-manager.enable = true;
-
+  programs.fish.enable = true;
+  
   swapDevices = [ {
     device = "/var/lib/swapfile";
     size = 32*1024;
@@ -60,6 +66,7 @@
   users.users = {
     user = {
       isNormalUser = true;
+      shell = pkgs.fish;
       extraGroups = ["wheel" "networkmanager" "video" "libvirtd"];
     };
   };
@@ -78,6 +85,7 @@
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
   programs.sway.enable = true;
   services.dbus.enable = true;
+  
   xdg.portal = {
     enable = true;
     wlr.enable = true;

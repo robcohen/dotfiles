@@ -20,6 +20,7 @@
         lt = "${pkgs.eza}/bin/eza --tree";
         lla = "${pkgs.eza}/bin/eza -la";
         cat = "${pkgs.bat}/bin/bat";
+        fcode = "env -u WAYLAND_DISPLAY code";
     };  
   };
 } 
