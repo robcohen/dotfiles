@@ -76,7 +76,7 @@
     enable = true;
     settings = {
       default_session.command = ''
-        ${pkgs.greetd.tuigreet}/bin tuigreet \
+        ${pkgs.greetd.tuigreet}/bin/tuigreet \
         --time \
         --asterisks \
         --user-menu \ 
@@ -84,10 +84,14 @@
       '';
     };
   };
-
+  programs.sway.enable = true;
   # This setups a SSH server. Very important if you're setting up a headless system.
   # Feel free to remove if you don't need it.
-
+  environment.systemPackages = with pkgs; [
+  wget
+  vim
+  git
+  ];
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   system.stateVersion = "23.11";
 }
