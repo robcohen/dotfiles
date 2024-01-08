@@ -3,10 +3,18 @@
   pkgs,
   config,
   ...
-}:{
+}:
+
+let
+  unstable = import inputs.unstable {
+    system = pkgs.system;
+    config.allowUnfree = true;
+  };
+
+in {
 
   programs.vscode = {
     enable = true;
-    package = pkgs.vscode;
+    package = unstable.vscode;
   };
 }

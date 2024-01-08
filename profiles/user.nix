@@ -4,7 +4,9 @@
   config,
   pkgs,
   ...
-}: {
+}: 
+
+{
   imports = [
     ./sway
     ./tmux
