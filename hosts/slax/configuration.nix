@@ -48,14 +48,21 @@
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.initrd.luks.devices."luks-7e440f75-4329-441c-91e1-e131810f2b3a".device = "/dev/disk/by-uuid/7e440f75-4329-441c-91e1-e131810f2b3a";
-  
+
+  swapDevices = [ {
+    device = "/var/lib/swapfile";
+    size = 32*1024;
+  } ];
+
   users.users = {
     user = {
       isNormalUser = true;
       extraGroups = ["wheel" "networkmanager" "video"];
     };
   };
+
+  i18n.defaultLocale = "en_US.UTF-8";
+
   services.greetd = {
     enable = true;
     settings = {
@@ -68,8 +75,8 @@
       '';
     };
   };
+
   programs.sway.enable = true;
-  
   environment.systemPackages = with pkgs; [
     wget
     vim

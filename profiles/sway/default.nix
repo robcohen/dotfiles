@@ -20,10 +20,9 @@ wayland.windowManager.sway = {
         command = "waybar";
       }];
       output = {
-          eDP-1 = {
-            mode = "3456x2160@60Hz";
+          DP-1 = {
             # Set HIDP scale (pixel integer scaling)
-            scale = "2";
+            scale = "1.3";
 	      };
 	    };
     };

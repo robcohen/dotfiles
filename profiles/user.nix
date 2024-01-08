@@ -53,6 +53,7 @@
       swaylock-effects
       swayidle
       wl-clipboard
+      wlr-randr
       mako
       alacritty
       shotman
