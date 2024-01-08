@@ -15,6 +15,7 @@
     ./waybar
     ./git
     ./vscode
+    ./helix
   ];
 
   nixpkgs = {
