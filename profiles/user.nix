@@ -9,7 +9,7 @@
 {
   imports = [
     inputs.ags.homeManagerModules.default
-    ./sway
+    #./sway
     ./ags
     ./tmux
     ./fish

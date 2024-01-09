@@ -83,7 +83,8 @@
     };
   };
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
-  programs.sway.enable = true;
+  #programs.sway.enable = true;
+  programs.hyprland.enable = true;
   services.dbus.enable = true;
   
   xdg.portal = {
