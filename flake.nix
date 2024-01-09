@@ -49,6 +49,11 @@
         extraSpecialArgs = {inherit inputs outputs;};
         modules = [./profiles/user.nix];
       };
+      "user@brix" = home-manager.lib.homeManagerConfiguration {
+        pkgs = stable-nixpkgs.legacyPackages.x86_64-linux;
+        extraSpecialArgs = {inherit inputs outputs;};
+        modules = [./profiles/user.nix];
+      };
     };
   };
 }
