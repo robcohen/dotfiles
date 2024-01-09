@@ -12,3 +12,5 @@ for now, run:
 ```
 env -u WAYLAND_DISPLAY code .
 ```
+
+What else?

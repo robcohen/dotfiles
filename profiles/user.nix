@@ -106,10 +106,12 @@
     enableFishIntegration = true;
     pinentryFlavor = "curses";
   };
- 
+  services.gnome-keyring.enable = true;
+
   home.sessionVariables = {
     EDITOR = "vim";
     NIXOS_OZONE_WL = "1";
+    SSH_AUTH_SOCK = "/run/user/1000/keyring/ssh";
   };
 
   home.pointerCursor = {
