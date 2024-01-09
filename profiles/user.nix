@@ -6,7 +6,13 @@
   ...
 }: 
 
-{
+let
+  unstable = import inputs.unstable-nixpkgs {
+    system = pkgs.system;
+    config.allowUnfree = true;
+  };
+  
+in {
   imports = [
     ./wofi
     ./sway
@@ -81,39 +87,49 @@
       # Communications
       telegram-desktop
       slack
+      element-desktop
       signal-desktop
 
       # CLI tools
       niv
       vim
-      wev
       eza
       bat
       grc
       wget
       unzip
-      tmux
-      eww-wayland
-      
+        
       # Audio
       pavucontrol
       pulseaudio-ctl
       easyeffects
       spotify
-  ];
+      pasystray
+  ] ++ (with unstable; [ 
+
+      electron-mail 
+
+  ]); 
+  
+  ## Services
   
   services.gpg-agent = {
     enable = true;
     enableFishIntegration = true;
     pinentryFlavor = "curses";
   };
-
+  services.pasystray = {
+    enable = true;
+  };
+  
   home.sessionVariables = {
     EDITOR = "vim";
     NIXOS_OZONE_WL = "1";
     SSH_AUTH_SOCK = "/run/user/1000/keyring/ssh";
   };
 
+  ## Sway Settings
+  
   home.pointerCursor = {
     name = "Adwaita";
     package = pkgs.gnome.adwaita-icon-theme;
@@ -130,6 +146,7 @@
       uris = ["qemu:///system"];
     };
   };
+  
   programs.waybar = {
     enable = true;
     systemd.enable = true;
@@ -140,7 +157,7 @@
         height = 32;
         modules-left = [ "sway/workspaces" "sway/mode" ];
         modules-center = [ "sway/window" ];
-        modules-right = [ "tray" "network" "memory" "cpu" "temperature" "clock#date" "clock#time" "custom/power"];
+        modules-right = [ "tray" "network" "memory" "cpu" "temperature" "clock#date" "clock#time" "custom/power" ];
         "sway/workspaces" = {
           disable-scroll = true;
           all-outputs = true;

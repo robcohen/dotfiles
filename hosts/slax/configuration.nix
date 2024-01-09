@@ -47,9 +47,13 @@
 
   ## Sound
 
-  sound.enable = true;
-  hardware.pulseaudio.enable = true;
-
+  #sound.enable = true;
+  #hardware.pulseaudio.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    pulse.enable = true;
+  };
   # Boot Parameters
 
   boot.loader.systemd-boot.enable = true;
@@ -83,9 +87,14 @@
     };
   };
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
-  programs.sway.enable = true;
+
+  programs.sway = {
+    enable = true;
+    wrapperFeatures.gtk = true;
+  };
+
   services.dbus.enable = true;
-  
+
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.user.enableGnomeKeyring = true;
 

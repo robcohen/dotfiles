@@ -6,7 +6,7 @@
 }:
 
 let
-  unstable = import inputs.unstable {
+  unstable = import inputs.unstable-nixpkgs {
     system = pkgs.system;
     config.allowUnfree = true;
   };

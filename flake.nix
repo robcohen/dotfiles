@@ -1,20 +1,21 @@
 {
-  description = "Rob Cohen's nix config";
+  description = "Rob Cohen nix config";
 
   inputs = {
     # Nixpkgs
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
-    unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    stable-nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    unstable-nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     # Home manager
     home-manager.url = "github:nix-community/home-manager/release-23.11";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager.inputs.nixpkgs.follows = "stable-nixpkgs";
     hardware.url = "github:nixos/nixos-hardware";
     sops-nix.url = "github:Mic92/sops-nix";
   };
 
   outputs = {
     self,
-    nixpkgs,
+    stable-nixpkgs,
+    unstable-nixpkgs,
     home-manager,
     sops-nix,
     ...
@@ -23,7 +24,7 @@
   in {
     # Available through 'nixos-rebuild --flake .#your-hostname'
     nixosConfigurations = {
-      slax = nixpkgs.lib.nixosSystem {
+      slax = stable-nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs;};
         # > Our main nixos configuration file <
         modules = [
@@ -36,7 +37,7 @@
     # Available through 'home-manager --flake .#your-username@your-hostname'
     homeConfigurations = {
       "user@slax" = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        pkgs = stable-nixpkgs.legacyPackages.x86_64-linux;
         extraSpecialArgs = {inherit inputs outputs;};
         modules = [./profiles/user.nix];
       };
