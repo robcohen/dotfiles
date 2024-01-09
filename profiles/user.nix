@@ -9,10 +9,10 @@
 {
   imports = [
     ./sway
+    ./ags
     ./tmux
     ./fish
     ./alacritty
-    ./waybar
     ./git
     ./vscode
     ./helix
@@ -92,6 +92,7 @@
       wget
       unzip
       tmux
+      eww-wayland
       
       # Audio
       pavucontrol
