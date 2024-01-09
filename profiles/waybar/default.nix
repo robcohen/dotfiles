@@ -21,8 +21,6 @@
         "cpu"
         "memory"
         "temperature"
-      #] ++  ( if config.hostname == "yoga" then [ "battery" ] else [ ])
-      #++ [
         "clock"
         "tray"
       ];
