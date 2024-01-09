@@ -9,6 +9,7 @@
     home-manager.url = "github:nix-community/home-manager/release-23.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     hardware.url = "github:nixos/nixos-hardware";
+    sops-nix.url = "github:Mic92/sops-nix";
 
   };
 
@@ -16,6 +17,7 @@
     self,
     nixpkgs,
     home-manager,
+    sops-nix,
     ...
   } @ inputs: let
     inherit (self) outputs;
@@ -25,7 +27,10 @@
       slax = nixpkgs.lib.nixosSystem {
         specialArgs = {inherit inputs outputs;};
         # > Our main nixos configuration file <
-        modules = [./hosts/slax/configuration.nix];
+        modules = [
+          ./hosts/slax/configuration.nix
+          sops-nix.nixosModules.sops
+        ];
       };
     };
 
