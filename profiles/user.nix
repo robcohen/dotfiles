@@ -80,7 +80,9 @@ in {
       obsidian
       pdftk
       gnome.seahorse
-
+      age
+      sops
+      
       # Crypto
       ledger-live-desktop
 
@@ -98,7 +100,9 @@ in {
       grc
       wget
       unzip
-        
+      ranger
+      kitty
+              
       # Audio
       pavucontrol
       pulseaudio-ctl
