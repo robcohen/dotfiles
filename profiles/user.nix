@@ -73,6 +73,7 @@
       bitwarden-cli
       obsidian
       pdftk
+      gnome.seahorse
 
       # Crypto
       ledger-live-desktop
