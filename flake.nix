@@ -32,11 +32,24 @@
           sops-nix.nixosModules.sops
         ];
       };
+      brix = stable-nixpkgs.lib.nixosSystem {
+        specialArgs = {inherit inputs outputs;};
+        # > Our main nixos configuration file <
+        modules = [
+          ./hosts/brix/configuration.nix
+          sops-nix.nixosModules.sops
+        ];
+      };
     };
 
     # Available through 'home-manager --flake .#your-username@your-hostname'
     homeConfigurations = {
       "user@slax" = home-manager.lib.homeManagerConfiguration {
+        pkgs = stable-nixpkgs.legacyPackages.x86_64-linux;
+        extraSpecialArgs = {inherit inputs outputs;};
+        modules = [./profiles/user.nix];
+      };
+      "user@brix" = home-manager.lib.homeManagerConfiguration {
         pkgs = stable-nixpkgs.legacyPackages.x86_64-linux;
         extraSpecialArgs = {inherit inputs outputs;};
         modules = [./profiles/user.nix];
