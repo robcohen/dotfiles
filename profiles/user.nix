@@ -9,7 +9,7 @@
 {
   imports = [
     inputs.ags.homeManagerModules.default
-    #./sway
+    ./sway
     ./ags
     ./tmux
     ./fish
@@ -129,7 +129,29 @@
       uris = ["qemu:///system"];
     };
   };
-  
+  programs.waybar = {
+    enable = true;
+    settings = {
+      mainBar = {
+        layer = "top";
+        position = "top";
+        height = 32;
+        modules-left = [ "sway/workspaces" "sway/mode" ];
+        modules-center = [ "sway/window" ];
+        modules-right = [ "tray" "network" "memory" "cpu" "temperature" "clock#date" "clock#time" "custom/power"];
+        "sway/workspaces" = {
+          disable-scroll = true;
+          all-outputs = true;
+          format = "{name}";
+        };
+        "custom/power" = {
+          format = "  ";
+          on-click = "swaynag -t warning -m 'Power Menu Options' -b 'Logout' 'swaymsg exit' -b 'Suspend' 'systemctl suspend' -b 'Shutdown' 'systemctl shutdown' -b 'Reboot' 'systemctl reboot'";
+        };
+      };
+    };
+  };
+
   programs.direnv.enable = true;
 
   # Let Home Manager install and manage itself.
