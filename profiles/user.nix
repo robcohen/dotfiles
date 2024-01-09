@@ -92,6 +92,10 @@ in {
       element-desktop
       signal-desktop
 
+      # VMs
+      quickemu
+      quickgui
+
       # CLI tools
       niv
       vim

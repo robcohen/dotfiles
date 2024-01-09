@@ -58,7 +58,18 @@
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd = {
+    enable = true;
+
+    qemu = {
+      package = pkgs.qemu_kvm;
+      ovmf = {
+        enable = true;
+        packages = [pkgs.OVMFFull.fd];
+      };
+      swtpm.enable = true;
+    };
+  };
   programs.virt-manager.enable = true;
   programs.fish.enable = true;
   
@@ -94,10 +105,11 @@
   };
 
   services.dbus.enable = true;
-
+  services.fstrim.enable = true;
+  
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.user.enableGnomeKeyring = true;
-
+  
   environment.systemPackages = with pkgs; [
     wget
     vim
