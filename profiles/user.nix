@@ -8,6 +8,7 @@
 
 {
   imports = [
+    inputs.ags.homeManagerModules.default
     ./sway
     ./ags
     ./tmux
