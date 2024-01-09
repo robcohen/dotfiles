@@ -106,7 +106,6 @@
     enableFishIntegration = true;
     pinentryFlavor = "curses";
   };
-  services.gnome-keyring.enable = true;
 
   home.sessionVariables = {
     EDITOR = "vim";

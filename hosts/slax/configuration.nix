@@ -86,11 +86,8 @@
   programs.sway.enable = true;
   services.dbus.enable = true;
   
-  xdg.portal = {
-    enable = true;
-    wlr.enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-  };
+  services.gnome.gnome-keyring.enable = true;
+  security.pam.services.user.enableGnomeKeyring = true;
 
   environment.systemPackages = with pkgs; [
     wget
