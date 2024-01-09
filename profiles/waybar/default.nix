@@ -8,19 +8,6 @@
    programs.waybar = {
     enable = true;
     systemd.enable = true;
-    style = ''
-      ${builtins.readFile "${pkgs.waybar}/etc/xdg/waybar/style.css"}
-
-      window#waybar {
-        background: transparent;
-        border-bottom: none;
-      }
-
-      * {
-        font-size: 18px;
-        }
-      }
-    '';
     settings = [{
       height = 30;
       layer = "top";
