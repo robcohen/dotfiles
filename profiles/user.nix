@@ -8,9 +8,8 @@
 
 {
   imports = [
-    inputs.ags.homeManagerModules.default
+    ./wofi
     ./sway
-    ./ags
     ./tmux
     ./fish
     ./alacritty
