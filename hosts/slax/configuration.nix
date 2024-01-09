@@ -67,7 +67,7 @@
     user = {
       isNormalUser = true;
       shell = pkgs.fish;
-      extraGroups = ["wheel" "networkmanager" "video" "libvirtd"];
+      extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd"];
     };
   };
 
