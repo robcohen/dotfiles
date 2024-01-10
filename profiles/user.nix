@@ -76,7 +76,6 @@ in {
       brave
       onlyoffice-bin
       bitwarden
-      bitwarden-cli
       obsidian
       pdftk
       gnome.seahorse
