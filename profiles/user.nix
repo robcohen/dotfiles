@@ -81,6 +81,7 @@ in {
       gnome.seahorse
       age
       sops
+      vulnix
       
       # Crypto
       ledger-live-desktop
@@ -91,10 +92,12 @@ in {
       element-desktop
       signal-desktop
 
-      # VMs
+      # VMs / containers
       quickemu
       quickgui
       looking-glass-client
+      distrobox
+      podman
 
       # CLI tools
       niv

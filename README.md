@@ -13,4 +13,5 @@ for now, run:
 env -u WAYLAND_DISPLAY code .
 ```
 
-Test again
+ephemeral firefox:
+```distrobox-ephemeral --image alpine:latest --additional-packages "firefox" -- firefox```

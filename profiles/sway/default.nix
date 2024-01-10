@@ -17,7 +17,7 @@ wayland.windowManager.sway = {
         {command = "nm-applet --indicator";}
       ];
       bars = [{
-        command = "waybar";
+        #command = "waybar";
       }];
       output = {
           DP-1 = {
