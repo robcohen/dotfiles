@@ -55,6 +55,7 @@
     pulse.enable = true;
   };
   # Boot Parameters
+  boot.extraModulePackages = with config.boot.kernelPackages; [ kvmfr ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

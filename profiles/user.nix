@@ -95,6 +95,7 @@ in {
       # VMs
       quickemu
       quickgui
+      looking-glass-client
 
       # CLI tools
       niv
