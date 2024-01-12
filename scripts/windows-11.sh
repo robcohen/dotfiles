@@ -9,7 +9,6 @@
     -pidfile windows-11/windows-11.pid \
     -enable-kvm \
     -machine q35,smm=on,vmport=off,hpet=off \
-    -device intel-iommu,caching-mode=on \
     -global kvm-pit.lost_tick_policy=discard \
     -global ICH9-LPC.disable_s3=1 \
     -cpu host,kvm=on,+hypervisor,+invtsc,l3-cache=on,migratable=no,hv_passthrough \
@@ -21,7 +20,6 @@
     -device vfio-pci,host=01:00.1 \
     -display sdl,gl=on \
     -device intel-hda \
-    -device hda-duplex,audiodev=audio0 \
     -rtc base=localtime,clock=host,driftfix=slew \
     -device virtio-rng-pci,rng=rng0 \
     -object rng-random,id=rng0,filename=/dev/urandom \
@@ -48,3 +46,5 @@
     -tpmdev emulator,id=tpm0,chardev=chrtpm \
     -device tpm-tis,tpmdev=tpm0 \
     -serial unix:windows-11/windows-11-serial.socket,server,nowait \
+    -device ivshmem-plain,id=shmem0,memdev=looking-glass \
+    -object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=128M,share=yes
