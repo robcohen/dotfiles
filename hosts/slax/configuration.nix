@@ -56,8 +56,20 @@
   };
   # Boot Parameters
   boot.extraModulePackages = with config.boot.kernelPackages; [ kvmfr ];
-
+  boot.kernelModules  = [ "kvmfr" "vfio_virqfd" "vfio_pci" "vfio_iommu_type1" "vfio" ];
+  boot.blacklistedKernelModules = [ "nvidia" "nouveau" ];
+  boot.extraModprobeConfig = "
+    options kvmfr static_size_mb=128
+    options vfio-pci ids=10de:2504,10de:228e
+  "; 
+  services.udev.extraRules = ''                                                                
+    SUBSYSTEM=="kvmfr", OWNER="user", GROUP="kvm", MODE="0660"
+    SUBSYSTEM=="vfio", OWNER="user", GROUP="kvm", MODE="0660"
+  ''; 
   boot.loader.systemd-boot.enable = true;
+  boot.kernelParams = [ "intel_iommu=on" ];
+ 
+
   boot.loader.efi.canTouchEfiVariables = true;
   virtualisation.libvirtd = {
     enable = true;
@@ -94,7 +106,7 @@
     user = {
       isNormalUser = true;
       shell = pkgs.fish;
-      extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd"];
+      extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd" "kvm"];
     };
   };
 
@@ -121,7 +133,12 @@
   
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.user.enableGnomeKeyring = true;
-  
+  security.pam.loginLimits = [{
+    domain = "user";
+    type = "hard";
+    item = "memlock";
+    value = "infinity";
+  }]; 
   environment.systemPackages = with pkgs; [
     wget
     vim

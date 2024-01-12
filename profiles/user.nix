@@ -71,6 +71,8 @@ in {
       pinentry
       networkmanagerapplet
       waybar
+      pciutils
+      usbutils
 
       # Productivity
       brave
@@ -110,6 +112,7 @@ in {
       ranger
       kitty
       nixfmt
+      dmidecode
         
       # Audio
       pavucontrol
