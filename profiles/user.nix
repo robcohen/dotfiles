@@ -109,7 +109,8 @@ in {
       unzip
       ranger
       kitty
-              
+      nixfmt
+        
       # Audio
       pavucontrol
       pulseaudio-ctl
