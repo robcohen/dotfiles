@@ -11,14 +11,13 @@
     -machine q35,smm=on,vmport=off,hpet=off \
     -global kvm-pit.lost_tick_policy=discard \
     -global ICH9-LPC.disable_s3=1 \
-    -cpu host,kvm=on,+hypervisor,+invtsc,l3-cache=on,migratable=no,hv_passthrough \
+    -cpu host,kvm=off,+hypervisor,+invtsc,l3-cache=on,migratable=no,hv_passthrough,host-phys-bits=off \
     -smp cores=8,threads=2,sockets=1 \
     -m 8G \
-    -device virtio-balloon \
     -vga none \
     -device vfio-pci,host=01:00.0,multifunction=on \
     -device vfio-pci,host=01:00.1 \
-    -display sdl,gl=on \
+    -display sdl\
     -device intel-hda \
     -rtc base=localtime,clock=host,driftfix=slew \
     -device virtio-rng-pci,rng=rng0 \
@@ -29,9 +28,7 @@
     -chardev spicevmc,id=ccid,name=smartcard \
     -device ccid-card-passthru,chardev=ccid \
     -device usb-ehci,id=input \
-    -device usb-kbd,bus=input.0 \
     -k en-us \
-    -device usb-tablet,bus=input.0 \
     -device virtio-net,netdev=nic \
     -netdev user,hostname=windows-11,hostfwd=tcp::22221-:22,id=nic \
     -global driver=cfi.pflash01,property=secure,value=on \
@@ -46,5 +43,10 @@
     -tpmdev emulator,id=tpm0,chardev=chrtpm \
     -device tpm-tis,tpmdev=tpm0 \
     -serial unix:windows-11/windows-11-serial.socket,server,nowait \
+    -monitor unix:windows-11/windows-11-monitor.socket,server,nowait \
+    -spice port=5900,addr=127.0.0.1,disable-ticketing=on \
     -device ivshmem-plain,id=shmem0,memdev=looking-glass \
-    -object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=128M,share=yes
+    -object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=128M,share=yes \
+    -object input-linux,id=kbd1,evdev=/dev/input/event3,grab_all=on,repeat=on \
+    -object input-linux,id=mouse1,evdev=/dev/input/event2
+

@@ -73,7 +73,7 @@ in {
       waybar
       pciutils
       usbutils
-
+ 
       # Productivity
       brave
       onlyoffice-bin
@@ -97,9 +97,9 @@ in {
       # VMs / containers
       quickemu
       quickgui
-      looking-glass-client
       distrobox
       podman
+      virt-viewer
 
       # CLI tools
       niv
@@ -122,7 +122,7 @@ in {
       pasystray
   ] ++ (with unstable; [ 
 
-      electron-mail 
+      #electron-mail 
 
   ]); 
   
