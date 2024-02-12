@@ -27,6 +27,16 @@ wayland.windowManager.sway = {
 	    };
     };
     extraConfig = ''
+      for_window [window_role = "pop-up"] floating enable
+      for_window [window_role = "bubble"] floating enable
+      for_window [window_role = "dialog"] floating enable
+      for_window [window_type = "dialog"] floating enable
+      for_window [window_role = "task_dialog"] floating enable
+      for_window [window_type = "menu"] floating enable
+      for_window [app_id = "floating"] floating enable
+      for_window [app_id = "floating_update"] floating enable, resize set width 1000px height 600px
+      for_window [class = "(?i)pinentry"] floating enable
+      for_window [title = "Administrator privileges required"] floating enable
       gaps inner 8
       bindsym Print               exec 'shotman -c output'
       bindsym Print+Shift         exec 'shotman -c region'

@@ -16,5 +16,10 @@ in {
   programs.vscode = {
     enable = true;
     package = unstable.vscode;
+    extensions = with unstable.vscode-extensions; [
+      dracula-theme.theme-dracula
+      vscodevim.vim
+      yzhang.markdown-all-in-one
+    ];
   };
 }

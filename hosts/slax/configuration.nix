@@ -47,13 +47,8 @@
 
   ## Sound
 
-  #sound.enable = true;
-  #hardware.pulseaudio.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    pulse.enable = true;
-  };
+  hardware.pulseaudio.enable = true;
+
   # Boot Parameters
   boot.extraModulePackages = with config.boot.kernelPackages; [ kvmfr ];
   boot.kernelModules  = [ "kvmfr" "vfio_virqfd" "vfio_pci" "vfio_iommu_type1" "vfio" ];
@@ -97,7 +92,7 @@
     device = "/var/lib/swapfile";
     size = 32*1024;
   } ];
-
+  
   users.users = {
     user = {
       isNormalUser = true;
@@ -123,10 +118,12 @@
     enable = true;
     wrapperFeatures.gtk = true;
   };
-
+  programs.thunar.enable = true;
   services.dbus.enable = true;
   services.fstrim.enable = true;
-  
+  services.kubo = {
+    enable = true;
+  }; 
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.user.enableGnomeKeyring = true;
   environment.systemPackages = with pkgs; [

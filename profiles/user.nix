@@ -17,7 +17,8 @@ in {
     ./wofi
     ./sway
     ./tmux
-    ./fish
+    ./bash
+    #./fish
     ./alacritty
     ./git
     ./vscode
@@ -73,6 +74,9 @@ in {
       waybar
       pciutils
       usbutils
+
+      # Automation
+      home-assistant-cli
  
       # Productivity
       brave
@@ -84,6 +88,11 @@ in {
       age
       sops
       vulnix
+      rymdport
+      anki
+      cmake
+      octaveFull
+      okular
       
       # Crypto
       ledger-live-desktop
@@ -120,9 +129,15 @@ in {
       easyeffects
       spotify
       pasystray
-  ] ++ (with unstable; [ 
+      plasma-pa
+      carla
 
-      #electron-mail 
+  ] ++ (with unstable; [ 
+      thunderbird 
+      beancount
+      fava
+      wineWowPackages.waylandFull
+      winetricks
 
   ]); 
   
