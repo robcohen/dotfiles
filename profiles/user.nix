@@ -133,7 +133,8 @@ in {
       carla
 
   ] ++ (with unstable; [ 
-      thunderbird 
+      thunderbird
+      firefox 
       beancount
       fava
       wineWowPackages.waylandFull
