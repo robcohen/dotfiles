@@ -147,8 +147,16 @@ in {
   services.gpg-agent = {
     enable = true;
     enableFishIntegration = true;
-    pinentryFlavor = "curses";
+    enableSshSupport = true;
+    defaultCacheTtlSsh = 6*60*60;
+    pinentryFlavor = "gtk2";
   };
+
+  programs.keychain = {
+    enable = true;
+    keys = [ "id_ed25519" ];
+  };
+  
   services.pasystray = {
     enable = true;
   };
