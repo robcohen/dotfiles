@@ -74,6 +74,7 @@ in {
       waybar
       pciutils
       usbutils
+      openssl
 
       # Automation
       home-assistant-cli
