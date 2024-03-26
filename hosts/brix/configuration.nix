@@ -42,8 +42,22 @@
   ## Networking
   networking.hostName = "brix";
   networking.networkmanager.enable = true;
-  
+  networking.wireless.networks."ACC-Secure" = {
+    auth = ''
+      key_mgmt=WPA-EAP
+      eap=TLS
+      identity="r2145219@ACCstudent.austincc.edu"
+      ca_cert="/home/user/Documents/certificates/ACC-CA.cer"
+      private_key_passwd="CHANGEME"
+      client_cert="/home/user/Documents/certificates/r2145219@ACCstudentaustinccedu.pem"
+      private_key="/home/user/Documents/certificates/r2145219@ACCstudentaustinccedu.key"
+    '';
+  };
+
   time.timeZone = "America/Chicago";
+  ## Bluetooth
+
+  services.blueman.enable = true;
 
   ## Sound
 
