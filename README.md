@@ -16,5 +16,7 @@ $ nix-shell '<home-manager>' -A install
 $ home-manager switch --flake .#user@slax
 ```
 
+SSH agent works now
+
 ephemeral firefox:
 ```distrobox-ephemeral --image alpine:latest --additional-packages "firefox" -- firefox```
