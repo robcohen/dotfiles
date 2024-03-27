@@ -75,6 +75,10 @@ in {
       pciutils
       usbutils
       openssl
+      binutils
+      ffmpeg
+      solaar
+      ltunify
 
       # Automation
       home-assistant-cli
@@ -94,7 +98,7 @@ in {
       cmake
       octaveFull
       okular
-      
+ 
       # Crypto
       ledger-live-desktop
 
@@ -123,6 +127,7 @@ in {
       kitty
       nixfmt
       dmidecode
+      dig
         
       # Audio
       pavucontrol
