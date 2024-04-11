@@ -40,10 +40,27 @@
   };
   
   ## Networking
-  networking.hostName = "slax";
-  networking.networkmanager.enable = true;
+  networking = {
+      hostName = "slax";
+      nameservers = [ "1.1.1.1" "8.8.8.8" ];
+      networkmanager.enable = true;
+  };
   
   time.timeZone = "America/Chicago";
+
+  ## Printing
+
+  services.printing.enable = true;
+  services.printing.drivers = [ pkgs.cups-brother-hll2350dw ];
+  services.avahi = {
+    enable = true;
+    nssmdns = true;
+    openFirewall = true;
+  };
+  ## Mouse
+  # Logitech receiver
+  hardware.logitech.wireless.enable = true;
+  hardware.logitech.wireless.enableGraphical = true;
 
   ## Sound
 
@@ -96,7 +113,7 @@
   users.users = {
     user = {
       isNormalUser = true;
-      shell = pkgs.fish;
+      shell = pkgs.bash;
       extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd" "kvm"];
     };
   };
