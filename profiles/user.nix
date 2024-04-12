@@ -79,6 +79,7 @@ in {
       ffmpeg
       solaar
       ltunify
+      bluez
 
       # Automation
       home-assistant-cli
