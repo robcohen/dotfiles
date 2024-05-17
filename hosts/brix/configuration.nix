@@ -53,6 +53,8 @@
       private_key="/home/user/Documents/certificates/r2145219@ACCstudentaustinccedu.key"
     '';
   };
+  networking.firewall.allowedTCPPorts = [ 8384 22000 ];
+  networking.firewall.allowedUDPPorts = [ 22000 21027 ];
 
   time.timeZone = "America/Chicago";
   ## Bluetooth
@@ -75,6 +77,15 @@
   boot.loader.efi.canTouchEfiVariables = true;
   virtualisation.libvirtd.enable = true;
   programs.virt-manager.enable = true;
+
+  virtualisation.podman = {
+    enable = true;
+    dockerCompat = true;
+    dockerSocket.enable = true;
+    defaultNetwork.settings.dns_enabled = true;
+  };
+
+
   programs.fish.enable = true;
   
   swapDevices = [ {
@@ -108,6 +119,18 @@
     wrapperFeatures.gtk = true;
   };
 
+  services.usbmuxd.enable = true;
+  services.syncthing = {
+    enable = true;
+    user = "user";
+    dataDir = "/home/user/Documents";
+    configDir = "/home/user/.config/syncthing";
+    overrideDevices = false;     # overrides any devices added or deleted through the WebUI
+    overrideFolders = false;     # overrides any folders added or deleted through the WebUI
+    settings = {
+      };
+    };
+
   services.dbus.enable = true;
 
   services.gnome.gnome-keyring.enable = true;
@@ -117,6 +140,11 @@
     wget
     vim
     git
+    podman-compose
+    libimobiledevice
+    ifuse
+    wineWowPackages.waylandFull
+    winetricks
   ];
   
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion

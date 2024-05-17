@@ -80,13 +80,13 @@ in {
       solaar
       ltunify
       bluez
+      light
 
       # Automation
       home-assistant-cli
  
       # Productivity
       brave
-      onlyoffice-bin
       bitwarden
       obsidian
       pdftk
@@ -113,7 +113,6 @@ in {
       quickemu
       quickgui
       distrobox
-      podman
       virt-viewer
 
       # CLI tools
@@ -140,13 +139,16 @@ in {
       carla
 
   ] ++ (with unstable; [ 
+      gh
+      onlyoffice-bin
       thunderbird
       firefox 
       beancount
       fava
       wineWowPackages.waylandFull
       winetricks
-
+      magic-wormhole-rs
+      warp
   ]); 
   
   ## Services
@@ -194,34 +196,45 @@ in {
   };
   
   programs.waybar = {
-    enable = true;
-    systemd.enable = true;
-    settings = {
-      mainBar = {
-        layer = "top";
-        position = "top";
-        height = 32;
-        modules-left = [ "sway/workspaces" "sway/mode" ];
-        modules-center = [ "sway/window" ];
-        modules-right = [ "tray" "network" "memory" "cpu" "temperature" "clock#date" "clock#time" "custom/power" ];
-        "sway/workspaces" = {
-          disable-scroll = true;
-          all-outputs = true;
-          format = "{name}";
-        };
-        "custom/power" = {
-          format = "  ";
-          on-click = "swaynag -t warning -m 'Power Menu Options' -b 'Logout' 'swaymsg exit' -b 'Suspend' 'systemctl suspend' -b 'Shutdown' 'systemctl shutdown' -b 'Reboot' 'systemctl reboot'";
-        };
+  enable = true;
+  systemd.enable = true;
+  settings = {
+    mainBar = {
+      layer = "top";
+      position = "top";
+      height = 32;
+      modules-left = [ "sway/workspaces" "sway/mode" ];
+      modules-center = [ "sway/window" ];
+      modules-right = [
+        "tray"
+        "network"
+        "memory"
+        "cpu"
+        "battery"
+        "temperature"
+        "clock#date"
+        "clock#time"
+        "custom/power"
+      ];
+      "sway/workspaces" = {
+        disable-scroll = true;
+        all-outputs = true;
+        format = "{name}";
+      };
+      "custom/power" = {
+        format = "  ";
+        on-click = "swaynag -t warning -m 'Power Menu Options' -b 'Logout' 'swaymsg exit' -b 'Suspend' 'systemctl suspend' -b 'Shutdown' 'systemctl shutdown' -b 'Reboot' 'systemctl reboot'";
+      };
+      "clock#date" = {
+        format = "{:%a %d %b}";
+        tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
       };
     };
+  };
   };
 
   programs.direnv.enable = true;
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
-  nixpkgs.config.permittedInsecurePackages = [
-    "electron-25.9.0"
-  ];
 }
