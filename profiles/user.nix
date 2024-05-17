@@ -86,9 +86,6 @@ in {
       home-assistant-cli
  
       # Productivity
-      brave
-      bitwarden
-      obsidian
       pdftk
       gnome.seahorse
       age
@@ -98,16 +95,6 @@ in {
       anki
       cmake
       octaveFull
-      okular
- 
-      # Crypto
-      ledger-live-desktop
-
-      # Communications
-      telegram-desktop
-      slack
-      element-desktop
-      signal-desktop
 
       # VMs / containers
       quickemu
@@ -128,6 +115,7 @@ in {
       nixfmt
       dmidecode
       dig
+      libfido2
         
       # Audio
       pavucontrol
@@ -149,6 +137,15 @@ in {
       winetricks
       magic-wormhole-rs
       warp
+      telegram-desktop
+      slack
+      element-desktop
+      signal-desktop
+      bitwarden
+      obsidian
+      ledger-live-desktop
+      brave
+      okular
   ]); 
   
   ## Services
