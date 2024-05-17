@@ -84,9 +84,6 @@
     dockerSocket.enable = true;
     defaultNetwork.settings.dns_enabled = true;
   };
-
-
-  programs.fish.enable = true;
   
   swapDevices = [ {
     device = "/var/lib/swapfile";
@@ -96,7 +93,7 @@
   users.users = {
     user = {
       isNormalUser = true;
-      shell = pkgs.fish;
+      shell = pkgs.oil;
       extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd"];
     };
   };

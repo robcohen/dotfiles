@@ -17,8 +17,6 @@ in {
     ./wofi
     ./sway
     ./tmux
-    ./bash
-    #./fish
     ./alacritty
     ./git
     ./vscode
@@ -152,7 +150,6 @@ in {
   
   services.gpg-agent = {
     enable = true;
-    enableFishIntegration = true;
     enableSshSupport = true;
     defaultCacheTtlSsh = 6*60*60;
     pinentryFlavor = "gtk2";

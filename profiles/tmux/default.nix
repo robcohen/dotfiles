@@ -10,7 +10,7 @@
     mouse = true;
     keyMode = "vi";
     prefix = "C-s";
-    shell = "${pkgs.fish}/bin/fish";
+    shell = "${pkgs.oil}/bin/oil";
     terminal = "tmux-256color";
     historyLimit = 100000;
     extraConfig = ''
