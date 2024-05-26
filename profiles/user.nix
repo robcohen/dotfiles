@@ -80,6 +80,7 @@ in {
       ltunify
       bluez
       light
+      xdg-utils
 
       # Automation
       home-assistant-cli
