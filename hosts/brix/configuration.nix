@@ -89,11 +89,13 @@
     device = "/var/lib/swapfile";
     size = 32*1024;
   } ];
+  
+  programs.zsh.enable = true;
 
   users.users = {
     user = {
       isNormalUser = true;
-      shell = pkgs.oil;
+      shell = pkgs.zsh;
       extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd"];
     };
   };

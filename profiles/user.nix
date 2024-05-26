@@ -21,6 +21,7 @@ in {
     ./git
     ./vscode
     ./helix
+    ./zsh
   ];
 
   nixpkgs = {
@@ -144,8 +145,20 @@ in {
       ledger-live-desktop
       brave
       okular
+      git-repo
   ]); 
-  
+ 
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "text/html" = "brave.desktop";
+      "x-scheme-handler/http" = "brave.desktop";
+      "x-scheme-handler/https" = "brave.desktop";
+      "x-scheme-handler/about" = "brave.desktop";
+      "x-scheme-handler/unknown" = "brave.desktop";
+    };
+  };
+ 
   ## Services
   
   services.gpg-agent = {
@@ -165,6 +178,7 @@ in {
   };
   
   home.sessionVariables = {
+    ELECTRON_DEFAULT_BROWSER = "brave";
     EDITOR = "vim";
     NIXOS_OZONE_WL = "1";
     SSH_AUTH_SOCK = "/run/user/1000/keyring/ssh";
@@ -227,7 +241,10 @@ in {
   };
   };
 
-  programs.direnv.enable = true;
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
