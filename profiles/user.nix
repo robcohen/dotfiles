@@ -166,7 +166,6 @@ in {
     enable = true;
     enableSshSupport = true;
     defaultCacheTtlSsh = 6*60*60;
-    pinentryFlavor = "gtk2";
   };
 
   programs.keychain = {
