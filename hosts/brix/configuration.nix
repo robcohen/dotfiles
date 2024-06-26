@@ -56,7 +56,7 @@
   networking.firewall.allowedTCPPorts = [ 8384 22000 ];
   networking.firewall.allowedUDPPorts = [ 22000 21027 ];
 
-  time.timeZone = "America/Chicago";
+  time.timeZone = "Europe/Belgrade";
   ## Bluetooth
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
@@ -71,6 +71,19 @@
     alsa.enable = true;
     pulse.enable = true;
   };
+
+  # OpenGL
+
+  hardware.opengl.enable = true;
+  hardware.opengl.driSupport = true;
+  hardware.opengl.extraPackages = with pkgs; [
+    intel-media-driver
+    intel-compute-runtime
+    vaapiIntel
+    vaapiVdpau
+    libvdpau-va-gl
+  ];
+  
   # Boot Parameters
 
   boot.loader.systemd-boot.enable = true;
@@ -96,7 +109,7 @@
     user = {
       isNormalUser = true;
       shell = pkgs.zsh;
-      extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd"];
+      extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd" "adbusers"];
     };
   };
 
@@ -117,6 +130,7 @@
     enable = true;
     wrapperFeatures.gtk = true;
   };
+  programs.adb.enable = true;
 
   services.usbmuxd.enable = true;
   services.syncthing = {

@@ -22,6 +22,7 @@ in {
     ./vscode
     ./helix
     ./zsh
+    ./ungoogled-chromium
   ];
 
   nixpkgs = {
@@ -81,6 +82,9 @@ in {
       bluez
       light
       xdg-utils
+      weston
+      v4l-utils
+      mpv
 
       # Automation
       home-assistant-cli
@@ -112,10 +116,10 @@ in {
       unzip
       ranger
       kitty
-      nixfmt
       dmidecode
       dig
       libfido2
+      jq
         
       # Audio
       pavucontrol
@@ -125,6 +129,8 @@ in {
       pasystray
       plasma-pa
       carla
+
+      slack 
 
   ] ++ (with unstable; [ 
       gh
@@ -138,13 +144,11 @@ in {
       magic-wormhole-rs
       warp
       telegram-desktop
-      slack
       element-desktop
       signal-desktop
       bitwarden
       obsidian
       ledger-live-desktop
-      brave
       okular
       git-repo
   ]); 
@@ -158,6 +162,17 @@ in {
       "x-scheme-handler/about" = "brave.desktop";
       "x-scheme-handler/unknown" = "brave.desktop";
     };
+  };
+
+  programs.brave = {
+    enable = true;
+    commandLineArgs = [
+      "--enable-features=UseOzonePlatform,VaapiVideoDecoder"
+      "--ozone-platform=wayland"
+      "--enable-accelerated-video-decode"
+      "--enable-gpu-rasterization"
+      "--enable-zero-copy"
+      ];
   };
  
   ## Services
@@ -182,6 +197,8 @@ in {
     EDITOR = "vim";
     NIXOS_OZONE_WL = "1";
     SSH_AUTH_SOCK = "/run/user/1000/keyring/ssh";
+    LIBVA_DRIVER_NAME = "i965";
+    MOZ_DISABLE_RDD_SANDBOX = "1";
   };
 
   ## Sway Settings
