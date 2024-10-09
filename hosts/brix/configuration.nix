@@ -38,7 +38,7 @@
     experimental-features = "nix-command flakes";
     auto-optimise-store = true;
   };
-  
+
   ## Networking
   networking.hostName = "brix";
   networking.networkmanager.enable = true;
@@ -56,7 +56,14 @@
   networking.firewall.allowedTCPPorts = [ 8384 22000 ];
   networking.firewall.allowedUDPPorts = [ 22000 21027 ];
 
-  time.timeZone = "Europe/Belgrade";
+  services.automatic-timezoned.enable = true;
+  services.geoclue2.enable = true;
+
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/backlight/%k/brightness"
+    ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chmod g+w /sys/class/backlight/%k/brightness"
+  '';
+
   ## Bluetooth
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
@@ -73,18 +80,29 @@
   };
 
   # OpenGL
-
-  hardware.opengl.enable = true;
-  hardware.opengl.driSupport = true;
-  hardware.opengl.extraPackages = with pkgs; [
-    intel-media-driver
-    intel-compute-runtime
-    vaapiIntel
-    vaapiVdpau
-    libvdpau-va-gl
+  hardware.enableRedistributableFirmware = true;
+  hardware.firmware = with pkgs; [
+    linux-firmware
+    sof-firmware
   ];
-  
+  hardware.opengl = {
+    enable = true;
+    driSupport = true;
+    driSupport32Bit = true;
+    extraPackages = with pkgs; [
+      intel-media-driver
+      intel-compute-runtime
+      vaapiIntel
+      vaapiVdpau
+      libvdpau-va-gl
+    ];
+  };
+
   # Boot Parameters
+  boot.kernelPackages = inputs.unstable-nixpkgs.legacyPackages.${pkgs.system}.linuxPackages_latest;
+  boot.kernelModules = [ "i915" ];
+  boot.kernelParams = [ "acpi_enforce_resources=lax" "iwlwifi.power_save=0" ];  hardware.logitech.wireless.enable = true;
+  hardware.logitech.wireless.enableGraphical = true;
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -97,12 +115,12 @@
     dockerSocket.enable = true;
     defaultNetwork.settings.dns_enabled = true;
   };
-  
+
   swapDevices = [ {
     device = "/var/lib/swapfile";
     size = 32*1024;
   } ];
-  
+
   programs.zsh.enable = true;
 
   users.users = {
@@ -126,12 +144,19 @@
   };
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
+  environment.variables = {
+    LIBVA_DRIVER_NAME = "iHD";  # Use Intel's media driver
+    VDPAU_DRIVER = "va_gl";     # OpenGL-based VDPAU driver
+    #WLR_NO_HARDWARE_CURSORS = "1";  # Can help with cursor issues on some Intel GPUs
+    __GLX_VENDOR_LIBRARY_NAME = "mesa"; # Force use of Mesa drivers
+  };
   programs.sway = {
     enable = true;
     wrapperFeatures.gtk = true;
   };
   programs.adb.enable = true;
 
+  services.pcscd.enable = true;
   services.usbmuxd.enable = true;
   services.syncthing = {
     enable = true;
@@ -146,6 +171,11 @@
 
   services.dbus.enable = true;
 
+  services.ollama = {
+    enable = true;
+  };
+  services.fwupd.enable = true;
+
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.user.enableGnomeKeyring = true;
 
@@ -158,8 +188,21 @@
     ifuse
     wineWowPackages.waylandFull
     winetricks
+    vulkan-tools
+    vulkan-loader
+    vulkan-validation-layers
+    libva-utils
+    intel-gpu-tools
+    intel-media-driver
+    intel-compute-runtime
+    intel-ocl
+    mesa
+    wayland
+    wayland-utils
+    wev
+    efitools
   ];
-  
+
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   system.stateVersion = "23.11";
 }

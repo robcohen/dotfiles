@@ -16,6 +16,14 @@ $ nix-shell '<home-manager>' -A install
 $ home-manager switch --flake .#user@slax
 ```
 
+## Set outputs
+
+swaymsg output eDP-1 disable && swaymsg output HDMI-A-1 enable
+
+## Geoclue broken, set location manually:
+
+timedatectl set-timezone 
+
 SSH agent works now
 
 ephemeral firefox:

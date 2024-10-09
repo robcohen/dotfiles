@@ -13,7 +13,6 @@ wayland.windowManager.sway = {
       terminal = "alacritty"; 
       menu = "wofi --show run";
       startup = [
-        # Launch Firefox on start
         {command = "nm-applet --indicator";}
       ];
       bars = [{
@@ -37,6 +36,8 @@ wayland.windowManager.sway = {
       for_window [app_id = "floating_update"] floating enable, resize set width 1000px height 600px
       for_window [class = "(?i)pinentry"] floating enable
       for_window [title = "Administrator privileges required"] floating enable
+      for_window [app_id="pinentry-gnome3"] floating enable
+      
       gaps inner 8
       bindsym Print               exec 'shotman -c output'
       bindsym Print+Shift         exec 'shotman -c region'

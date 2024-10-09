@@ -7,6 +7,7 @@
 
 let
   unstable = import inputs.unstable-nixpkgs {
+    system = pkgs.system;
   };
 
 in {
@@ -37,5 +38,10 @@ in {
       dictionary = "";
       enabled = true;
     };
+    session = {
+      restore_on_startup = 0;
+    };
+    homepage = "about:blank";
+    homepage_is_newtabpage = false;
   };
 }

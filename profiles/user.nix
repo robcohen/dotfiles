@@ -4,14 +4,14 @@
   config,
   pkgs,
   ...
-}: 
+}:
 
 let
   unstable = import inputs.unstable-nixpkgs {
     system = pkgs.system;
     config.allowUnfree = true;
   };
-  
+
 in {
   imports = [
     ./wofi
@@ -69,7 +69,7 @@ in {
       shotman
       wofi
       gnupg
-      pinentry
+      pinentry-gnome3
       networkmanagerapplet
       waybar
       pciutils
@@ -85,10 +85,11 @@ in {
       weston
       v4l-utils
       mpv
+      bluetuith
 
       # Automation
       home-assistant-cli
- 
+
       # Productivity
       pdftk
       gnome.seahorse
@@ -120,7 +121,10 @@ in {
       dig
       libfido2
       jq
-        
+      opensc
+      pcsctools
+      ccid
+
       # Audio
       pavucontrol
       pulseaudio-ctl
@@ -130,37 +134,42 @@ in {
       plasma-pa
       carla
 
-      slack 
+      slack
 
-  ] ++ (with unstable; [ 
+  ] ++ (with unstable; [
       gh
       onlyoffice-bin
       thunderbird
-      firefox 
-      beancount
-      fava
+      firefox
+      tor-browser
       wineWowPackages.waylandFull
       winetricks
       magic-wormhole-rs
       warp
       telegram-desktop
-      element-desktop
+      #fractal
+      #element-desktop
       signal-desktop
       bitwarden
       obsidian
       ledger-live-desktop
       okular
       git-repo
-  ]); 
- 
+      gpa
+      steam
+      zed-editor
+      aichat
+      fallout2-ce
+  ]);
+
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
-      "text/html" = "brave.desktop";
-      "x-scheme-handler/http" = "brave.desktop";
-      "x-scheme-handler/https" = "brave.desktop";
-      "x-scheme-handler/about" = "brave.desktop";
-      "x-scheme-handler/unknown" = "brave.desktop";
+      "text/html" = "firefox.desktop";
+      "x-scheme-handler/http" = "firefox.desktop";
+      "x-scheme-handler/https" = "firefox.desktop";
+      "x-scheme-handler/about" = "firefox.desktop";
+      "x-scheme-handler/unknown" = "firefox.desktop";
     };
   };
 
@@ -174,24 +183,31 @@ in {
       "--enable-zero-copy"
       ];
   };
- 
+
   ## Services
-  
+
   services.gpg-agent = {
     enable = true;
     enableSshSupport = true;
     defaultCacheTtlSsh = 6*60*60;
+    enableScDaemon = true;
+    pinentryPackage = pkgs.pinentry-gnome3;
+    extraConfig = ''
+      pinentry-program ${pkgs.pinentry-curses}/bin/pinentry-curses
+    '';
   };
 
-  programs.keychain = {
+  programs.gpg = {
     enable = true;
-    keys = [ "id_ed25519" ];
+    settings = {
+      use-agent = true;
+    };
   };
-  
+
   services.pasystray = {
     enable = true;
   };
-  
+
   home.sessionVariables = {
     ELECTRON_DEFAULT_BROWSER = "brave";
     EDITOR = "vim";
@@ -199,10 +215,11 @@ in {
     SSH_AUTH_SOCK = "/run/user/1000/keyring/ssh";
     LIBVA_DRIVER_NAME = "i965";
     MOZ_DISABLE_RDD_SANDBOX = "1";
+    GPG_TTY = "$(tty)";
   };
 
   ## Sway Settings
-  
+
   home.pointerCursor = {
     name = "Adwaita";
     package = pkgs.gnome.adwaita-icon-theme;
@@ -219,7 +236,7 @@ in {
       uris = ["qemu:///system"];
     };
   };
-  
+
   programs.waybar = {
   enable = true;
   systemd.enable = true;
