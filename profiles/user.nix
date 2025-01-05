@@ -160,16 +160,21 @@ in {
       zed-editor
       aichat
       fallout2-ce
+      looking-glass-client
+      obs-studio-plugins.looking-glass-obs
+      obs-studio
+      shotcut
+      radicle-node
   ]);
 
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
       "text/html" = "firefox.desktop";
-      "x-scheme-handler/http" = "firefox.desktop";
-      "x-scheme-handler/https" = "firefox.desktop";
-      "x-scheme-handler/about" = "firefox.desktop";
-      "x-scheme-handler/unknown" = "firefox.desktop";
+      "x-scheme-handler/http" = "chromium.desktop";
+      "x-scheme-handler/https" = "chromium.desktop";
+      "x-scheme-handler/about" = "chromium.desktop";
+      "x-scheme-handler/unknown" = "chromium.desktop";
     };
   };
 
