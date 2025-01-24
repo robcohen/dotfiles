@@ -8,7 +8,7 @@
   programs.alacritty = {
     enable = true;
     settings = {
-      shell.program = "tmux";
+      terminal.shell.program = "tmux";
       env.TERM = "alacritty";
       window = {
         decorations = "full";
