@@ -52,7 +52,7 @@ in {
       font-awesome_5
       font-awesome
       noto-fonts
-      noto-fonts-cjk
+      noto-fonts-cjk-sans
       noto-fonts-emoji
       liberation_ttf
       fira-code
@@ -92,7 +92,7 @@ in {
 
       # Productivity
       pdftk
-      gnome.seahorse
+      seahorse
       age
       sops
       vulnix
@@ -163,7 +163,6 @@ in {
       looking-glass-client
       obs-studio-plugins.looking-glass-obs
       obs-studio
-      shotcut
       radicle-node
   ]);
 
@@ -227,7 +226,7 @@ in {
 
   home.pointerCursor = {
     name = "Adwaita";
-    package = pkgs.gnome.adwaita-icon-theme;
+    package = pkgs.adwaita-icon-theme;
     size = 24;
     x11 = {
       enable = true;
