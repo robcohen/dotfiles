@@ -20,9 +20,16 @@
         overlays = [ nixos-cosmic.overlays.default ];
       };
 
+      unstable = import inputs.unstable-nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
+
       mkHomeConfig = hostname: home-manager.lib.homeManagerConfiguration {
         pkgs = stable-nixpkgs.legacyPackages.${system};
-        extraSpecialArgs = { inherit inputs; };
+        extraSpecialArgs = {
+          inherit inputs unstable;
+        };
         modules = [ ./profiles/user.nix ];
       };
     in {

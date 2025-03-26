@@ -124,11 +124,6 @@
   services.desktopManager.cosmic.enable = true;
   services.displayManager.cosmic-greeter.enable = true;
 
-  services.issue.enable = true;
-  services.issue.text = ''
-    Welcome to Brix – NixOS ${config.system.nixos.label}
-  '';
-
   environment.systemPackages = with pkgs; [
     wget vim git podman-compose libimobiledevice ifuse
     wineWowPackages.waylandFull winetricks
