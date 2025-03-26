@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     ../ledger.nix
+    ../syncthing.nix
   ];
 
   nixpkgs = {
@@ -11,8 +12,10 @@
     config.allowUnfree = true;
   };
 
-  nix.registry = lib.mapAttrs (_: flake: { inherit flake; })
-    (lib.filterAttrs (_: lib.isType "flake") inputs);
+  nix.registry = {
+    nixpkgs.flake = inputs.stable-nixpkgs;
+    unstable.flake = inputs.unstable-nixpkgs;
+  };
 
   nix.settings = {
     trusted-users = [ "root" "user" ];
@@ -20,7 +23,7 @@
     auto-optimise-store = true;
     substituters = [ "https://cosmic.cachix.org" ];
     trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
-  };
+      };
 
   networking.hostName = "brix";
   networking.networkmanager.enable = true;
@@ -37,12 +40,12 @@
 
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
-  services.blueman.enable = true;
 
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     pulse.enable = true;
+    jack.enable = true;
   };
 
   services.coredns = {
@@ -78,6 +81,7 @@
     "iwlwifi.power_save=0"
     "i915.enable_psr=0"
   ];
+  boot.tmp.useTmpfs = true;
 
   hardware.logitech.wireless.enable = true;
   hardware.logitech.wireless.enableGraphical = true;
@@ -102,12 +106,10 @@
 
   programs.zsh.enable = true;
 
-  users.users = {
-    user = {
-      isNormalUser = true;
-      shell = pkgs.zsh;
-      extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd" "adbusers"];
-    };
+  users.users.user = {
+    isNormalUser = true;
+    shell = pkgs.zsh;
+    extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd" "adbusers"];
   };
 
   i18n.defaultLocale = "en_US.UTF-8";
@@ -122,48 +124,28 @@
   services.desktopManager.cosmic.enable = true;
   services.displayManager.cosmic-greeter.enable = true;
 
+  services.issue.enable = true;
+  services.issue.text = ''
+    Welcome to Brix – NixOS ${config.system.nixos.label}
+  '';
+
   environment.systemPackages = with pkgs; [
     wget vim git podman-compose libimobiledevice ifuse
     wineWowPackages.waylandFull winetricks
     vulkan-tools vulkan-loader vulkan-validation-layers
     libva-utils intel-gpu-tools mesa wayland wayland-utils wev efitools
-
-    unstable.cosmic-session
-    unstable.cosmic-edit
-    unstable.cosmic-files
-    unstable.cosmic-panel
-    unstable.cosmic-settings
-    unstable.cosmic-term
-
-    (pkgs.writeShellScriptBin "start-cosmic" ''
-      export XDG_SESSION_TYPE=wayland
-      export XDG_CURRENT_DESKTOP=cosmic
-      export GDK_BACKEND=wayland
-      export QT_QPA_PLATFORM=wayland
-      exec dbus-run-session ${unstable.cosmic-session}/bin/cosmic-session
-    '')
   ];
 
   programs.adb.enable = true;
   services.pcscd.enable = true;
   services.usbmuxd.enable = true;
 
-  services.syncthing = {
-    enable = true;
-    user = "user";
-    dataDir = "/home/user/Documents";
-    configDir = "/home/user/.config/syncthing";
-    overrideDevices = false;
-    overrideFolders = false;
-    settings = {};
-  };
-
   services.dbus.enable = true;
   services.ollama.enable = true;
   services.fwupd.enable = true;
 
   services.gnome.gnome-keyring.enable = true;
-  security.pam.services.user.enableGnomeKeyring = true;
+  security.pam.services.cosmic-greeter.enableGnomeKeyring = true;
 
   system.stateVersion = "23.11";
 }
