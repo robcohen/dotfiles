@@ -3,8 +3,6 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../ledger.nix
-    ../syncthing.nix
   ];
 
   nixpkgs = {
@@ -50,7 +48,7 @@
 
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = with pkgs; [ linux-firmware sof-firmware ];
-
+  hardware.ledger.enable = true;
   hardware.graphics = {
     enable = true;
     extraPackages = with pkgs; [

@@ -20,6 +20,7 @@ in {
     ./programs/zsh.nix
     ./programs/home-manager.nix
     ./services/gpg-agent.nix
+    ./services/syncthing.nix
   ];
 
   nixpkgs = {
