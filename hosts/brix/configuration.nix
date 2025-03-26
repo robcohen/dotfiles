@@ -48,20 +48,6 @@
     jack.enable = true;
   };
 
-  services.coredns = {
-    enable = true;
-    config = ''
-      . {
-        forward . 1.1.1.1 8.8.8.8
-      }
-
-      eth. {
-        forward . resolver.ens.domains
-      }
-    '';
-  };
-
-
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = with pkgs; [ linux-firmware sof-firmware ];
 
