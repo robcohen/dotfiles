@@ -54,11 +54,13 @@
       . {
         forward . 1.1.1.1 8.8.8.8
       }
-      eth {
+
+      eth. {
         forward . resolver.ens.domains
       }
     '';
   };
+
 
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = with pkgs; [ linux-firmware sof-firmware ];
