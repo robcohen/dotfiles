@@ -15,7 +15,7 @@ let
 in {
   imports = [
     ./wofi
-    ./sway
+    #./sway
     ./tmux
     ./alacritty
     ./git
@@ -153,7 +153,7 @@ in {
       bitwarden
       obsidian
       ledger-live-desktop
-      okular
+      kdePackages.okular
       git-repo
       gpa
       steam
@@ -164,6 +164,9 @@ in {
       obs-studio-plugins.looking-glass-obs
       obs-studio
       radicle-node
+      devenv
+      qflipper
+      cachix
   ]);
 
   xdg.mimeApps = {
@@ -224,15 +227,15 @@ in {
 
   ## Sway Settings
 
-  home.pointerCursor = {
-    name = "Adwaita";
-    package = pkgs.adwaita-icon-theme;
-    size = 24;
-    x11 = {
-      enable = true;
-      defaultCursor = "Adwaita";
-      };
-  };
+  #home.pointerCursor = {
+  #  name = "Adwaita";
+  #  package = pkgs.adwaita-icon-theme;
+  #  size = 24;
+  #  x11 = {
+  #    enable = true;
+  #    defaultCursor = "Adwaita";
+  #    };
+  #};
 
   dconf.settings = {
     "org/virt-manager/virt-manager/connections" = {
@@ -241,43 +244,43 @@ in {
     };
   };
 
-  programs.waybar = {
-  enable = true;
-  systemd.enable = true;
-  settings = {
-    mainBar = {
-      layer = "top";
-      position = "top";
-      height = 32;
-      modules-left = [ "sway/workspaces" "sway/mode" ];
-      modules-center = [ "sway/window" ];
-      modules-right = [
-        "tray"
-        "network"
-        "memory"
-        "cpu"
-        "battery"
-        "temperature"
-        "clock#date"
-        "clock#time"
-        "custom/power"
-      ];
-      "sway/workspaces" = {
-        disable-scroll = true;
-        all-outputs = true;
-        format = "{name}";
-      };
-      "custom/power" = {
-        format = "  ";
-        on-click = "swaynag -t warning -m 'Power Menu Options' -b 'Logout' 'swaymsg exit' -b 'Suspend' 'systemctl suspend' -b 'Shutdown' 'systemctl shutdown' -b 'Reboot' 'systemctl reboot'";
-      };
-      "clock#date" = {
-        format = "{:%a %d %b}";
-        tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
-      };
-    };
-  };
-  };
+  #programs.waybar = {
+  #enable = true;
+  #systemd.enable = true;
+  #settings = {
+  #  mainBar = {
+  #    layer = "top";
+  #    position = "top";
+  #    height = 32;
+  #    modules-left = [ "sway/workspaces" "sway/mode" ];
+  #    modules-center = [ "sway/window" ];
+  #    modules-right = [
+  #      "tray"
+  #      "network"
+  #      "memory"
+  #      "cpu"
+  #      "battery"
+  #      "temperature"
+  #      "clock#date"
+  #      "clock#time"
+  #      "custom/power"
+  #    ];
+  #    "sway/workspaces" = {
+  #      disable-scroll = true;
+  #      all-outputs = true;
+  #      format = "{name}";
+  #    };
+  #    "custom/power" = {
+  #      format = "  ";
+  #      on-click = "swaynag -t warning -m 'Power Menu Options' -b 'Logout' 'swaymsg exit' -b 'Suspend' 'systemctl suspend' -b 'Shutdown' 'systemctl shutdown' -b 'Reboot' 'systemctl reboot'";
+  #    };
+  #    "clock#date" = {
+  #      format = "{:%a %d %b}";
+  #      tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
+  #    };
+  #  };
+  #};
+  #};
 
   programs.direnv = {
     enable = true;
