@@ -8,7 +8,7 @@
 
   imports = [
     ./hardware-configuration.nix
-    ../../virtualization.nix
+    ./../virtualization.nix
   ];
 
   nixpkgs = {

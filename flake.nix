@@ -41,6 +41,7 @@
             unstable = unstable-nixpkgs.legacyPackages.${system};
           };
           modules = [
+            nixos-cosmic.nixosModules.default
             ./hosts/slax/configuration.nix
             sops-nix.nixosModules.sops
           ];
