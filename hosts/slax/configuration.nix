@@ -41,8 +41,6 @@
   services.automatic-timezoned.enable = true;
   services.geoclue2.enable = true;
 
-  time.timeZone = "America/Chicago";
-
   services.avahi = {
     enable = true;
     nssmdns = true;
