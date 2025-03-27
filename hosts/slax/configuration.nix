@@ -16,20 +16,17 @@
     config.allowUnfree = true;
   };
 
-  nix.registry = (lib.mapAttrs (_: flake: { inherit flake; }))
-    (lib.filterAttrs (_: lib.isType "flake") inputs);
-
-  nix.nixPath = [ "/etc/nix/path" ];
-  environment.etc = lib.mapAttrs'
-    (name: value: {
-      name = "nix/path/${name}";
-      value.source = value.flake;
-    })
-    config.nix.registry;
+  nix.registry = {
+    nixpkgs.flake = inputs.stable-nixpkgs;
+    unstable.flake = inputs.unstable-nixpkgs;
+  };
 
   nix.settings = {
+    trusted-users = [ "root" "user" ];
     experimental-features = "nix-command flakes";
     auto-optimise-store = true;
+    substituters = [ "https://cosmic.cachix.org" ];
+    trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
   };
 
   networking = {
