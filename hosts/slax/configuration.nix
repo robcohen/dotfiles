@@ -38,12 +38,6 @@
   services.automatic-timezoned.enable = true;
   services.geoclue2.enable = true;
 
-  services.avahi = {
-    enable = true;
-    nssmdns = true;
-    openFirewall = true;
-  };
-
   hardware.logitech.wireless = {
     enable = true;
     enableGraphical = true;
