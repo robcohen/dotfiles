@@ -55,4 +55,5 @@ sudo nixos-rebuild switch --flake ~/Documents/dotfiles/#$HOSTNAME
 echo "🏠 Switching Home Manager config..."
 home-manager switch --flake ~/Documents/dotfiles/#$CURRENT_USER@$HOSTNAME
 
-echo "✅ Update complete!"
+echo "✅ Update complete! Home Manager News:"
+home-manager news --flake ~/Documents/dotfiles/#$CURRENT_USER@$HOSTNAME

@@ -75,6 +75,9 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  systemd.packages = [ pkgs.observatory ];
+  systemd.services.monitord.wantedBy = [ "multi-user.target" ];
+
   virtualisation.libvirtd.enable = true;
   programs.virt-manager.enable = true;
 
@@ -100,7 +103,11 @@
 
   i18n.defaultLocale = "en_US.UTF-8";
 
-  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+    COSMIC_DATA_CONTROL_ENABLED = 1;
+  };
+
   environment.variables = {
     LIBVA_DRIVER_NAME = "iHD";
     VDPAU_DRIVER = "va_gl";
