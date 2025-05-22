@@ -2,9 +2,9 @@
   description = "Rob Cohen nix config";
 
   inputs = {
-    stable-nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    stable-nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     unstable-nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager/release-24.11";
+    home-manager.url = "github:nix-community/home-manager/release-25.05";
     home-manager.inputs.nixpkgs.follows = "stable-nixpkgs";
     hardware.url = "github:nixos/nixos-hardware";
     sops-nix.url = "github:Mic92/sops-nix";

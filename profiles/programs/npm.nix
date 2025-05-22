@@ -9,8 +9,8 @@
 
   # Configure npm to install global packages in home directory
   home.file.".npmrc".text = ''
-    prefix=$HOME/.npm-packages
-    cache=$HOME/.npm-cache
+    prefix=${config.home.homeDirectory}/.npm-packages
+    cache=${config.home.homeDirectory}/.npm-cache
   '';
 
   # Add npm global bin to PATH

@@ -16,7 +16,7 @@ let
     virt-viewer niv vim eza bat grc wget unzip ranger
     kitty dmidecode dig libfido2 jq opensc pcsctools ccid
     pavucontrol pulseaudio-ctl easyeffects spotify
-    pasystray plasma-pa carla slack
+    pasystray kdePackages.plasma-pa carla slack
   ];
 
   unstableApps = with unstable; [

@@ -18,6 +18,7 @@ in {
     ./programs/ungoogled-chromium.nix
     ./programs/git.nix
     ./programs/zsh.nix
+    ./programs/npm.nix
     ./programs/home-manager.nix
     ./services/gpg-agent.nix
     ./services/syncthing.nix
