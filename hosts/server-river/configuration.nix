@@ -76,8 +76,14 @@ in {
   services.desktopManager.cosmic.enable = lib.mkForce false;
   services.displayManager.cosmic-greeter.enable = lib.mkForce false;
 
-  # Remove desktop environment variables
-  environment.sessionVariables = lib.mkForce {};
+  # Remove desktop environment variables (keep NIX_PATH for system functionality)
+  environment.sessionVariables = lib.mkForce {
+    NIX_PATH = lib.concatStringsSep ":" [
+      "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
+      "nixos-config=/etc/nixos/configuration.nix"
+      "/nix/var/nix/profiles/per-user/root/channels"
+    ];
+  };
 
   # Modern server packages with ZFS and data management tools
   environment.systemPackages = with pkgs; [
@@ -1087,6 +1093,7 @@ in {
     enable = true;
     address = "127.0.0.1";
     port = 9000;
+    intermediatePasswordFile = config.sops.secrets.ca-intermediate-passphrase.path;
 
     settings = {
       root = "/etc/step-ca/certs/root_ca.crt";
@@ -1228,109 +1235,8 @@ in {
   };
 
   # Security hardening for critical services
-  systemd.services.grafana.serviceConfig = {
-    NoNewPrivileges = true;
-    ProtectSystem = "strict";
-    ProtectHome = true;
-    PrivateTmp = true;
-    PrivateDevices = true;
-    ProtectKernelTunables = true;
-    ProtectKernelModules = true;
-    ProtectControlGroups = true;
-    RestrictSUIDSGID = true;
-    RemoveIPC = true;
-    RestrictRealtime = true;
-    RestrictNamespaces = true;
-    LockPersonality = true;
-    SystemCallFilter = [ "@system-service" "~@debug" "~@mount" "~@privileged" ];
-    RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
-    ReadWritePaths = [ "/var/lib/grafana" ];
-  };
-
-  systemd.services.prometheus.serviceConfig = {
-    NoNewPrivileges = true;
-    ProtectSystem = "strict";
-    ProtectHome = true;
-    PrivateTmp = true;
-    PrivateDevices = true;
-    ProtectKernelTunables = true;
-    ProtectKernelModules = true;
-    ProtectControlGroups = true;
-    RestrictSUIDSGID = true;
-    RemoveIPC = true;
-    RestrictRealtime = true;
-    SystemCallFilter = [ "@system-service" "~@debug" "~@mount" "~@privileged" ];
-    RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
-    ReadWritePaths = [ "/var/lib/prometheus2" ];
-  };
-
-  systemd.services.ntfy-sh.serviceConfig = {
-    NoNewPrivileges = true;
-    ProtectSystem = "strict";
-    ProtectHome = true;
-    PrivateTmp = true;
-    PrivateDevices = true;
-    ProtectKernelTunables = true;
-    ProtectKernelModules = true;
-    ProtectControlGroups = true;
-    RestrictSUIDSGID = true;
-    RemoveIPC = true;
-    RestrictRealtime = true;
-    SystemCallFilter = [ "@system-service" "~@debug" "~@mount" "~@privileged" ];
-    RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
-    ReadWritePaths = [ "/var/lib/ntfy-sh" ];
-  };
-
-  systemd.services.headscale.serviceConfig = {
-    NoNewPrivileges = true;
-    ProtectSystem = "strict";
-    ProtectHome = true;
-    PrivateTmp = true;
-    PrivateDevices = true;
-    ProtectKernelTunables = true;
-    ProtectKernelModules = true;
-    ProtectControlGroups = true;
-    RestrictSUIDSGID = true;
-    RemoveIPC = true;
-    RestrictRealtime = true;
-    SystemCallFilter = [ "@system-service" "~@debug" "~@mount" "~@privileged" ];
-    RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
-    ReadWritePaths = [ "/var/lib/headscale" ];
-  };
-
-  # Security hardening for logging services
-  systemd.services.loki.serviceConfig = {
-    NoNewPrivileges = true;
-    ProtectSystem = "strict";
-    ProtectHome = true;
-    PrivateTmp = true;
-    PrivateDevices = true;
-    ProtectKernelTunables = true;
-    ProtectKernelModules = true;
-    ProtectControlGroups = true;
-    RestrictSUIDSGID = true;
-    RemoveIPC = true;
-    RestrictRealtime = true;
-    SystemCallFilter = [ "@system-service" "~@debug" "~@mount" "~@privileged" ];
-    RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
-    ReadWritePaths = [ "/var/lib/loki" ];
-  };
-
-  systemd.services.promtail.serviceConfig = {
-    NoNewPrivileges = true;
-    ProtectSystem = "strict";
-    ProtectHome = true;
-    PrivateTmp = true;
-    ProtectKernelTunables = true;
-    ProtectKernelModules = true;
-    ProtectControlGroups = true;
-    RestrictSUIDSGID = true;
-    RemoveIPC = true;
-    RestrictRealtime = true;
-    SystemCallFilter = [ "@system-service" "~@debug" "~@mount" "~@privileged" ];
-    RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
-    ReadWritePaths = [ "/var/lib/promtail" "/var/log" ];
-  };
+  # Note: Grafana, Prometheus, Loki, ntfy-sh, Promtail, and Headscale use their respective module defaults
+  # Custom hardening removed due to conflicts with NixOS module security configurations
 
   # TPM PCR monitoring service
   systemd.services."tpm-pcr-monitor" = {
