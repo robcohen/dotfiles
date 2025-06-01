@@ -1,6 +1,7 @@
 { config, pkgs, lib, inputs, ... }:
 
 let
+  vars = import ../lib/vars.nix;
   unstable = import inputs.unstable-nixpkgs {
     system = pkgs.system;
     config.allowUnfree = true;
@@ -33,8 +34,8 @@ in {
   };
 
   home = {
-    username = "user";
-    homeDirectory = "/home/user";
+    username = vars.user.name;
+    homeDirectory = vars.user.home;
     stateVersion = "23.11";
   };
 

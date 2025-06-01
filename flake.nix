@@ -15,7 +15,7 @@
     let
       system = "x86_64-linux";
 
-      unstable-patched = import unstable-nixpkgs {
+      cosmic = import unstable-nixpkgs {
         inherit system;
         overlays = [ nixos-cosmic.overlays.default ];
       };
@@ -25,7 +25,7 @@
         config.allowUnfree = true;
       };
 
-      mkHomeConfig = hostname: home-manager.lib.homeManagerConfiguration {
+      mkHomeConfig = home-manager.lib.homeManagerConfiguration {
         pkgs = stable-nixpkgs.legacyPackages.${system};
         extraSpecialArgs = {
           inherit inputs unstable;
@@ -51,7 +51,7 @@
           inherit system;
           specialArgs = {
             inherit inputs;
-            unstable = unstable-patched;
+            unstable = cosmic;
           };
           modules = [
             nixos-cosmic.nixosModules.default
@@ -59,13 +59,53 @@
             sops-nix.nixosModules.sops
           ];
         };
+
+        server-river = stable-nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = {
+            inherit inputs;
+            unstable = stable-nixpkgs.legacyPackages.${system};
+          };
+          modules = [
+            ./hosts/server-river/configuration.nix
+            sops-nix.nixosModules.sops
+          ];
+        };
       };
 
       homeConfigurations = {
-        "user@slax" = mkHomeConfig "slax";
-        "user@brix" = mkHomeConfig "brix";
+        "user@slax" = mkHomeConfig;
+        "user@brix" = mkHomeConfig;
+        "user@server-river" = mkHomeConfig;
       };
 
       formatter.${system} = stable-nixpkgs.legacyPackages.${system}.nixpkgs-fmt;
+
+      # Infrastructure tests
+      checks.${system} = {
+        server-river-test = import ./tests/server-river-test.nix {
+          inherit system;
+          pkgs = stable-nixpkgs.legacyPackages.${system};
+        };
+      };
+
+      # Development shell with testing tools
+      devShells.${system}.default = stable-nixpkgs.legacyPackages.${system}.mkShell {
+        buildInputs = with stable-nixpkgs.legacyPackages.${system}; [
+          nixpkgs-fmt
+          sops
+          age
+          # Testing tools
+          nixos-test-driver
+        ];
+        
+        shellHook = ''
+          echo "🧪 NixOS Infrastructure Development Environment"
+          echo "Available commands:"
+          echo "  nix flake check          - Run all tests"
+          echo "  nix build .#checks.x86_64-linux.server-river-test  - Run specific test"
+          echo "  sops secrets.yaml        - Edit secrets"
+        '';
+      };
     };
 }

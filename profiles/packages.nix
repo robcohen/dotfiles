@@ -17,6 +17,8 @@ let
     kitty dmidecode dig libfido2 jq opensc pcsctools ccid
     pavucontrol pulseaudio-ctl easyeffects spotify
     pasystray kdePackages.plasma-pa carla slack
+    # User CLI and development tools
+    llama-cpp htop btop ripgrep fd yq tree
   ];
 
   unstableApps = with unstable; [

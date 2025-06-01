@@ -1,35 +1,23 @@
 # hosts/brix/configuration.nix
 { config, pkgs, lib, unstable, inputs, ... }:
-{
+
+let
+  vars = import ../../lib/vars.nix;
+in {
   imports = [
     ./hardware-configuration.nix
+    ../common/base.nix
+    ../common/security.nix
   ];
 
-  nixpkgs = {
-    overlays = [ ];
-    config.allowUnfree = true;
-  };
-
-  nix.registry = {
-    nixpkgs.flake = inputs.stable-nixpkgs;
-    unstable.flake = inputs.unstable-nixpkgs;
-  };
-
-  nix.settings = {
-    trusted-users = [ "root" "user" ];
-    experimental-features = "nix-command flakes";
-    auto-optimise-store = true;
-    substituters = [ "https://cosmic.cachix.org" ];
-    trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
-      };
 
   networking.hostName = "brix";
-  networking.networkmanager.enable = true;
-  networking.firewall.allowedTCPPorts = [ 8384 22000 ];
-  networking.firewall.allowedUDPPorts = [ 22000 21027 ];
+  networking.networkmanager = {
+    enable = true;
+    wifi.macAddress = "random";
+    ethernet.macAddress = "random";
+  };
 
-  services.automatic-timezoned.enable = true;
-  services.geoclue2.enable = true;
 
   services.udev.extraRules = ''
     ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/backlight/%k/brightness"
@@ -37,17 +25,17 @@
   '';
 
   hardware.bluetooth.enable = true;
-  hardware.bluetooth.powerOnBoot = true;
-
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    pulse.enable = true;
-    jack.enable = true;
+  hardware.bluetooth.powerOnBoot = false;
+  hardware.bluetooth.settings.General = {
+    ControllerMode = "bredr";
+    JustWorksRepairing = "never";
+    Privacy = "device";
   };
+
 
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = with pkgs; [ linux-firmware sof-firmware ];
+  hardware.cpu.intel.updateMicrocode = true;
   hardware.ledger.enable = true;
   hardware.graphics = {
     enable = true;
@@ -63,77 +51,158 @@
   boot.kernelPackages = unstable.linuxPackages_latest;
   boot.kernelModules = [ "i915" ];
   boot.kernelParams = [
-    "acpi_enforce_resources=lax"
     "iwlwifi.power_save=0"
     "i915.enable_psr=0"
+    "slab_nomerge"           # Prevent heap exploitation
+    "init_on_alloc=1"        # Zero memory on allocation
+    "init_on_free=1"         # Zero memory on free
+    "page_alloc.shuffle=1"   # Randomize page allocator
+    "fwupd.verbose=1"        # Verbose firmware logging
+    "efi=debug"              # EFI debugging
+    "lockdown=confidentiality" # Kernel lockdown mode
   ];
   boot.tmp.useTmpfs = true;
 
   hardware.logitech.wireless.enable = true;
   hardware.logitech.wireless.enableGraphical = true;
 
-  boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot = {
+    enable = true;
+    editor = false;
+    consoleMode = "0";
+    configurationLimit = 10;  # Limit boot entries
+  };
   boot.loader.efi.canTouchEfiVariables = true;
 
   systemd.packages = [ pkgs.observatory ];
   systemd.services.monitord.wantedBy = [ "multi-user.target" ];
 
-  virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd = {
+    enable = true;
+    allowedBridges = [ "virbr0" ];
+    qemu.swtpm.enable = true;
+  };
+  virtualisation.waydroid.enable = true;
   programs.virt-manager.enable = true;
 
   virtualisation.podman = {
     enable = true;
     dockerCompat = true;
     dockerSocket.enable = true;
-    defaultNetwork.settings.dns_enabled = true;
+    defaultNetwork.settings = {
+      dns_enabled = true;
+      ipv6_enabled = false;
+    };
   };
 
   swapDevices = [{
-    device = "/swapfile";
-    size = 32 * 1024;
+    device = vars.hosts.brix.swapPath;
+    size = vars.hosts.brix.swapSize;
   }];
 
-  programs.zsh.enable = true;
+  users.users.${vars.user.name}.extraGroups = ["libvirtd" "adbusers"];
 
-  users.users.user = {
-    isNormalUser = true;
-    shell = pkgs.zsh;
-    extraGroups = ["wheel" "networkmanager" "input" "video" "libvirtd" "adbusers"];
-  };
+  environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
 
-  i18n.defaultLocale = "en_US.UTF-8";
-
-  environment.sessionVariables = {
-    NIXOS_OZONE_WL = "1";
-    COSMIC_DATA_CONTROL_ENABLED = 1;
-  };
-
-  environment.variables = {
-    LIBVA_DRIVER_NAME = "iHD";
-    VDPAU_DRIVER = "va_gl";
-    __GLX_VENDOR_LIBRARY_NAME = "mesa";
-  };
-
-  services.desktopManager.cosmic.enable = true;
-  services.displayManager.cosmic-greeter.enable = true;
 
   environment.systemPackages = with pkgs; [
-    wget vim git podman-compose libimobiledevice ifuse
-    wineWowPackages.waylandFull winetricks
+    # Container and device management
+    podman-compose libimobiledevice ifuse
+    # Graphics and hardware tools (system-level)
     vulkan-tools vulkan-loader vulkan-validation-layers
     libva-utils intel-gpu-tools mesa wayland wayland-utils wev efitools
+    # Hardware monitoring (requires root access)
+    lm_sensors smartmontools
   ];
+
+  # TPM firmware protection
+  security.tpm2 = {
+    enable = true;
+    tctiEnvironment.enable = true;
+  };
+
+  # Enhanced logging for firmware monitoring
+  services.journald.extraConfig = ''
+    SystemMaxUse=1G
+    ForwardToSyslog=yes
+  '';
+
+
+  # Sandbox Wine applications
+  programs.firejail.enable = true;
+
+  # SSD optimizations
+  services.fstrim.enable = true;  # Automatic TRIM
+  
+  # Container registry mirrors for faster pulls
+  virtualisation.containers.registries.search = [
+    "docker.io"
+    "quay.io"
+    "ghcr.io"
+  ];
+
+  # Automatic cleanup
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
+  
+  virtualisation.podman.autoPrune = {
+    enable = true;
+    dates = "weekly";
+    flags = [ "--all" ];
+  };
+
+  # Power management
+  services.tlp.enable = true;                         # Battery optimization
+  services.power-profiles-daemon.enable = false;     # Conflicts with TLP
+  services.thermald.enable = true;                    # Thermal management
+
+
+  # Better observability
+  services.smartd.enable = true;  # Automatic disk health checks
+  
+  # Network monitoring
+  services.vnstat.enable = true;  # Network usage statistics
+  
+  # Security auditing
+  security.auditd.enable = true;  # System call auditing
 
   programs.adb.enable = true;
   services.pcscd.enable = true;
   services.usbmuxd.enable = true;
 
-  services.dbus.enable = true;
-  services.ollama.enable = true;
-  services.fwupd.enable = true;
+  # USB device security
+  services.usbguard = {
+    enable = true;
+    rules = ''
+      allow with-interface equals { 03:00:01 03:01:01 } # HID devices (keyboard/mouse)
+      allow with-interface equals { 08:06:50 } # Mass storage
+      allow with-interface equals { 09:00:00 } # USB hubs
+      allow with-interface equals { 0e:01:01 } # Video devices
+      allow with-interface equals { 01:01:00 01:02:00 } # Audio devices
+      allow with-interface equals { ff:42:01 } # Android devices (ADB)
+    '';
+  };
 
-  services.gnome.gnome-keyring.enable = true;
-  security.pam.services.cosmic-greeter.enableGnomeKeyring = true;
+  services.fwupd = {
+    enable = true;
+    
+    # Verification & Sources
+    extraRemotes = [ "lvfs" ];  # Only official LVFS, not testing
+    
+    # Security settings
+    uefiCapsuleSettings = {
+      DisableCapsuleUpdateOnDisk = true;  # Prevent persistent backdoors
+      RequireESRTFwMgmt = true;          # Require ESRT firmware management
+    };
+    
+    # Package verification  
+    package = pkgs.fwupd.override {
+      enablePassim = true;    # P2P verification network
+    };
+  };
 
-  system.stateVersion = "23.11";
+
 }
