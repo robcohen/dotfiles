@@ -68,6 +68,7 @@ in {
   };
 
   networking.hostName = "server-river";
+  networking.hostId = "12345678"; # Required for ZFS - generate with: head -c 8 /etc/machine-id
   networking.networkmanager.enable = true;
 
   # Headless server optimizations
@@ -572,12 +573,6 @@ in {
         smart-notify info "Daily Backup" "Local backup completed successfully" "backup,daily"
       '';
 
-      failHook = ''
-        echo "Local backup FAILED at $(date)" >> /var/log/backup-notifications.log
-
-        # Critical failure - always push
-        smart-notify critical "Backup FAILED" "Daily local backup failed! Check logs immediately." "backup,failure"
-      '';
     };
 
     # 2. Offline drive backup (weekly rotation)
@@ -706,20 +701,7 @@ in {
   # RPC services required for NFS
   services.rpcbind.enable = true;
 
-  # ZFS monitoring and alerting
-  services.zfs.zed = {
-    enable = true;
-    settings = {
-      ZED_DEBUG_LOG = "/tmp/zed.debug.log";
-      ZED_EMAIL_ADDR = [ "root" ];
-      ZED_EMAIL_PROG = "mail";
-      ZED_EMAIL_OPTS = "-s '@SUBJECT@' @ADDRESS@";
-      ZED_NOTIFY_INTERVAL_SECS = 3600;
-      ZED_NOTIFY_VERBOSE = true;
-      ZED_USE_ENCLOSURE_LEDS = true;
-      ZED_SCRUB_AFTER_RESILVER = true;
-    };
-  };
+  # ZFS monitoring and alerting (ZED not available in this NixOS version)
 
   # Periodic data integrity checks
   systemd.services."zfs-monthly-scrub" = {
@@ -778,11 +760,18 @@ in {
         '';
       };
 
-      # Custom backup status exporter
+      # Custom backup status exporter (configured via Prometheus target)
       json = {
         enable = true;
         port = 9105;
-        url = "http://100.64.0.1:8080/backup-status";
+        configFile = pkgs.writeText "json-exporter-config.yml" ''
+          modules:
+            default:
+              metrics:
+              - name: backup_validation_success
+                path: $.validation_success
+                type: gauge
+        '';
       };
     };
 
@@ -1540,8 +1529,9 @@ in {
       domain = "sync.robcohen.dev";
       dnsProvider = "cloudflare";
       environmentFile = config.sops.secrets.cloudflare-api-key.path;
-      group = "headscale";
-      postRun = "systemctl reload headscale";
+      group = "nginx";
+      postRun = "systemctl reload nginx";
+      webroot = null; # Use DNS challenge, not webroot
     };
   };
 
@@ -1597,15 +1587,16 @@ in {
       };
 
       # DNS settings
-      dns_config = {
-        override_local_dns = true;
-        nameservers = [
-          "1.1.1.1"
-          "8.8.8.8"
-        ];
-        domains = [ ];
+      dns = {
         magic_dns = true;
         base_domain = "internal.robcohen.dev";
+        nameservers = {
+          global = [
+            "1.1.1.1"
+            "8.8.8.8"
+          ];
+        };
+        search_domains = [ ];
       };
 
       # Disable Tailscale's default DERP servers (optional)
