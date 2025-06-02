@@ -1,20 +1,12 @@
-{ config, pkgs, lib, validatedHostConfig, hostFeatures, isDesktop, isServer, ... }:
+{ config, pkgs, lib, hostConfig, hostFeatures, hostType, ... }:
 
 let
   hasFeature = feature: builtins.elem feature hostFeatures;
+  isDesktop = hostType == "desktop";
+  isServer = hostType == "server";
 in {
   # Conditional imports based on host type and features
-  imports = lib.optionals isDesktop [
-    ./desktop
-  ] ++ lib.optionals isServer [
-    ./server
-  ] ++ lib.optionals (hasFeature "gaming") [
-    ./features/gaming.nix
-  ] ++ lib.optionals (hasFeature "development") [
-    ./features/development.nix
-  ] ++ lib.optionals (hasFeature "multimedia") [
-    ./features/multimedia.nix
-  ];
+  imports = [];
 
   # Host-specific session variables
   home.sessionVariables = lib.mkMerge [

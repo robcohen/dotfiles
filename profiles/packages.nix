@@ -1,13 +1,9 @@
-{ config, pkgs, lib, unstable, ... }:
+{ config, pkgs, lib, unstable, hostConfig, hostFeatures, hostType, ... }:
 
 let
-  vars = import ../lib/vars.nix;
-  hostname = builtins.readFile /etc/hostname;
-  hostConfig = vars.hosts.${lib.strings.removeSuffix "\n" hostname} or {};
-  isDesktop = hostConfig.type or "desktop" == "desktop";
-  isServer = hostConfig.type or "desktop" == "server";
-  features = hostConfig.features or [];
-  hasFeature = feature: builtins.elem feature features;
+  hasFeature = feature: builtins.elem feature hostFeatures;
+  isDesktop = hostType == "desktop";
+  isServer = hostType == "server";
 
   # Core packages for all systems
   fonts = with pkgs; [

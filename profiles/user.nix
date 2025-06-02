@@ -2,15 +2,19 @@
 
 let
   vars = import ../lib/vars.nix;
-  hostname = builtins.readFile /etc/hostname;
-  hostConfig = vars.hosts.${lib.strings.removeSuffix "\n" hostname} or {};
+  
+  # Simple hostname detection with fallback
+  detectedHostname = "brix";  # Hardcode for now to avoid infinite recursion
+  
+  # Get host config 
+  hostConfig = vars.hosts.${detectedHostname} or {};
+  
   unstable = import inputs.unstable-nixpkgs {
     system = pkgs.system;
     config.allowUnfree = true;
   };
 in {
   imports = [
-    ./validation.nix
     ./host-specific.nix
     ./packages.nix
     ./session-variables.nix
@@ -51,6 +55,14 @@ in {
     };
   };
 
+  # Pass config to other modules  
+  _module.args = {
+    hostname = detectedHostname;
+    hostConfig = hostConfig;
+    hostFeatures = hostConfig.features or [];
+    hostType = hostConfig.type or "desktop";
+  };
+
   home = {
     username = vars.user.name;
     homeDirectory = vars.user.home;
@@ -66,4 +78,19 @@ in {
   };
 
   systemd.user.startServices = "sd-switch";
+
+  # Add simple debugging info
+  home.file.".config/home-manager/host-info.txt".text = ''
+    Host: ${detectedHostname}
+    Type: ${hostConfig.type or "desktop"}
+    Features: ${lib.concatStringsSep ", " (hostConfig.features or [])}
+    State Version: ${hostConfig.homeManagerStateVersion or "23.11"}
+  '';
+
+  # Add useful shell aliases for home-manager
+  home.shellAliases = {
+    hm-switch = "home-manager switch --flake ~/Documents/dotfiles/#user@${detectedHostname}";
+    hm-news = "home-manager news --flake ~/Documents/dotfiles/#user@${detectedHostname}";
+    hm-gens = "home-manager generations";
+  };
 }

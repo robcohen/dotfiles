@@ -1,8 +1,8 @@
-{ config, pkgs, lib, isDesktop, ... }:
+{ config, pkgs, lib, hostType, ... }:
 
 {
   # Desktop notification services
-  services = lib.mkIf isDesktop {
+  services = lib.mkIf (hostType == "desktop") {
     # Dunst notification daemon
     dunst = {
       enable = true;
