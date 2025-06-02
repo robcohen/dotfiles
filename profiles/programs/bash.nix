@@ -8,6 +8,10 @@
   programs.bash = { 
     enable = true;
     enableCompletion = true;
+    initExtra = ''
+      # Set GPG TTY for terminal operations
+      export GPG_TTY=$(tty)
+    '';
     shellAliases = {
       ls = "${pkgs.eza}/bin/eza";
       ll = "${pkgs.eza}/bin/eza -l";

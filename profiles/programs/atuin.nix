@@ -23,8 +23,6 @@
       common_prefix = ["sudo"];
       common_subcommands = ["build" "test" "run"];
       
-      # Key bindings
-      keymap_mode = "vim";
     };
   };
 }

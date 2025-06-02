@@ -45,6 +45,9 @@ in {
     ./services/syncthing.nix
     ./services/desktop-notifications.nix
     ./services/system-monitoring.nix
+    # Security modules (import after base configurations)
+    ./security/advanced-ssh.nix
+    ./security/advanced-gpg.nix
   ];
 
   nixpkgs = {
@@ -87,10 +90,48 @@ in {
     State Version: ${hostConfig.homeManagerStateVersion or "23.11"}
   '';
 
-  # Add useful shell aliases for home-manager
+
+  # Add .local/bin to PATH
+  home.sessionPath = [ "$HOME/.local/bin" ];
+
+  # Security tools
+  home.packages = with pkgs; [
+    age               # Modern encryption
+    sops              # Secrets operations
+    chkrootkit        # Rootkit scanner
+    lynis             # Security auditing tool
+    vulnix            # Nix vulnerability scanner
+    nmap              # Network scanner
+  ];
+
+  # Simple security scripts
+  home.file.".local/bin/security-scan" = {
+    text = ''
+      #!/usr/bin/env bash
+      echo "🔍 Basic Security Scan"
+      echo "===================="
+      echo ""
+      echo "📦 Checking for vulnerable packages..."
+      vulnix --system 2>/dev/null | head -5 || echo "No critical vulnerabilities found"
+      echo ""
+      echo "🌐 Checking open ports..."
+      nmap -sT localhost 2>/dev/null | grep open || echo "No open ports detected"
+      echo ""
+      echo "✅ Basic scan complete. Run 'lynis audit system' for detailed analysis."
+    '';
+    executable = true;
+  };
+
+  # Shell aliases
   home.shellAliases = {
+    # Home Manager
     hm-switch = "home-manager switch --flake ~/Documents/dotfiles/#user@${detectedHostname}";
     hm-news = "home-manager news --flake ~/Documents/dotfiles/#user@${detectedHostname}";
     hm-gens = "home-manager generations";
+    
+    # Security
+    security-scan = "~/.local/bin/security-scan";
+    security-audit = "lynis audit system";
+    rootkit-check = "sudo chkrootkit";
   };
 }

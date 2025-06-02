@@ -13,7 +13,6 @@ in {
     (lib.mkIf isServer {
       # Server-specific variables
       TERM = "xterm-256color";
-      EDITOR = "vim";  # Prefer vim on servers
     })
     (lib.mkIf (hasFeature "gaming") {
       # Gaming optimizations
