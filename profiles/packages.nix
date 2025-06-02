@@ -9,15 +9,36 @@ let
 
   systemUtils = with pkgs; [
     gnupg pinentry-gnome3 networkmanagerapplet
-    pciutils usbutils openssl binutils ffmpeg solaar ltunify
-    bluez light xdg-utils weston v4l-utils mpv bluetuith
-    home-assistant-cli pdftk seahorse age sops vulnix rymdport
-    anki cmake octaveFull quickemu quickgui distrobox
-    virt-viewer niv vim eza bat grc wget unzip ranger
-    kitty dmidecode dig libfido2 jq opensc pcsctools ccid
+    pciutils usbutils openssl binutils ffmpeg 
+    bluez light xdg-utils weston v4l-utils mpv
+    home-assistant-cli pdftk seahorse age sops vulnix
+    cmake octaveFull quickemu quickgui distrobox
+    virt-viewer niv vim dmidecode dig libfido2 jq 
+    opensc pcsctools ccid
+  ];
+
+  hardwareUtils = with pkgs; [
+    solaar ltunify bluetuith
+  ];
+
+  audioVideoApps = with pkgs; [
     pavucontrol pulseaudio-ctl easyeffects spotify
-    pasystray kdePackages.plasma-pa carla slack
-    # User CLI and development tools
+    pasystray kdePackages.plasma-pa carla
+  ];
+
+  terminalApps = with pkgs; [
+    kitty eza bat grc wget unzip ranger
+  ];
+
+  communicationApps = with pkgs; [
+    slack
+  ];
+
+  archiveApps = with pkgs; [
+    rymdport anki
+  ];
+
+  cliDevTools = with pkgs; [
     llama-cpp htop btop ripgrep fd yq tree
   ];
 
@@ -31,5 +52,7 @@ let
     radicle-node devenv qflipper cachix
   ];
 in {
-  home.packages = fonts ++ systemUtils ++ unstableApps;
+  home.packages = fonts ++ systemUtils ++ hardwareUtils ++ audioVideoApps ++ 
+                  terminalApps ++ communicationApps ++ archiveApps ++ 
+                  cliDevTools ++ unstableApps;
 }

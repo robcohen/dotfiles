@@ -53,7 +53,12 @@ echo "🛠  Rebuilding NixOS..."
 sudo nixos-rebuild switch --flake ~/Documents/dotfiles/#$HOSTNAME
 
 echo "🏠 Switching Home Manager config..."
-home-manager switch --flake ~/Documents/dotfiles/#$CURRENT_USER@$HOSTNAME
+if ! command -v home-manager &> /dev/null; then
+  echo "  📦 Home Manager not found, bootstrapping..."
+  nix run --no-write-lock-file github:nix-community/home-manager/release-25.05 -- switch --flake ~/Documents/dotfiles/#$CURRENT_USER@$HOSTNAME
+else
+  home-manager switch --flake ~/Documents/dotfiles/#$CURRENT_USER@$HOSTNAME
+fi
 
 echo "✅ Update complete! Home Manager News:"
 home-manager news --flake ~/Documents/dotfiles/#$CURRENT_USER@$HOSTNAME

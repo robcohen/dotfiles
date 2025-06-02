@@ -16,7 +16,7 @@ programs.git = {
 #    signing.key = "";
 #    signing.signByDefault = true;
     extraConfig = {
-      core.editor = "hx";
+      core.editor = "vim";
       # Cache git credentials for 15 minutes
       credential.helper = "cache";
       # Sign all commits using ssh key
