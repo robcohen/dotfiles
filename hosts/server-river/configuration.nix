@@ -117,7 +117,7 @@ in {
     # Management scripts from external files
     (writeShellScriptBin "ca-install-from-airgap" (builtins.readFile ./scripts/ca-install-from-airgap.sh))
     (writeShellScriptBin "ca-status" (builtins.readFile ./scripts/ca-status.sh))
-    (writeShellScriptBin "tmp-status" (builtins.readFile ./scripts/tpm-status.sh))
+    (writeShellScriptBin "tpm-status" (builtins.readFile ./scripts/tpm-status.sh))
     (writeShellScriptBin "tpm-seal-ca-key" (builtins.readFile ./scripts/tpm-seal-ca-key.sh))
     (writeShellScriptBin "security-status" (builtins.readFile ./scripts/security-status.sh))
     (writeShellScriptBin "backup-validate" (builtins.readFile ./scripts/backup-validate.sh))

@@ -63,6 +63,15 @@ in {
   ];
   boot.tmp.useTmpfs = true;
 
+  # Plymouth boot splash screen
+  boot.plymouth = {
+    enable = true;
+    theme = "breeze";
+  };
+
+  # Enable systemd in initrd for Plymouth LUKS integration
+  boot.initrd.systemd.enable = true;
+
   hardware.logitech.wireless.enable = true;
   hardware.logitech.wireless.enableGraphical = true;
 
@@ -133,7 +142,7 @@ in {
 
   # SSD optimizations
   services.fstrim.enable = true;  # Automatic TRIM
-  
+
   # Container registry mirrors for faster pulls
   virtualisation.containers.registries.search = [
     "docker.io"
@@ -147,7 +156,7 @@ in {
     dates = "weekly";
     options = "--delete-older-than 30d";
   };
-  
+
   virtualisation.podman.autoPrune = {
     enable = true;
     dates = "weekly";
@@ -162,10 +171,10 @@ in {
 
   # Better observability
   services.smartd.enable = true;  # Automatic disk health checks
-  
+
   # Network monitoring
   services.vnstat.enable = true;  # Network usage statistics
-  
+
   # Security auditing
   security.auditd.enable = true;  # System call auditing
 
@@ -188,20 +197,17 @@ in {
 
   services.fwupd = {
     enable = true;
-    
-    # Verification & Sources
-    extraRemotes = [ "lvfs" ];  # Only official LVFS, not testing
-    
+
+    # Verification & Sources - only official LVFS, no testing or P2P
+    extraRemotes = [ "lvfs" ];
+
     # Security settings
     uefiCapsuleSettings = {
       DisableCapsuleUpdateOnDisk = true;  # Prevent persistent backdoors
       RequireESRTFwMgmt = true;          # Require ESRT firmware management
     };
-    
-    # Package verification  
-    package = pkgs.fwupd.override {
-      enablePassim = true;    # P2P verification network
-    };
+
+    # Use default package (no P2P firmware sharing for security)
   };
 
 
