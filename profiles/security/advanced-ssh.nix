@@ -17,7 +17,6 @@
       PermitLocalCommand no
       
       # Connection security
-      GSSAPIAuthentication no
       HostbasedAuthentication no
       PubkeyAuthentication yes
       ChallengeResponseAuthentication no
