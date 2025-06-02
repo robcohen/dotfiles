@@ -1,9 +1,11 @@
 { inputs, pkgs, config, ... }:
 {
-  programs.direnv = {
+  programs.zoxide = {
     enable = true;
-    nix-direnv.enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
+    options = [
+      "--cmd cd"  # Use 'cd' command instead of 'z'
+    ];
   };
 }

@@ -1,8 +1,7 @@
 { inputs, pkgs, config, ... }:
 {
-  programs.direnv = {
+  programs.dircolors = {
     enable = true;
-    nix-direnv.enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
   };

@@ -3,6 +3,8 @@
   programs.zsh = {
     enable = true;
     enableCompletion = true;
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
     shellAliases = {
       ls = "${pkgs.eza}/bin/eza";
       ll = "${pkgs.eza}/bin/eza -l";
@@ -10,14 +12,7 @@
       lt = "${pkgs.eza}/bin/eza --tree";
       lla = "${pkgs.eza}/bin/eza -la";
       cat = "${pkgs.bat}/bin/bat";
+      fcode = "env -u WAYLAND_DISPLAY code";
     };
-  };
-
-  programs.direnv = {
-    enable = true;
-    nix-direnv = {
-      enable = true;
-    };
-    enableZshIntegration = true;
   };
 }

@@ -21,22 +21,22 @@
       };
       font = {
         normal = {
-          family = "monospace";
-          style = "regular";
+          family = "Source Code Pro";
+          style = "Regular";
         };
         bold = {
-          family = "monospace";
-          style = "regular";
+          family = "Source Code Pro";
+          style = "Bold";
         };
         italic = {
-          family = "monospace";
-          style = "regular";
+          family = "Source Code Pro";
+          style = "Italic";
         };
         bold_italic = {
-          family = "monospace";
-          style = "regular";
+          family = "Source Code Pro";
+          style = "Bold Italic";
         };
-        size = 14.00;
+        size = 14.0;
       };
       # colors = {
       #   primary = {
