@@ -9,7 +9,7 @@
 programs.git = {
       # Install git
       enable = true;
-      
+
     # Additional options for the git program
     package = pkgs.gitAndTools.gitFull; # Install git wiith all the optional extras
     userName = "robcohen";
@@ -28,7 +28,6 @@ programs.git = {
       gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
       # Use ssh-keygen directly instead of SSH agent for signing
       gpg.ssh.program = "ssh-keygen";
-      push = {
         autoSetupRemote = true;
       };
     };
