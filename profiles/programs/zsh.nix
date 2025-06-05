@@ -5,7 +5,7 @@
     enableCompletion = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
-    initExtra = ''
+    initContent = ''
       # Set GPG TTY for terminal operations
       export GPG_TTY=$(tty)
     '';

@@ -25,7 +25,7 @@ in {
   '';
 
   hardware.bluetooth.enable = true;
-  hardware.bluetooth.powerOnBoot = false;
+  hardware.bluetooth.powerOnBoot = true;
   hardware.bluetooth.settings.General = {
     ControllerMode = "bredr";
     JustWorksRepairing = "never";

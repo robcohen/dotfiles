@@ -45,6 +45,10 @@ fi
 echo "✅ No upstream release changes. Continuing update..."
 echo ""
 
+# Prompt for sudo access upfront to avoid interruption during long operations
+echo "🔐 This script requires sudo access for NixOS rebuild..."
+sudo -v
+
 # Update
 echo "🔄 Updating Nix flake..."
 nix flake update

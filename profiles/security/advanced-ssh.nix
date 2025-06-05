@@ -10,14 +10,12 @@
       StrictHostKeyChecking ask
       VerifyHostKeyDNS yes
       
-      # Disable potentially insecure features
-      ForwardAgent no
+      # Note: ForwardAgent needed for SSH signing, so only disable for remote hosts
       ForwardX11 no
       ForwardX11Trusted no
       PermitLocalCommand no
       
       # Connection security
-      GSSAPIAuthentication no
       HostbasedAuthentication no
       PubkeyAuthentication yes
       ChallengeResponseAuthentication no
@@ -38,6 +36,13 @@
     
     # Host-specific security configurations
     matchBlocks = {
+      "localhost" = {
+        # Allow agent for local git signing
+        extraOptions = {
+          ForwardAgent = "yes";
+        };
+      };
+      
       "*.internal" = {
         # Internal network hosts
         user = "user";
@@ -51,10 +56,18 @@
       "github.com" = {
         # GitHub-specific security
         user = "git";
-        identityFile = "~/.ssh/id_ed25519";
+        identityFile = "~/.ssh/id_rsa";
         extraOptions = {
           StrictHostKeyChecking = "yes";
           VerifyHostKeyDNS = "yes";
+          ForwardAgent = "no";  # Disable for remote connections
+        };
+      };
+      
+      "*" = {
+        # Default settings for all other hosts
+        extraOptions = {
+          ForwardAgent = "no";  # Disable by default for security
         };
       };
       
