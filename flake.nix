@@ -1,7 +1,9 @@
 {
-  description = "Rob Cohen nix config";
+  description = "NixOS configuration with Home Manager";
 
   inputs = {
+    # Version pinning: These versions should match any infrastructure repos
+    # that import tools from this dotfiles repository
     stable-nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     unstable-nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager/release-25.05";
@@ -9,101 +11,187 @@
     hardware.url = "github:nixos/nixos-hardware";
     sops-nix.url = "github:Mic92/sops-nix";
     nixos-cosmic.url = "github:lilyinstarlight/nixos-cosmic";
+    nixos-generators.url = "github:nix-community/nixos-generators";
+    nixos-generators.inputs.nixpkgs.follows = "stable-nixpkgs";
   };
 
-  outputs = inputs@{ self, stable-nixpkgs, unstable-nixpkgs, home-manager, sops-nix, nixos-cosmic, ... }:
+  outputs = inputs@{ self, stable-nixpkgs, unstable-nixpkgs, home-manager, sops-nix, nixos-cosmic, nixos-generators, ... }:
     let
       system = "x86_64-linux";
-
-      cosmic = import unstable-nixpkgs {
-        inherit system;
-        overlays = [ nixos-cosmic.overlays.default ];
-      };
-
-      unstable = import inputs.unstable-nixpkgs {
+      
+      # Consolidated package sets with consistent configuration
+      unstable = import unstable-nixpkgs {
         inherit system;
         config.allowUnfree = true;
       };
+      
+      unstable-cosmic = import unstable-nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+        overlays = [ nixos-cosmic.overlays.default ];
+      };
+      
+      stable = stable-nixpkgs.legacyPackages.${system};
+      
+      # Common specialArgs to reduce duplication
+      commonSpecialArgs = {
+        inherit inputs unstable;
+      };
 
       mkHomeConfig = home-manager.lib.homeManagerConfiguration {
-        pkgs = stable-nixpkgs.legacyPackages.${system};
-        extraSpecialArgs = {
-          inherit inputs unstable;
-        };
+        pkgs = stable;
+        extraSpecialArgs = commonSpecialArgs;
         modules = [ ./profiles/user.nix ];
       };
     in {
       nixosConfigurations = {
         slax = stable-nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = {
-            inherit inputs;
-            unstable = unstable-nixpkgs.legacyPackages.${system};
-          };
+          specialArgs = commonSpecialArgs;
           modules = [
             nixos-cosmic.nixosModules.default
             ./hosts/slax/configuration.nix
             sops-nix.nixosModules.sops
+            ./modules/sops.nix
           ];
         };
 
         brix = stable-nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = {
-            inherit inputs;
-            unstable = cosmic;
+          specialArgs = commonSpecialArgs // {
+            unstable = unstable-cosmic;
           };
           modules = [
             nixos-cosmic.nixosModules.default
             ./hosts/brix/configuration.nix
             sops-nix.nixosModules.sops
+            ./modules/sops.nix
           ];
         };
 
-        server-river = stable-nixpkgs.lib.nixosSystem {
-          inherit system;
-          specialArgs = {
-            inherit inputs;
-            unstable = stable-nixpkgs.legacyPackages.${system};
-          };
-          modules = [
-            ./hosts/server-river/configuration.nix
-            sops-nix.nixosModules.sops
-          ];
-        };
       };
 
       homeConfigurations = {
         "user@slax" = mkHomeConfig;
         "user@brix" = mkHomeConfig;
-        "user@server-river" = mkHomeConfig;
       };
 
-      formatter.${system} = stable-nixpkgs.legacyPackages.${system}.nixpkgs-fmt;
+      formatter.${system} = stable.nixpkgs-fmt;
 
       # Infrastructure tests
-      checks.${system} = {
-        server-river-test = import ./tests/server-river-test.nix {
-          inherit system;
-          pkgs = stable-nixpkgs.legacyPackages.${system};
+      checks.${system} = {};
+
+      # ISO/VM image generation
+      packages.${system} = 
+        let
+          # Function to generate ISO/VM for any host
+          mkImage = hostConfig: format: nixos-generators.nixosGenerate {
+            inherit system format;
+            specialArgs = commonSpecialArgs;
+            modules = [ hostConfig ];
+          };
+          
+          # Function to generate live ISO with SSH access
+          mkLiveISO = hostConfig: nixos-generators.nixosGenerate {
+            inherit system;
+            specialArgs = commonSpecialArgs;
+            modules = [
+              hostConfig
+              ./modules/sops.nix
+              ({ config, lib, ... }: {
+                services.openssh.enable = true;
+                users.users.root.openssh.authorizedKeys.keys = 
+                  lib.strings.splitString "\n" (lib.strings.removeSuffix "\n" 
+                    (builtins.readFile config.sops.secrets."ssh/emergencyKeys".path));
+                # Disable graphical services for live ISO
+                services.desktopManager.cosmic.enable = false;
+                services.displayManager.cosmic-greeter.enable = false;
+              })
+            ];
+            format = "iso";
+          };
+        in {
+          # Shared infrastructure tools (for other repos to import)
+          infrastructure-tools = import ./packages/infrastructure-tools.nix { 
+            pkgs = stable; 
+            lib = stable.lib; 
+          };
+          
+          # Live ISOs for each host
+          slax-live-iso = mkLiveISO ./hosts/slax/configuration.nix;
+          brix-live-iso = mkLiveISO ./hosts/brix/configuration.nix;
+          
+          # VM images for each host
+          slax-vm = mkImage ./hosts/slax/configuration.nix "vm";
+          brix-vm = mkImage ./hosts/brix/configuration.nix "vm";
+          
+          # Alternative formats
+          slax-qcow2 = mkImage ./hosts/slax/configuration.nix "qcow2";
+          brix-qcow2 = mkImage ./hosts/brix/configuration.nix "qcow2";
+          
+          # Generic emergency recovery ISO
+          emergency-iso = nixos-generators.nixosGenerate {
+            inherit system;
+            specialArgs = commonSpecialArgs;
+            modules = [
+              ./hosts/common/base.nix
+              ./modules/sops.nix
+              ({ config, lib, ... }: {
+                services.openssh.enable = true;
+                users.users.root.openssh.authorizedKeys.keys = 
+                  lib.strings.splitString "\n" (lib.strings.removeSuffix "\n" 
+                    (builtins.readFile config.sops.secrets."ssh/emergencyKeys".path));
+                services.desktopManager.cosmic.enable = false;
+                services.displayManager.cosmic-greeter.enable = false;
+              })
+            ];
+            format = "iso";
+          };
         };
-      };
 
       # Development shell with testing tools
-      devShells.${system}.default = stable-nixpkgs.legacyPackages.${system}.mkShell {
-        buildInputs = with stable-nixpkgs.legacyPackages.${system}; [
+      devShells.${system}.default = stable.mkShell {
+        buildInputs = with stable; [
           nixpkgs-fmt
           sops
           age
           # Testing tools
-          nixos-test-driver
+          qemu
         ];
         
         shellHook = ''
+          # Add scripts to PATH
+          export PATH="$PWD/assets/scripts:$PATH"
+          
+          # Create convenient aliases
+          alias check-versions="$PWD/assets/scripts/check-versions.sh"
+          alias update-system="$PWD/assets/scripts/update-system.sh"
+          alias update-home-manager="$PWD/assets/scripts/update-home-manager.sh"
+          alias full-update="$PWD/assets/scripts/full-update.sh"
+          
           echo "🧪 NixOS Infrastructure Development Environment"
           echo "Available commands:"
           echo "  nix flake check          - Run all tests"
-          echo "  nix build .#checks.x86_64-linux.server-river-test  - Run specific test"
+          echo ""
+          echo "System update scripts:"
+          echo "  check-versions           - Check for upstream releases"
+          echo "  update-system            - Update flake and rebuild NixOS"
+          echo "  update-home-manager      - Update Home Manager configuration"
+          echo "  full-update             - Run complete system update"
+          echo ""
+          echo "Build ISOs for specific hosts:"
+          echo "  nix build .#slax-live-iso"
+          echo "  nix build .#brix-live-iso"
+          echo "  nix build .#emergency-iso"
+          echo ""
+          echo "Build VM images:"
+          echo "  nix build .#slax-vm"
+          echo "  nix build .#brix-vm"
+          echo ""
+          echo "Build QCOW2 images:"
+          echo "  nix build .#slax-qcow2"
+          echo "  nix build .#brix-qcow2"
+          echo ""
           echo "  sops secrets.yaml        - Edit secrets"
         '';
       };

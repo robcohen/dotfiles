@@ -1,6 +1,10 @@
 { config, pkgs, lib, ... }:
 
 {
+  imports = [
+    ./infrastructure.nix      # Infrastructure tools
+    ./direnv-infrastructure.nix  # Auto-loading infrastructure environment
+  ];
   # Development-specific programs
   programs = {
     # Enhanced direnv already configured

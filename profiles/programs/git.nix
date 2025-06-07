@@ -4,7 +4,10 @@
   config,
   lib,
   ...
-}: {
+}: 
+let
+  vars = import ../../lib/vars.nix;
+in {
 
 programs.git = {
       # Install git
@@ -12,8 +15,8 @@ programs.git = {
 
     # Additional options for the git program
     package = pkgs.gitAndTools.gitFull; # Install git wiith all the optional extras
-    userName = "robcohen";
-    userEmail = "3231868+robcohen@users.noreply.github.com";
+    userName = vars.user.githubUsername;
+    userEmail = vars.user.email;
 #    signing.key = "";
 #    signing.signByDefault = true;
     extraConfig = {
@@ -23,11 +26,12 @@ programs.git = {
       # Sign all commits using ssh key (only if key exists)
       commit.gpgsign = true;
       gpg.format = "ssh";
-      user.signingkey = "~/.ssh/id_rsa.pub";
+      user.signingkey = vars.user.signingKey;
       # SSH signature verification
       gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
       # Use ssh-keygen directly instead of SSH agent for signing
       gpg.ssh.program = "ssh-keygen";
+      push = {
         autoSetupRemote = true;
       };
     };
@@ -35,8 +39,8 @@ programs.git = {
 
   # Create SSH allowed signers file for local verification
   home.activation.createAllowedSigners = ''
-    if [[ -f ~/.ssh/id_rsa.pub ]]; then
-      echo "3231868+robcohen@users.noreply.github.com $(cat ~/.ssh/id_rsa.pub)" > ~/.ssh/allowed_signers
+    if [[ -f ${vars.user.signingKey} ]]; then
+      echo "${vars.user.email} $(cat ${vars.user.signingKey})" > ~/.ssh/allowed_signers
       chmod 644 ~/.ssh/allowed_signers
     fi
   '';

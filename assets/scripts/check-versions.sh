@@ -1,23 +1,18 @@
 #!/run/current-system/sw/bin/bash
 
-CURRENT_USER=$(whoami)
-HOSTNAME=$(hostname)
+set -e
 
-# Extract pinned versions
 PINNED_NIXOS=$(grep '^\s*stable-nixpkgs\.url' flake.nix | sed -E 's/.*nixos-([0-9]+\.[0-9]+).*/\1/')
 PINNED_HM=$(grep 'home-manager.url' flake.nix | sed -E 's/.*release-([0-9]+\.[0-9]+).*/\1/')
 
 echo "🔍 Checking latest NixOS and Home Manager stable releases…"
 
-# Get latest nixos tag
-# Get latest nixos release branch
 LATEST_NIXOS=$(git ls-remote --heads https://github.com/NixOS/nixpkgs \
   | grep -o 'refs/heads/nixos-[0-9]\{2\}\.[0-9]\{2\}' \
   | sed 's|refs/heads/nixos-||' \
   | sort -V \
   | tail -n1)
 
-# Get latest home-manager release branch
 LATEST_HM=$(git ls-remote --heads https://github.com/nix-community/home-manager \
   | grep -o 'refs/heads/release-[0-9]\{2\}\.[0-9]\{2\}' \
   | sed 's|refs/heads/release-||' \
@@ -42,27 +37,4 @@ if [[ "$PINNED_NIXOS" != "$LATEST_NIXOS" || "$PINNED_HM" != "$LATEST_HM" ]]; the
   exit 1
 fi
 
-echo "✅ No upstream release changes. Continuing update..."
-echo ""
-
-# Prompt for sudo access upfront to avoid interruption during long operations
-echo "🔐 This script requires sudo access for NixOS rebuild..."
-sudo -v
-
-# Update
-echo "🔄 Updating Nix flake..."
-nix flake update
-
-echo "🛠  Rebuilding NixOS..."
-sudo nixos-rebuild switch --flake ~/Documents/dotfiles/#$HOSTNAME
-
-echo "🏠 Switching Home Manager config..."
-if ! command -v home-manager &> /dev/null; then
-  echo "  📦 Home Manager not found, bootstrapping..."
-  nix run --no-write-lock-file github:nix-community/home-manager/release-25.05 -- switch --flake ~/Documents/dotfiles/#$CURRENT_USER@$HOSTNAME
-else
-  home-manager switch --flake ~/Documents/dotfiles/#$CURRENT_USER@$HOSTNAME
-fi
-
-echo "✅ Update complete! Home Manager News:"
-home-manager news --flake ~/Documents/dotfiles/#$CURRENT_USER@$HOSTNAME
+echo "✅ No upstream release changes detected."

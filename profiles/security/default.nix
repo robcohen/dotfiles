@@ -5,6 +5,7 @@
     ./advanced-gpg.nix
     ./advanced-ssh.nix  
     ./system-monitoring.nix
+    ./bip39-ssh-keygen.nix
   ];
 
   # Core security packages
@@ -20,6 +21,10 @@
     network-monitor = "~/.local/bin/network-monitor";
     gpg-verify = "~/.local/bin/gpg-verify";
     ssh-audit = "~/.local/bin/ssh-audit-local";
+    # BIP39 and TPM key management
+    bip39-keygen = "~/.local/bin/bip39-ssh-manager";
+    tpm-ssh-load = "ssh-add -s ${pkgs.tpm2-pkcs11}/lib/libtpm2_pkcs11.so";
+    tpm-ssh-list = "tpm2_ptool listkey";
   };
 
   # Security documentation
@@ -39,6 +44,13 @@
     - `ssh-audit` - SSH client security audit
     - `ssh-rotate-keys` - SSH key rotation helper
     - `secure-scp` - Secure file transfer with integrity checking
+    
+    ### BIP39 and TPM Key Management
+    - `bip39-keygen generate-mnemonic` - Generate new BIP39 mnemonic
+    - `bip39-keygen create-key` - Create SSH key from mnemonic
+    - `bip39-keygen store-in-tpm` - Store SSH key in TPM
+    - `tpm-ssh-load` - Load TPM keys into SSH agent
+    - `tmp-ssh-list` - List TPM-stored keys
     
     ## Security Maintenance
     

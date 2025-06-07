@@ -1,1 +1,24 @@
+# Nix build results
+result
+result-*
+
+# Personal secrets
+secrets.nix
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Legacy
 ACC*

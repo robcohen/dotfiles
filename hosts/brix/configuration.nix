@@ -27,10 +27,14 @@ in {
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
   hardware.bluetooth.settings.General = {
-    ControllerMode = "bredr";
-    JustWorksRepairing = "never";
+    ControllerMode = "dual";
+    JustWorksRepairing = "confirm";
     Privacy = "device";
   };
+  services.blueman.enable = true;
+
+  # Allow Bluetooth firmware loading under kernel lockdown
+  security.lockKernelModules = false; # Required for Bluetooth firmware loading
 
 
   hardware.enableRedistributableFirmware = true;
@@ -59,7 +63,7 @@ in {
     "page_alloc.shuffle=1"   # Randomize page allocator
     "fwupd.verbose=1"        # Verbose firmware logging
     "efi=debug"              # EFI debugging
-    "lockdown=confidentiality" # Kernel lockdown mode
+    "lockdown=integrity"     # Kernel lockdown mode (integrity allows signed firmware)
   ];
   boot.tmp.useTmpfs = true;
 
@@ -109,7 +113,7 @@ in {
     size = vars.hosts.brix.swapSize;
   }];
 
-  users.users.${vars.user.name}.extraGroups = ["libvirtd" "adbusers"];
+  users.users.${vars.user.name}.extraGroups = ["libvirtd" "adbusers" "tss"];
 
   environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
 
@@ -122,12 +126,23 @@ in {
     libva-utils intel-gpu-tools mesa wayland wayland-utils wev efitools
     # Hardware monitoring (requires root access)
     lm_sensors smartmontools
+    # TPM and cryptographic tools
+    tpm2-tools tpm2-pkcs11 opensc
+    # BIP39 and key derivation
+    electrum python3Packages.mnemonic
   ];
 
   # TPM firmware protection
   security.tpm2 = {
     enable = true;
     tctiEnvironment.enable = true;
+    pkcs11.enable = true;  # Enable PKCS#11 interface
+  };
+
+  # Smart card and PKCS#11 support
+  services.pcscd = {
+    enable = true;
+    plugins = [ pkgs.tpm2-pkcs11 ];
   };
 
   # Enhanced logging for firmware monitoring
@@ -179,7 +194,6 @@ in {
   security.auditd.enable = true;  # System call auditing
 
   programs.adb.enable = true;
-  services.pcscd.enable = true;
   services.usbmuxd.enable = true;
 
   # USB device security
@@ -201,10 +215,10 @@ in {
     # Verification & Sources - only official LVFS, no testing or P2P
     extraRemotes = [ "lvfs" ];
 
-    # Security settings
+    # Security settings - relaxed for Bluetooth compatibility
     uefiCapsuleSettings = {
-      DisableCapsuleUpdateOnDisk = true;  # Prevent persistent backdoors
-      RequireESRTFwMgmt = true;          # Require ESRT firmware management
+      DisableCapsuleUpdateOnDisk = false;  # Allow firmware updates for Bluetooth
+      RequireESRTFwMgmt = false;          # Relaxed for better firmware support
     };
 
     # Use default package (no P2P firmware sharing for security)

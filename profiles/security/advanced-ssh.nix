@@ -15,6 +15,9 @@
       ForwardX11Trusted no
       PermitLocalCommand no
       
+      # TPM2-PKCS11 support for hardware-backed keys
+      PKCS11Provider ${pkgs.tpm2-pkcs11}/lib/libtpm2_pkcs11.so
+      
       # Connection security
       HostbasedAuthentication no
       PubkeyAuthentication yes
