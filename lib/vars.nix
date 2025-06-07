@@ -15,7 +15,7 @@ in
     email = secretUser.email or "user@example.com";
     realName = secretUser.realName or "Example User";
     githubUsername = secretUser.githubUsername or "example-user";
-    signingKey = secretUser.signingKey or "~/.ssh/id_ed25519.pub";
+    signingKey = secretUser.signingKey or "~/.ssh/id_bip39_ed25519.pub";
   };
 
   domains = {

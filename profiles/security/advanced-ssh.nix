@@ -15,8 +15,8 @@
       ForwardX11Trusted no
       PermitLocalCommand no
       
-      # TPM2-PKCS11 support for hardware-backed keys
-      PKCS11Provider ${pkgs.tpm2-pkcs11}/lib/libtpm2_pkcs11.so
+      # TPM2-PKCS11 support for hardware-backed keys (disabled to avoid RSA key conflict)
+      # PKCS11Provider ${pkgs.tpm2-pkcs11}/lib/libtpm2_pkcs11.so
       
       # Connection security
       HostbasedAuthentication no
@@ -59,11 +59,12 @@
       "github.com" = {
         # GitHub-specific security
         user = "git";
-        identityFile = "~/.ssh/id_rsa";
+        identityFile = "~/.ssh/id_bip39_ed25519";
         extraOptions = {
           StrictHostKeyChecking = "yes";
           VerifyHostKeyDNS = "yes";
           ForwardAgent = "no";  # Disable for remote connections
+          IdentitiesOnly = "yes";  # Force only the specified identity file
         };
       };
       
