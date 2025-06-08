@@ -13,9 +13,11 @@
     nixos-cosmic.url = "github:lilyinstarlight/nixos-cosmic";
     nixos-generators.url = "github:nix-community/nixos-generators";
     nixos-generators.inputs.nixpkgs.follows = "stable-nixpkgs";
+    bip39-cli.url = "github:monomadic/bip39-cli";
+    bip39-cli.flake = false;
   };
 
-  outputs = inputs@{ self, stable-nixpkgs, unstable-nixpkgs, home-manager, sops-nix, nixos-cosmic, nixos-generators, ... }:
+  outputs = inputs@{ self, stable-nixpkgs, unstable-nixpkgs, home-manager, sops-nix, nixos-cosmic, nixos-generators, bip39-cli, ... }:
     let
       system = "x86_64-linux";
       
@@ -112,10 +114,10 @@
           };
         in {
           # Shared infrastructure tools (for other repos to import)
-          infrastructure-tools = import ./packages/infrastructure-tools.nix { 
-            pkgs = stable; 
-            lib = stable.lib; 
-          };
+          # infrastructure-tools = import ./packages/infrastructure-tools.nix { 
+          #   pkgs = stable; 
+          #   lib = stable.lib; 
+          # };
           
           # Live ISOs for each host
           slax-live-iso = mkLiveISO ./hosts/slax/configuration.nix;
@@ -149,51 +151,83 @@
           };
         };
 
-      # Development shell with testing tools
-      devShells.${system}.default = stable.mkShell {
-        buildInputs = with stable; [
-          nixpkgs-fmt
-          sops
-          age
-          # Testing tools
-          qemu
-        ];
-        
-        shellHook = ''
-          # Add scripts to PATH
-          export PATH="$PWD/assets/scripts:$PATH"
+      # Development shells
+      devShells.${system} = 
+        let
+          # Import infrastructure shells
+          infraShells = import ./devshells/infrastructure.nix { 
+            pkgs = stable; 
+            lib = stable.lib; 
+          };
           
-          # Create convenient aliases
-          alias check-versions="$PWD/assets/scripts/check-versions.sh"
-          alias update-system="$PWD/assets/scripts/update-system.sh"
-          alias update-home-manager="$PWD/assets/scripts/update-home-manager.sh"
-          alias full-update="$PWD/assets/scripts/full-update.sh"
+          # Import individual language shells directly
+          rustShells = import ./devshells/rust.nix { pkgs = stable; };
+          goShells = import ./devshells/go.nix { pkgs = stable; };
+          pythonShells = import ./devshells/python.nix { pkgs = stable; };
+        in {
+          # Default dotfiles development shell (unchanged behavior)
+          default = stable.mkShell {
+            buildInputs = with stable; [
+              nixpkgs-fmt
+              sops
+              age
+              # Testing tools
+              qemu
+            ];
+            
+            shellHook = ''
+              # Add scripts to PATH
+              export PATH="$PWD/assets/scripts:$PATH"
+              
+              # Create convenient aliases
+              alias check-versions="$PWD/assets/scripts/check-versions.sh"
+              alias update-system="$PWD/assets/scripts/update-system.sh"
+              alias update-home-manager="$PWD/assets/scripts/update-home-manager.sh"
+              alias full-update="$PWD/assets/scripts/full-update.sh"
+              
+              echo "🧪 NixOS Infrastructure Development Environment"
+              echo "Available commands:"
+              echo "  nix flake check          - Run all tests"
+              echo ""
+              echo "System update scripts:"
+              echo "  check-versions           - Check for upstream releases"
+              echo "  update-system            - Update flake and rebuild NixOS"
+              echo "  update-home-manager      - Update Home Manager configuration"
+              echo "  full-update             - Run complete system update"
+              echo ""
+              echo "Build ISOs for specific hosts:"
+              echo "  nix build .#slax-live-iso"
+              echo "  nix build .#brix-live-iso"
+              echo "  nix build .#emergency-iso"
+              echo ""
+              echo "Build VM images:"
+              echo "  nix build .#slax-vm"
+              echo "  nix build .#brix-vm"
+              echo ""
+              echo "Build QCOW2 images:"
+              echo "  nix build .#slax-qcow2"
+              echo "  nix build .#brix-qcow2"
+              echo ""
+              echo "Development shells available:"
+              echo "  nix develop .#rust       - Rust development"
+              echo "  nix develop .#go         - Go development"  
+              echo "  nix develop .#python     - Python development"
+              echo "  nix develop .#languages  - Multi-language environment"
+              echo "  nix develop .#infrastructure - Infrastructure tools"
+              echo "  nix develop .#kubernetes - Kubernetes tools"
+              echo "  nix develop .#security   - Security tools"
+              echo ""
+              echo "  sops secrets.yaml        - Edit secrets"
+            '';
+          };
           
-          echo "🧪 NixOS Infrastructure Development Environment"
-          echo "Available commands:"
-          echo "  nix flake check          - Run all tests"
-          echo ""
-          echo "System update scripts:"
-          echo "  check-versions           - Check for upstream releases"
-          echo "  update-system            - Update flake and rebuild NixOS"
-          echo "  update-home-manager      - Update Home Manager configuration"
-          echo "  full-update             - Run complete system update"
-          echo ""
-          echo "Build ISOs for specific hosts:"
-          echo "  nix build .#slax-live-iso"
-          echo "  nix build .#brix-live-iso"
-          echo "  nix build .#emergency-iso"
-          echo ""
-          echo "Build VM images:"
-          echo "  nix build .#slax-vm"
-          echo "  nix build .#brix-vm"
-          echo ""
-          echo "Build QCOW2 images:"
-          echo "  nix build .#slax-qcow2"
-          echo "  nix build .#brix-qcow2"
-          echo ""
-          echo "  sops secrets.yaml        - Edit secrets"
-        '';
-      };
+          # Infrastructure development shells
+          inherit (infraShells.devShells) infrastructure kubernetes security;
+          
+          # Programming language development shells  
+          inherit (rustShells.devShells) rust;
+          inherit (goShells.devShells) go;
+          inherit (pythonShells.devShells) python;
+        };
     };
 }

@@ -6,7 +6,7 @@ let
 in {
   # Security monitoring tools
   home.packages = with pkgs; [
-    rkhunter        # Rootkit scanner
+    # rkhunter        # Rootkit scanner (not available)
     chkrootkit      # Another rootkit scanner
     lynis           # Security auditing tool
     vulnix          # Nix vulnerability scanner

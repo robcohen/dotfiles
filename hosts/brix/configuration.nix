@@ -22,14 +22,33 @@ in {
   services.udev.extraRules = ''
     ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/backlight/%k/brightness"
     ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chmod g+w /sys/class/backlight/%k/brightness"
+    
+    # Intel AX211 Bluetooth device authorization and power management
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0033", ATTR{authorized}="1"
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0033", ATTR{power/autosuspend}="-1"
+    
+    # General Bluetooth class device rules
+    ACTION=="add", SUBSYSTEM=="bluetooth", RUN+="${pkgs.coreutils}/bin/chmod 666 /dev/rfkill"
+    ACTION=="add", ATTR{class}=="e0*", ATTR{authorized}="1"
   '';
 
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
-  hardware.bluetooth.settings.General = {
-    ControllerMode = "dual";
-    JustWorksRepairing = "confirm";
-    Privacy = "device";
+  hardware.bluetooth.settings = {
+    General = {
+      ControllerMode = "dual";
+      JustWorksRepairing = "confirm";
+      Privacy = "device";
+      # Enhanced timeout and retry settings for firmware loading
+      DiscoverableTimeout = 0;
+      PairableTimeout = 0;
+      AutoConnectTimeout = 60;
+    };
+    Policy = {
+      AutoEnable = true;
+      ReconnectAttempts = 7;
+      ReconnectIntervals = "1,2,4,8,16,32,64";
+    };
   };
   services.blueman.enable = true;
 
@@ -64,6 +83,10 @@ in {
     "fwupd.verbose=1"        # Verbose firmware logging
     "efi=debug"              # EFI debugging
     "lockdown=integrity"     # Kernel lockdown mode (integrity allows signed firmware)
+    
+    # Bluetooth power management fixes
+    "btusb.enable_autosuspend=0"  # Disable Bluetooth auto-suspend
+    "usbcore.autosuspend=-1"      # Disable USB auto-suspend globally
   ];
   boot.tmp.useTmpfs = true;
 
@@ -196,7 +219,7 @@ in {
   programs.adb.enable = true;
   services.usbmuxd.enable = true;
 
-  # USB device security
+  # USB device security with Bluetooth support
   services.usbguard = {
     enable = true;
     rules = ''
@@ -206,6 +229,14 @@ in {
       allow with-interface equals { 0e:01:01 } # Video devices
       allow with-interface equals { 01:01:00 01:02:00 } # Audio devices
       allow with-interface equals { ff:42:01 } # Android devices (ADB)
+      
+      # Bluetooth support for Intel AX211
+      allow with-interface equals { e0:01:01 } # Bluetooth wireless controller
+      allow with-interface equals { e0:01:03 } # Bluetooth AMP controller  
+      allow with-interface one-of { e0:01:01 e0:01:03 } # Either Bluetooth interface
+      
+      # Intel AX211 specific vendor/product (if needed)
+      allow id 8087:0033 # Intel AX211 Bluetooth
     '';
   };
 

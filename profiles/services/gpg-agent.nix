@@ -6,6 +6,6 @@
     enableSshSupport = true;
     defaultCacheTtlSsh = 6 * 60 * 60;
     enableScDaemon = true;
-    pinentry.package = pkgs.pinentry-gnome3;
+    pinentry.package = pkgs.pinentry-gtk2;
   };
 }

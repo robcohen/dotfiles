@@ -29,8 +29,6 @@ programs.git = {
       user.signingkey = vars.user.signingKey;
       # SSH signature verification
       gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
-      # Use ssh-keygen directly instead of SSH agent for signing
-      gpg.ssh.program = "ssh-keygen";
       push = {
         autoSetupRemote = true;
       };
