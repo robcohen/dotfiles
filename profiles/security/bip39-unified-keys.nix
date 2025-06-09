@@ -907,18 +907,22 @@ EOF
       echo "🔄 Deriving SSH key using HKDF..." >&2
       
       # HKDF Extract: Convert BIP39 seed to fixed-length pseudorandom key (PRK)
-      BASE_SEED_BIN=$(echo -n "$BASE_SEED" | xxd -r -p)
+      # Write binary data to file to avoid bash null byte warnings
+      echo -n "$BASE_SEED" | xxd -r -p > "$SECURE_TMPDIR/base_seed.bin"
+      BASE_SEED_BIN_FILE="$SECURE_TMPDIR/base_seed.bin"
       
       # HKDF Expand: Derive SSH subkey with context-specific info
       # SSH_SEED = HKDF-Expand(PRK, info="ssh", salt="", length=32)
-      SSH_SEED_32=$(echo -n "ssh" | openssl dgst -sha256 -hmac "$BASE_SEED_BIN" | cut -d' ' -f2)
+      echo -n "ssh" > "$SECURE_TMPDIR/ssh_info"
+      SSH_SEED_32=$(openssl dgst -sha256 -mac HMAC -macopt keyfile:"$BASE_SEED_BIN_FILE" < "$SECURE_TMPDIR/ssh_info" | cut -d' ' -f2)
       SSH_SEED_32=''${SSH_SEED_32:0:64}  # 32 bytes (64 hex chars)
       
       echo "🔄 Deriving age key using HKDF..." >&2
       
       # HKDF Expand: Derive age subkey with different context
       # AGE_SEED = HKDF-Expand(PRK, info="age", salt="", length=32)  
-      AGE_SEED_32=$(echo -n "age" | openssl dgst -sha256 -hmac "$BASE_SEED_BIN" | cut -d' ' -f2)
+      echo -n "age" > "$SECURE_TMPDIR/age_info"
+      AGE_SEED_32=$(openssl dgst -sha256 -mac HMAC -macopt keyfile:"$BASE_SEED_BIN_FILE" < "$SECURE_TMPDIR/age_info" | cut -d' ' -f2)
       AGE_SEED_32=''${AGE_SEED_32:0:64}  # 32 bytes (64 hex chars)
       
       # Create SSH P-256 private key
