@@ -5,7 +5,7 @@
     ./advanced-gpg.nix
     ./advanced-ssh.nix  
     ./system-monitoring.nix
-    ./bip39-ssh-keygen.nix
+    ./bip39-user-tools.nix
   ];
 
   # Core security packages
@@ -50,7 +50,7 @@
     - `bip39-keygen create-key` - Create SSH key from mnemonic
     - `bip39-keygen store-in-tpm` - Store SSH key in TPM
     - `tpm-ssh-load` - Load TPM keys into SSH agent
-    - `tmp-ssh-list` - List TPM-stored keys
+    - `tpm-ssh-list` - List TPM-stored keys
     
     ## Security Maintenance
     

@@ -1,17 +1,13 @@
 { pkgs, ... }:
 
 {
-  # BIP39 SSH key generation and TPM storage tools
+  # BIP39 key derivation tools (user-level)
   home.packages = with pkgs; [
-    # BIP39 CLI tool will be added back once we verify the shell scripts work
-    # TPM tools and engines
-    tpm2-tools
-    tpm2-tss
-    tpm2-pkcs11
-    # Age with TPM plugin support
+    # BIP39 CLI tool
+    (import ./bip39-package.nix { inherit pkgs; })
+    # Age for encryption (user-level)
     age
-    age-plugin-tpm
-    # OpenSSL with engine support
+    # OpenSSL for crypto operations
     openssl
     # Secure file deletion and memory tools
     coreutils  # includes shred
