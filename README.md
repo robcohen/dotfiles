@@ -251,3 +251,4 @@ This configuration is provided as-is for educational purposes. Adapt it to your 
 ## 🤝 Contributing
 
 Feel free to use this configuration as inspiration for your own setup. If you find improvements or have questions, please open an issue!
+test
