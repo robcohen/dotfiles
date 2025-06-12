@@ -5,18 +5,15 @@
   lib,
   ...
 }: 
-let
-  vars = import ../../lib/vars.nix;
-in {
-
-programs.git = {
-      # Install git
-      enable = true;
+{
+  programs.git = {
+    # Install git
+    enable = true;
 
     # Additional options for the git program
     package = pkgs.gitAndTools.gitFull; # Install git wiith all the optional extras
-    userName = vars.user.githubUsername;
-    userEmail = vars.user.email;
+    userName = "user";  # Will be set via git config after SOPS setup
+    userEmail = "user@example.com";  # Will be set via git config after SOPS setup
 #    signing.key = "";
 #    signing.signByDefault = true;
     extraConfig = {
@@ -26,7 +23,7 @@ programs.git = {
       # Sign all commits using ssh key (only if key exists)
       commit.gpgsign = true;
       gpg.format = "ssh";
-      user.signingkey = vars.user.signingKey;
+      user.signingkey = "~/.ssh/id_ed25519.pub";  # Standard location
       # SSH signature verification
       gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
       push = {
@@ -36,9 +33,9 @@ programs.git = {
   };
 
   # Create SSH allowed signers file for local verification
-  home.activation.createAllowedSigners = ''
-    if [[ -f ${vars.user.signingKey} ]]; then
-      echo "${vars.user.email} $(cat ${vars.user.signingKey})" > ~/.ssh/allowed_signers
+  home.activation.createAllowedSigners = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if [[ -f ~/.ssh/id_ed25519.pub ]]; then
+      echo "user@example.com $(cat ~/.ssh/id_ed25519.pub)" > ~/.ssh/allowed_signers
       chmod 644 ~/.ssh/allowed_signers
     fi
   '';

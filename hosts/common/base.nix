@@ -1,9 +1,6 @@
-{ inputs, pkgs, ... }:
+{ inputs, pkgs, config, lib, ... }:
 
-let
-  vars = import ../../lib/vars.nix;
-in {
-
+{
   nixpkgs = {
     overlays = [];
     config.allowUnfree = true;
@@ -15,7 +12,7 @@ in {
   };
 
   nix.settings = {
-    trusted-users = [ "root" vars.user.name ];
+    trusted-users = [ "root" "user" ];
     experimental-features = "nix-command flakes";
     auto-optimise-store = true;
     substituters = [ "https://cosmic.cachix.org" ];
@@ -24,7 +21,7 @@ in {
 
   programs.zsh.enable = true;
 
-  users.users.${vars.user.name} = {
+  users.users.user = {
     isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [ "wheel" "networkmanager" "input" "video" ];

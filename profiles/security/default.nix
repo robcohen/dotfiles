@@ -6,6 +6,7 @@
     ./advanced-ssh.nix  
     ./system-monitoring.nix
     ./bip39-user-tools.nix
+    ./bip39-unified-keys.nix
   ];
 
   # Core security packages

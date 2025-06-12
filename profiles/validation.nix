@@ -1,14 +1,12 @@
 { config, pkgs, lib, ... }:
 
 let
-  vars = import ../lib/vars.nix;
   hostname = builtins.readFile /etc/hostname;
   cleanHostname = lib.strings.removeSuffix "\n" hostname;
-  hostConfig = vars.hosts.${cleanHostname} or {};
   
   # Simple validation with defaults
-  hostType = hostConfig.type or "desktop";
-  hostFeatures = hostConfig.features or [];
+  hostType = "desktop";
+  hostFeatures = [];
   
 in {
   # Make host config available to other modules

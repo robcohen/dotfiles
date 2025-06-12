@@ -4,6 +4,8 @@ result-*
 
 # Personal secrets
 secrets.nix
+secrets.yaml*
+.sops.yaml.backup
 
 # Editor files
 .vscode/

@@ -45,6 +45,9 @@
       
       echo "🔧 Initializing TPM for SSH key storage..."
       
+      # Suppress tabrmd warnings by using direct device access
+      export TPM2TOOLS_TCTI="device:/dev/tpmrm0"
+      
       # Check if primary key already exists
       if tpm2_readpublic -c 0x81000001 >/dev/null 2>&1 && [[ "$FORCE" != "true" ]]; then
           echo "✅ TPM primary key already exists at handle 0x81000001"
@@ -60,12 +63,15 @@
       
       echo "🔐 Creating TPM primary key..."
       
-      # Create primary key in owner hierarchy with proper attributes for signing
+      # Suppress tabrmd warnings by using direct device access
+      export TPM2TOOLS_TCTI="device:/dev/tpmrm0"
+      
+      # Create primary key in owner hierarchy with proper attributes for being a parent
       tpm2_createprimary -C o -g sha256 -G ecc256 -c /tmp/primary.ctx \
-          -a "fixedtpm|fixedparent|sensitivedataorigin|userwithauth|decrypt|sign"
+          -a "fixedtpm|fixedparent|sensitivedataorigin|userwithauth|restricted|decrypt" 2>/dev/null
       
       # Make it persistent at handle 0x81000001  
-      tpm2_evictcontrol -C o -c /tmp/primary.ctx 0x81000001
+      tpm2_evictcontrol -C o -c /tmp/primary.ctx 0x81000001 2>/dev/null
       
       # Clean up
       rm -f /tmp/primary.ctx

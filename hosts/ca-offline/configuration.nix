@@ -1,8 +1,6 @@
 { config, pkgs, lib, ... }:
 
-let
-  vars = import ../../lib/vars.nix;
-in {
+{
   imports = [
     ./hardware-configuration.nix
   ];

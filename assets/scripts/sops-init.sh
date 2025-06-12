@@ -82,11 +82,6 @@ user:
     realName: "Your Real Name"
     githubUsername: "yourghusername"
 
-ssh:
-    # SSH public keys for emergency access
-    emergencyKeys:
-        - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... your-key-comment"
-
 domains:
     primary: "example.com"
     vpn: "vpn.example.com"
@@ -120,8 +115,7 @@ echo ""
 echo "Next steps:"
 echo "1. Edit secrets: sops secrets.yaml"
 echo "2. Update your personal information in the secrets file"
-echo "3. Add your SSH public key(s) to ssh.emergencyKeys"
-echo "4. Rebuild your system: sudo nixos-rebuild switch --flake ."
+echo "3. Rebuild your system: sudo nixos-rebuild switch --flake ."
 echo ""
 echo "📚 For more information, see: docs/SOPS-SETUP.md"
 echo ""

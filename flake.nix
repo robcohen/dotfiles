@@ -53,6 +53,7 @@
           modules = [
             nixos-cosmic.nixosModules.default
             ./hosts/slax/configuration.nix
+            # SOPS will be enabled manually after key setup
             sops-nix.nixosModules.sops
             ./modules/sops.nix
           ];
@@ -67,7 +68,7 @@
             nixos-cosmic.nixosModules.default
             ./hosts/brix/configuration.nix
             sops-nix.nixosModules.sops
-            ./modules/sops.nix
+            ./modules/sops.nix  # Temporarily disabled while setting up keys
           ];
         };
 
@@ -102,9 +103,6 @@
               ./modules/sops.nix
               ({ config, lib, ... }: {
                 services.openssh.enable = true;
-                users.users.root.openssh.authorizedKeys.keys = 
-                  lib.strings.splitString "\n" (lib.strings.removeSuffix "\n" 
-                    (builtins.readFile config.sops.secrets."ssh/emergencyKeys".path));
                 # Disable graphical services for live ISO
                 services.desktopManager.cosmic.enable = false;
                 services.displayManager.cosmic-greeter.enable = false;

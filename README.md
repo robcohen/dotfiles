@@ -19,15 +19,28 @@ A comprehensive NixOS configuration using flakes and Home Manager, featuring des
    ```bash
    cp secrets.example.nix secrets.nix
    # Edit secrets.nix with your personal information
+   
+   # Set up secure private secrets directory
+   mkdir -p ~/.secrets
+   chmod 700 ~/.secrets
    ```
 
 3. **Apply configuration:**
    ```bash
    # For desktop hosts (slax/brix)
    sudo nixos-rebuild switch --flake .#slax
-   
+
    # Apply home-manager configuration
    home-manager switch --flake .#user@slax
+   ```
+
+4. **Bootstrap secrets (after system builds successfully):**
+   ```bash
+   # Generate new BIP39 mnemonic and set up SOPS
+   ./scripts/bootstrap-secrets.sh --generate
+   
+   # Or use existing mnemonic
+   ./scripts/bootstrap-secrets.sh --mnemonic "your 24 words here"
    ```
 
 ## 📁 Repository Structure
@@ -72,6 +85,7 @@ A comprehensive NixOS configuration using flakes and Home Manager, featuring des
 
 ### Security Features
 - **GPG/SSH**: Advanced cryptographic configurations
+- **BIP39/TPM**: Hardware-backed key derivation from mnemonic phrases
 - **System hardening**: Security-focused system configurations
 - **Secure boot**: TPM and secure boot configurations
 
@@ -138,12 +152,88 @@ sudo nixos-rebuild switch --flake .#your-host
 home-manager switch --flake .#user@your-host
 ```
 
-## 🛡️ Security Notes
+## 🛡️ Security & BIP39/TPM Key Management
+
+### BIP39/TPM Key Bootstrap
+
+This configuration includes an automated bootstrap process for BIP39/TPM key derivation and SOPS setup.
+
+#### Automated Bootstrap Process
+```bash
+# After your system builds successfully, run the bootstrap script:
+
+# Generate new BIP39 mnemonic and set up everything automatically
+./scripts/bootstrap-secrets.sh --generate
+
+# Or use an existing BIP39 mnemonic
+./scripts/bootstrap-secrets.sh --mnemonic "word1 word2 ... word24"
+```
+
+The bootstrap script will:
+1. ✅ Initialize TPM hardware
+2. ✅ Generate 24-word BIP39 mnemonic (or use existing)
+3. ✅ Derive age encryption keys using HKDF
+4. ✅ Update SOPS configuration with new age key
+5. ✅ Create encrypted secrets file in `~/.secrets/`
+6. ✅ Enable SOPS in system configuration
+
+**⚠️ CRITICAL**: The script will display your 24-word BIP39 mnemonic. Write it down on paper and store it securely - this is your master key for all secrets.
+
+#### Manual Key Management (after bootstrap)
+```bash
+# List all TPM-stored keys
+tpm-keys list
+
+# Get detailed info about a specific key
+tpm-keys info 0x81000100
+
+# Extract SSH public key from TPM
+tpm-to-pubkey 0x81000100
+
+# Load TPM keys into SSH agent
+tpm-ssh-agent
+
+# Remove a key from TPM (destructive!)
+tpm-keys remove 0x81000100
+```
+
+#### Manual Workflow (if not using bootstrap script)
+```bash
+# 1. Set up secure secrets directory
+mkdir -p ~/.secrets && chmod 700 ~/.secrets
+
+# 2. Generate 24-word mnemonic (save this securely!)
+MNEMONIC=$(bip39 generate --words 24 --quiet)
+echo "Save this mnemonic securely: $MNEMONIC"
+
+# 3. Initialize TPM
+tpm-init
+
+# 4. Create all keys from mnemonic  
+bip39-unified-keys --mnemonic "$MNEMONIC" --setup-sops --comment "MyDevice"
+
+# 5. Verify keys are stored
+tpm-keys list
+
+# 6. Get SSH public key for GitHub/servers
+tpm-to-pubkey 0x81000100
+```
+
+### Security Model
+
+- **Hardware-Only Storage**: Private keys are sealed in TPM hardware and never stored on disk
+- **Deterministic Recovery**: All keys can be recreated from the BIP39 mnemonic on any TPM-enabled device
+- **Zero Trust**: Private key material never exists unencrypted outside the TPM
+- **Forward Security**: Each operation requires TPM unsealing
+
+### Traditional Security Notes
 
 - **Secrets**: Never commit `secrets.nix` - it's gitignored
 - **Keys**: SSH keys and GPG keys are referenced, not embedded
 - **Signatures**: Git commits are signed by default
 - **Hardening**: System security configurations are applied
+- **BIP39 Recovery**: Store your mnemonic phrase securely offline - it's your master key
+- **Secure Storage**: Secrets stored in `~/.secrets/` with 700 permissions (owner-only access)
 
 ## 🎯 Educational Purpose
 

@@ -5,13 +5,13 @@ pkgs.rustPlatform.buildRustPackage rec {
   version = "1.0.0";
 
   src = pkgs.fetchFromGitHub {
-    owner = "monomadic";
+    owner = "robcohen";
     repo = "bip39-cli";
-    rev = "ee85cd6610fefaa6ba9b7b72ce2161c810cf6a48";
-    sha256 = "sha256-F3wFh86Ri9nYXAN3p9WdzqpixTMutmzdWSAI/xsiKWE=";
+    rev = "fbbddacd6be5c864aee8c995adb448c5ca11f85e";
+    sha256 = "11y6p2850v6v7z4v6dpfxvc9ybjwbkbv9vbbizixq1dc2p2vqq58";
   };
 
-  cargoHash = "sha256-PBe8Jt8/YctCe22mLjexUyAbIIjKcWtulCcF/deeJ5I=";
+  cargoHash = "sha256-EoUJfgHljjHH9lwFQGvxqceIT/r9GzN+qkSeIHpBB6E=";
 
   nativeBuildInputs = with pkgs; [ pkg-config ];
   buildInputs = with pkgs; [ openssl ];

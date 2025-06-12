@@ -1,9 +1,7 @@
 # hosts/brix/configuration.nix
 { config, pkgs, lib, unstable, inputs, ... }:
 
-let
-  vars = import ../../lib/vars.nix;
-in {
+{
   imports = [
     ./hardware-configuration.nix
     ../common/base.nix
@@ -133,11 +131,11 @@ in {
   };
 
   swapDevices = [{
-    device = vars.hosts.brix.swapPath;
-    size = vars.hosts.brix.swapSize;
+    device = "/swap/swapfile";
+    size = 32768;  # 32GB swap
   }];
 
-  users.users.${vars.user.name}.extraGroups = ["libvirtd" "adbusers" "tss"];
+  users.users.user.extraGroups = ["libvirtd" "adbusers" "tss"];
 
   environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
 

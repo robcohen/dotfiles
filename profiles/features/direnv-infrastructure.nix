@@ -1,9 +1,7 @@
 # Direnv configuration for automatic infrastructure environment
 { config, pkgs, lib, ... }:
 
-let
-  vars = import ../../lib/vars.nix;
-in {
+{
   # Enhanced direnv configuration
   programs.direnv = {
     enable = true;

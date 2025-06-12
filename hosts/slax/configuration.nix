@@ -6,9 +6,7 @@
   ...
 }:
 
-let
-  vars = import ../../lib/vars.nix;
-in {
+{
 
   imports = [
     ./hardware-configuration.nix
@@ -34,11 +32,11 @@ in {
   services.pipewire.audio.enable = true;
 
   swapDevices = [{
-    device = vars.hosts.slax.swapPath;
-    size = vars.hosts.slax.swapSize;
+    device = "/swap/swapfile";
+    size = 16384;  # 16GB swap  
   }];
 
-  users.users.${vars.user.name}.extraGroups = [ "libvirtd" "kvm" ];
+  users.users.user.extraGroups = [ "libvirtd" "kvm" ];
 
 
 

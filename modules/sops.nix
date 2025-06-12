@@ -6,13 +6,14 @@ with lib;
 {
   # SOPS configuration
   sops = {
-    defaultSopsFile = ../secrets.yaml;
+    defaultSopsFile = "/home/user/.secrets/secrets.yaml";
     defaultSopsFormat = "yaml";
+    validateSopsFiles = false;  # Allow building before secrets file exists
     
-    # Age key file location
+    # Age configuration - let SOPS-nix manage the key
     age = {
-      keyFile = "/var/lib/sops-nix/key.txt";
       generateKey = true;
+      keyFile = "/var/lib/sops-nix/key.txt";
     };
 
     # Define secrets that should be available to the system
@@ -38,15 +39,8 @@ with lib;
         group = "root";
         mode = "0400";
       };
-
-      # SSH emergency keys
-      "ssh/emergencyKeys" = {
-        owner = "root";
-        group = "root";
-        mode = "0400";
-      };
-
-      # Domain configuration
+      
+      # Domain configuration secrets
       "domains/primary" = {
         owner = "root";
         group = "root";
@@ -69,6 +63,8 @@ with lib;
   environment.systemPackages = with pkgs; [
     sops
     age
+    tpm2-tools      # TPM management for BIP39 unified keys
+    openssl         # For HKDF key derivation
   ];
 
   # Ensure SOPS service is running

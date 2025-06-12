@@ -1,13 +1,8 @@
 { config, pkgs, lib, inputs, ... }:
 
 let
-  vars = import ../lib/vars.nix;
-  
   # Simple hostname detection with fallback
   detectedHostname = "brix";  # Hardcode for now to avoid infinite recursion
-  
-  # Get host config 
-  hostConfig = vars.hosts.${detectedHostname} or {};
   
   unstable = import inputs.unstable-nixpkgs {
     system = pkgs.system;
@@ -60,15 +55,15 @@ in {
   # Pass config to other modules  
   _module.args = {
     hostname = detectedHostname;
-    hostConfig = hostConfig;
-    hostFeatures = hostConfig.features or [];
-    hostType = hostConfig.type or "desktop";
+    hostConfig = {};  # Simplified - no complex host config needed
+    hostFeatures = [];  # No features for simplified approach
+    hostType = "desktop";
   };
 
   home = {
-    username = vars.user.name;
-    homeDirectory = vars.user.home;
-    stateVersion = hostConfig.homeManagerStateVersion or "23.11";
+    username = "user";  # Hardcoded for now - SOPS secrets are system-level
+    homeDirectory = "/home/user";
+    stateVersion = "23.11";
   };
 
   xdg = {
@@ -84,9 +79,8 @@ in {
   # Add simple debugging info
   home.file.".config/home-manager/host-info.txt".text = ''
     Host: ${detectedHostname}
-    Type: ${hostConfig.type or "desktop"}
-    Features: ${lib.concatStringsSep ", " (hostConfig.features or [])}
-    State Version: ${hostConfig.homeManagerStateVersion or "23.11"}
+    Type: desktop
+    State Version: 23.11
   '';
 
 

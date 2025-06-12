@@ -42,7 +42,7 @@ creation_rules:
 sops secrets.yaml
 ```
 
-Add your secrets in YAML format:
+Add your secrets in YAML format (replace example values with your actual information):
 ```yaml
 user:
     name: "yourusername"
@@ -50,14 +50,10 @@ user:
     realName: "Your Real Name"
     githubUsername: "yourghusername"
 
-ssh:
-    emergencyKeys:
-        - "ssh-ed25519 AAAAC3... your-key-comment"
-
 domains:
-    primary: "example.com"
-    vpn: "vpn.example.com"
-    internal: "internal.example.com"
+    primary: "your-domain.com"
+    vpn: "vpn.your-domain.com"
+    internal: "internal.your-domain.com"
 ```
 
 ### 4. System Configuration
@@ -65,9 +61,13 @@ domains:
 The secrets are automatically available in your system configurations through:
 
 ```nix
-config.sops.secrets."user/name".path      # Contains your username
-config.sops.secrets."user/email".path     # Contains your email
-config.sops.secrets."ssh/emergencyKeys".path  # Contains SSH keys
+config.sops.secrets."user/name".path           # Contains your username
+config.sops.secrets."user/email".path          # Contains your email
+config.sops.secrets."user/realName".path       # Contains your real name
+config.sops.secrets."user/githubUsername".path # Contains your GitHub username
+config.sops.secrets."domains/primary".path     # Contains your primary domain
+config.sops.secrets."domains/vpn".path         # Contains your VPN domain  
+config.sops.secrets."domains/internal".path    # Contains your internal domain
 ```
 
 ## Key Management

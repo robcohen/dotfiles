@@ -203,16 +203,15 @@
           SALT="mnemonic"
       fi
       
-      BASE_SEED=$(echo -n "$MNEMONIC" | openssl dgst -sha512 -hmac "$SALT" | cut -d' ' -f2)
+      BASE_SEED=$(echo -n "$MNEMONIC" | openssl mac -binary -macopt key:"$SALT" -macopt digest:SHA512 HMAC | xxd -p | tr -d '\n')
       
-      # Derive SSH key using HKDF
-      echo -n "$BASE_SEED" | xxd -r -p > "$SECURE_TMPDIR/base_seed.bin"
-      echo -n "ssh" > "$SECURE_TMPDIR/ssh_info"
-      SSH_SEED=$(openssl dgst -sha256 -mac HMAC -macopt keyfile:"$SECURE_TMPDIR/base_seed.bin" < "$SECURE_TMPDIR/ssh_info" | cut -d' ' -f2)
+      # Derive SSH key using HKDF (OpenSSL 3.x)
+      SSH_INFO_HEX=$(echo -n "ssh" | xxd -p | tr -d '\n')
+      SSH_SEED=$(openssl kdf -binary -keylen 32 -kdfopt digest:SHA256 -kdfopt key:"$BASE_SEED" -kdfopt info:"$SSH_INFO_HEX" HKDF | xxd -p | tr -d '\n')
       
-      # Derive age key using HKDF
-      echo -n "age" > "$SECURE_TMPDIR/age_info"  
-      AGE_SEED=$(openssl dgst -sha256 -mac HMAC -macopt keyfile:"$SECURE_TMPDIR/base_seed.bin" < "$SECURE_TMPDIR/age_info" | cut -d' ' -f2)
+      # Derive age key using HKDF (OpenSSL 3.x)
+      AGE_INFO_HEX=$(echo -n "age" | xxd -p | tr -d '\n')
+      AGE_SEED=$(openssl kdf -binary -keylen 32 -kdfopt digest:SHA256 -kdfopt key:"$BASE_SEED" -kdfopt info:"$AGE_INFO_HEX" HKDF | xxd -p | tr -d '\n')
       
       # Generate deterministic age public key
       AGE_HASH=$(echo -n "$AGE_SEED" | xxd -r -p | openssl dgst -sha256 | cut -d' ' -f2)
