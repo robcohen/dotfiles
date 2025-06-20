@@ -14,7 +14,7 @@ let
 
   # Base system utilities (all hosts)
   baseSystemUtils = with pkgs; [
-    gnupg pinentry-gnome3 
+    gnupg pinentry-gnome3
     pciutils usbutils openssl binutils
     age sops vulnix niv vim
     dmidecode dig libfido2 jq opensc pcsctools ccid
@@ -33,7 +33,7 @@ let
     llama-cpp fd yq tree
   ];
 
-  # Gaming packages (conditional) 
+  # Gaming packages (conditional)
   gamingPackages = with unstable; lib.optionals (hasFeature "gaming") [
     steam fallout2-ce looking-glass-client
   ];
@@ -63,8 +63,8 @@ let
     rymdport anki
   ] ++ (with unstable; [
     gh onlyoffice-bin thunderbird firefox tor-browser
-    warp bitwarden obsidian ledger-live-desktop kdePackages.okular 
-    git-repo gpa zed-editor aichat
+    warp bitwarden obsidian ledger-live-desktop kdePackages.okular
+    git-repo gpa zed-editor aichat logseq
   ]);
 
   # Wine packages (conditional)
@@ -81,6 +81,6 @@ in {
   home.packages = fonts ++ baseSystemUtils ++
     lib.optionals isDesktop desktopUtils ++
     devPackages ++ gamingPackages ++ multimediaPackages ++
-    hardwarePackages ++ communicationPackages ++ 
+    hardwarePackages ++ communicationPackages ++
     productivityPackages ++ winePackages ++ devToolPackages;
 }
