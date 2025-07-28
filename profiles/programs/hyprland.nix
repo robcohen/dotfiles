@@ -75,6 +75,13 @@
         workspace_swipe = false;
       };
 
+      # Misc settings
+      misc = {
+        disable_hyprland_logo = true;
+        disable_splash_rendering = true;
+        force_default_wallpaper = 0;
+      };
+
       # Device configuration
       device = {
         name = "epic-mouse-v1";
@@ -186,11 +193,10 @@
 
       # Startup applications
       exec-once = [
-        "eww daemon && eww open bar"
-        "dunst"
         "swww-daemon"
-        # Set wallpaper if available
-        "swww img ~/Documents/dotfiles/assets/backgrounds/nix-wallpaper-dracula.png"
+        "sleep 1 && swww img ~/Documents/dotfiles/assets/backgrounds/nix-wallpaper-dracula.png"
+        "waybar"
+        "dunst"
         # Start authentication agent
         "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
       ];

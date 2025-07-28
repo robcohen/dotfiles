@@ -58,7 +58,7 @@
           modules = [
             ./hosts/brix/configuration.nix
             sops-nix.nixosModules.sops
-            ./modules/sops.nix  # Temporarily disabled while setting up keys
+            ./modules/sops.nix
           ];
         };
 
@@ -90,6 +90,7 @@
             specialArgs = commonSpecialArgs;
             modules = [
               hostConfig
+              sops-nix.nixosModules.sops
               ./modules/sops.nix
               ({ config, lib, ... }: {
                 services.openssh.enable = true;
@@ -123,6 +124,7 @@
             specialArgs = commonSpecialArgs;
             modules = [
               ./hosts/common/base.nix
+              sops-nix.nixosModules.sops
               ./modules/sops.nix
               ({ config, lib, ... }: {
                 services.openssh.enable = true;

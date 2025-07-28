@@ -3,7 +3,6 @@
 {
   programs.eww = {
     enable = true;
-    configDir = config.xdg.configHome + "/eww";
   };
 
   xdg.configFile."eww/eww.yuck".text = ''
@@ -36,7 +35,7 @@
       (box :class "sidestuff" :orientation "h" :space-evenly false :halign "end"
         (metric :label "🔊"
                 :value volume
-                :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%")
+                :onchange "${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%")
         (metric :label "💾"
                 :value {EWW_RAM.used_mem_perc}
                 :onchange "")
@@ -48,14 +47,14 @@
            :space-evenly true
            :halign "start"
            :spacing 10
-        (label :text "${workspaces}${current_workspace}")))
+        (label :text "''${workspaces}''${current_workspace}")))
 
     (defwidget music []
       (box :class "music"
            :orientation "h"
            :space-evenly false
            :halign "center"
-        {music != "" ? "🎵${music}" : ""}))
+        {music != "" ? "🎵''${music}" : ""}))
 
     (defwidget metric [label value onchange]
       (box :orientation "h"
@@ -74,19 +73,19 @@
 
     ;; Variables
     (defpoll time :interval "10s"
-      "date '+%H:%M %b %d, %Y'")
+      "${pkgs.coreutils}/bin/date '+%H:%M %b %d, %Y'")
 
-    (defpoll music :interval "2s"
-      "playerctl --player=spotify metadata --format '{{ artist }} - {{ title }}' 2>/dev/null || echo ''")
+    (defpoll music :interval "5s"
+      "${pkgs.playerctl}/bin/playerctl --player=spotify metadata --format '{{ artist }} - {{ title }}' 2>/dev/null || echo")
 
-    (defpoll volume :interval "1s"
-      "wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print substr($2, 1, 4) * 100}'")
+    (defpoll volume :interval "5s"
+      "${pkgs.wireplumber}/bin/wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | ${pkgs.gawk}/bin/awk '/Volume:/ {print int($2*100)}' || echo 0")
 
-    (defpoll workspaces :interval "1s"
-      "hyprctl workspaces -j | jq '.[] | select(.windows != 0) | .id' | wc -l")
+    (defpoll workspaces :interval "2s"
+      "HYPRLAND_INSTANCE_SIGNATURE=$(ls -t /run/user/$(id -u)/hypr/ | head -1) ${pkgs.hyprland}/bin/hyprctl workspaces -j | ${pkgs.jq}/bin/jq length 2>/dev/null || echo 1")
 
-    (defpoll current_workspace :interval "0.1s"
-      "hyprctl activeworkspace -j | jq .id")
+    (defpoll current_workspace :interval "1s"
+      "HYPRLAND_INSTANCE_SIGNATURE=$(ls -t /run/user/$(id -u)/hypr/ | head -1) ${pkgs.hyprland}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq .id 2>/dev/null || echo 1")
   '';
 
   xdg.configFile."eww/eww.scss".text = ''

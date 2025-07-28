@@ -37,7 +37,7 @@ in {
     ./programs/zoxide.nix
     ./programs/atuin.nix
     ./programs/hyprland.nix
-    ./programs/eww.nix
+    ./programs/waybar.nix
     ./services/gpg-agent.nix
     ./services/syncthing.nix
     ./services/desktop-notifications.nix

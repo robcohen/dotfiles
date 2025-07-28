@@ -58,7 +58,7 @@ in {
 
   # Feature-specific services
   services = {
-    # Gaming: disable power management for performance
-    poweralertd.enable = lib.mkDefault (!hasFeature "gaming");
+    # Disable poweralertd when TLP is used (they conflict)
+    poweralertd.enable = false;
   };
 }

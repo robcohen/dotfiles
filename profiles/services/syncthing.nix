@@ -5,7 +5,7 @@
   services.syncthing = {
   enable = true;
   tray = {
-        enable = true;
+        enable = false;  # Disabled since using eww for system tray
         command = "syncthingtray";
     };
   };
