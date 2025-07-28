@@ -109,8 +109,9 @@
   };
   boot.loader.efi.canTouchEfiVariables = true;
 
-  systemd.packages = [ pkgs.observatory ];
-  systemd.services.monitord.wantedBy = [ "multi-user.target" ];
+  # Observatory package removed with COSMIC - consider alternative monitoring tools
+  # systemd.packages = [ pkgs.observatory ];
+  # systemd.services.monitord.wantedBy = [ "multi-user.target" ];
 
   virtualisation.libvirtd = {
     enable = true;
@@ -218,24 +219,30 @@
   programs.adb.enable = true;
   services.usbmuxd.enable = true;
 
-  # USB device security with Bluetooth support
+  # USB device security with Bluetooth support (more permissive)
   services.usbguard = {
     enable = true;
     rules = ''
-      allow with-interface equals { 03:00:01 03:01:01 } # HID devices (keyboard/mouse)
-      allow with-interface equals { 08:06:50 } # Mass storage
-      allow with-interface equals { 09:00:00 } # USB hubs
-      allow with-interface equals { 0e:01:01 } # Video devices
-      allow with-interface equals { 01:01:00 01:02:00 } # Audio devices
-      allow with-interface equals { ff:42:01 } # Android devices (ADB)
+      # Allow all connected devices at boot
+      allow with-connect-type "hotplug"
       
-      # Bluetooth support for Intel AX211
-      allow with-interface equals { e0:01:01 } # Bluetooth wireless controller
-      allow with-interface equals { e0:01:03 } # Bluetooth AMP controller  
-      allow with-interface one-of { e0:01:01 e0:01:03 } # Either Bluetooth interface
+      # Allow common device classes
+      allow with-interface equals { 03:*:* } # All HID devices
+      allow with-interface equals { 08:*:* } # All mass storage
+      allow with-interface equals { 09:*:* } # All USB hubs
+      allow with-interface equals { 0e:*:* } # All video devices
+      allow with-interface equals { 01:*:* } # All audio devices
+      allow with-interface equals { ff:*:* } # Vendor-specific (including ADB)
       
-      # Intel AX211 specific vendor/product (if needed)
-      allow id 8087:0033 # Intel AX211 Bluetooth
+      # Bluetooth support
+      allow with-interface equals { e0:*:* } # All Bluetooth controllers
+      
+      # Allow your specific hub
+      allow id 0bda:5409 # 3-Port USB 2.1 Hub
+      
+      # Allow other common vendors
+      allow id 0bda:* # Realtek devices
+      allow id 8087:* # Intel devices
     '';
   };
 

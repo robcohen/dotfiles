@@ -74,7 +74,7 @@ let
 
   # Development tools (conditional)
   devToolPackages = with unstable; lib.optionals (hasFeature "development") [
-    radicle-node devenv qflipper cachix
+    radicle-node devenv qflipper cachix opencode
   ];
 
 in {

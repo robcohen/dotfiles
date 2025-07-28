@@ -10,14 +10,13 @@
     home-manager.inputs.nixpkgs.follows = "stable-nixpkgs";
     hardware.url = "github:nixos/nixos-hardware";
     sops-nix.url = "github:Mic92/sops-nix";
-    nixos-cosmic.url = "github:lilyinstarlight/nixos-cosmic";
     nixos-generators.url = "github:nix-community/nixos-generators";
     nixos-generators.inputs.nixpkgs.follows = "stable-nixpkgs";
     bip39-cli.url = "github:monomadic/bip39-cli";
     bip39-cli.flake = false;
   };
 
-  outputs = inputs@{ self, stable-nixpkgs, unstable-nixpkgs, home-manager, sops-nix, nixos-cosmic, nixos-generators, bip39-cli, ... }:
+  outputs = inputs@{ self, stable-nixpkgs, unstable-nixpkgs, home-manager, sops-nix, nixos-generators, bip39-cli, ... }:
     let
       system = "x86_64-linux";
       
@@ -27,11 +26,6 @@
         config.allowUnfree = true;
       };
       
-      unstable-cosmic = import unstable-nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-        overlays = [ nixos-cosmic.overlays.default ];
-      };
       
       stable = stable-nixpkgs.legacyPackages.${system};
       
@@ -51,7 +45,6 @@
           inherit system;
           specialArgs = commonSpecialArgs;
           modules = [
-            nixos-cosmic.nixosModules.default
             ./hosts/slax/configuration.nix
             # SOPS will be enabled manually after key setup
             sops-nix.nixosModules.sops
@@ -61,11 +54,8 @@
 
         brix = stable-nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = commonSpecialArgs // {
-            unstable = unstable-cosmic;
-          };
+          specialArgs = commonSpecialArgs;
           modules = [
-            nixos-cosmic.nixosModules.default
             ./hosts/brix/configuration.nix
             sops-nix.nixosModules.sops
             ./modules/sops.nix  # Temporarily disabled while setting up keys
@@ -104,8 +94,6 @@
               ({ config, lib, ... }: {
                 services.openssh.enable = true;
                 # Disable graphical services for live ISO
-                services.desktopManager.cosmic.enable = false;
-                services.displayManager.cosmic-greeter.enable = false;
               })
             ];
             format = "iso";
@@ -141,8 +129,6 @@
                 users.users.root.openssh.authorizedKeys.keys = 
                   lib.strings.splitString "\n" (lib.strings.removeSuffix "\n" 
                     (builtins.readFile config.sops.secrets."ssh/emergencyKeys".path));
-                services.desktopManager.cosmic.enable = false;
-                services.displayManager.cosmic-greeter.enable = false;
               })
             ];
             format = "iso";

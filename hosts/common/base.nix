@@ -15,8 +15,6 @@
     trusted-users = [ "root" "user" ];
     experimental-features = "nix-command flakes";
     auto-optimise-store = true;
-    substituters = [ "https://cosmic.cachix.org" ];
-    trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
   };
 
   programs.zsh.enable = true;
@@ -46,15 +44,27 @@
     jack.enable = true;
   };
 
-  services.desktopManager.cosmic.enable = true;
-  services.displayManager.cosmic-greeter.enable = true;
+  # Hyprland window manager
+  programs.hyprland.enable = true;
+  services.displayManager.sddm.enable = true;
+  services.displayManager.sddm.wayland.enable = true;
 
   services.dbus.enable = true;
   services.gnome.gnome-keyring.enable = true;
-  security.pam.services.cosmic-greeter.enableGnomeKeyring = true;
+  security.pam.services.sddm.enableGnomeKeyring = true;
 
   environment.systemPackages = with pkgs; [
     wget vim git
+    # Hyprland essentials
+    waybar          # Status bar
+    dunst           # Notifications
+    rofi-wayland    # Application launcher
+    swww            # Wallpaper daemon
+    grim            # Screenshots
+    slurp           # Screen selection
+    wl-clipboard    # Clipboard utilities
+    brightnessctl   # Brightness control
+    pavucontrol     # Audio control GUI
   ];
 
   system.stateVersion = "23.11";
