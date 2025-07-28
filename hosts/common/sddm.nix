@@ -47,6 +47,6 @@
     jetbrains-mono
     noto-fonts
     noto-fonts-emoji
-    (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    pkgs.nerd-fonts.jetbrains-mono
   ];
 }
