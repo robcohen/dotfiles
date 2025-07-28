@@ -7,6 +7,7 @@
     ../common/base.nix
     ../common/security.nix
     ../common/tpm.nix
+    ../common/sddm.nix
   ];
 
 

@@ -38,10 +38,12 @@
           size = 3;
           passes = 1;
         };
-        drop_shadow = true;
-        shadow_range = 4;
-        shadow_render_power = 3;
-        "col.shadow" = "rgba(1a1a1aee)";
+        shadow = {
+          enabled = true;
+          range = 4;
+          render_power = 3;
+          color = "rgba(1a1a1aee)";
+        };
       };
 
       # Animations
@@ -162,18 +164,18 @@
       ];
 
       # Window rules
-      windowrule = [
-        "float, ^(pavucontrol)$"
-        "float, ^(blueman-manager)$"
-        "float, ^(nm-connection-editor)$"
-        "float, ^(file_progress)$"
-        "float, ^(confirm)$"
-        "float, ^(dialog)$"
-        "float, ^(download)$"
-        "float, ^(notification)$"
-        "float, ^(error)$"
-        "float, ^(splash)$"
-        "float, ^(confirmreset)$"
+      windowrulev2 = [
+        "float, class:^(pavucontrol)$"
+        "float, class:^(blueman-manager)$"
+        "float, class:^(nm-connection-editor)$"
+        "float, class:^(file_progress)$"
+        "float, class:^(confirm)$"
+        "float, class:^(dialog)$"
+        "float, class:^(download)$"
+        "float, class:^(notification)$"
+        "float, class:^(error)$"
+        "float, class:^(splash)$"
+        "float, class:^(confirmreset)$"
         "float, title:^(Open File)(.*)$"
         "float, title:^(Select a File)(.*)$"
         "float, title:^(Choose wallpaper)(.*)$"
@@ -184,7 +186,7 @@
 
       # Startup applications
       exec-once = [
-        "waybar"
+        "eww daemon && eww open bar"
         "dunst"
         "swww-daemon"
         # Set wallpaper if available
