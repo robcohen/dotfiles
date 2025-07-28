@@ -11,27 +11,30 @@ repos:
       - id: trailing-whitespace
       - id: check-merge-conflict
 
-# Temporarily disabled detect-secrets due to missing dependencies
-  # - repo: https://github.com/Yelp/detect-secrets
-  #   rev: v1.5.0
-  #   hooks:
-  #     - id: detect-secrets
-  #       args: ['--baseline', '.secrets.baseline']
-  #       exclude: ^(flake\.lock|\.git/)
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: ^(flake\.lock|\.git/)
+        additional_dependencies: ['gibberish-detector']
 
-# Temporarily disabled ggshield due to missing API key
+# GitGuardian ggshield - requires API key setup
+  # To enable: run `ggshield auth login` to set up API key
   # - repo: https://github.com/gitguardian/ggshield
   #   rev: v1.30.0
   #   hooks:
   #     - id: ggshield
   #       language: python
   #       stages: [pre-commit]
+  #       args: ['secret', 'scan', 'pre-commit']
 
-# Temporarily disabled gitleaks due to false positives on baseline file
-  # - repo: https://github.com/gitleaks/gitleaks
-  #   rev: v8.21.2
-  #   hooks:
-  #     - id: gitleaks
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+        args: ['--verbose', '--redact']
+        exclude: ^\.secrets\.baseline$
 
   - repo: local
     hooks:
@@ -41,16 +44,14 @@ repos:
         language: system
         pass_filenames: false
 
-# Temporarily disabled sensitive patterns check due to false positives
-      # - id: check-sensitive-patterns
-      #   name: Check for sensitive patterns
-      #   entry: bash -c 'if grep -r --exclude-dir=.git --exclude="*.md" -i "password\s*=\|api_key\s*=\|secret\s*=\|token\s*=\|credential" .; then echo "Potential credential detected!"; exit 1; fi'
-      #   language: system
-      #   pass_filenames: false
+      - id: check-sensitive-patterns
+        name: Check for sensitive patterns
+        entry: bash -c 'if grep -r --exclude-dir=.git --exclude="*.md" --exclude=".secrets.baseline" --exclude=".pre-commit-config.yaml" --exclude-dir=hosts -i "password\s*=.*[^#]\|api_key\s*=.*[^#]\|secret\s*=.*[^#]\|token\s*=.*[^#]" .; then echo "Potential credential detected!"; exit 1; fi'
+        language: system
+        pass_filenames: false
 
-# Temporarily disabled nix validation due to verbose output
-      # - id: nix-file-validation
-      #   name: Validate Nix files
-      #   entry: nix-instantiate --parse
-      #   language: system
-      #   files: '\.nix$'
+      - id: nix-file-validation
+        name: Validate Nix files
+        entry: bash -c 'for file in "$@"; do nix-instantiate --parse "$file" >/dev/null 2>&1 || { echo "Nix validation failed for $file"; exit 1; }; done'
+        language: system
+        files: '\.nix$'
