@@ -48,7 +48,7 @@
           version = "~> 2.0";
         };
         helm = {
-          source = "hashicorp/helm"; 
+          source = "hashicorp/helm";
           version = "~> 2.0";
         };
       };
@@ -65,13 +65,13 @@
     kd = "kubectl describe";
     kl = "kubectl logs";
     ke = "kubectl exec -it";
-    
+
     # Terraform
     tf = "terraform";
     tfa = "terraform apply";
     tfp = "terraform plan";
     tfi = "terraform init";
-    
+
     # Infrastructure
     tg = "terragrunt";
     hm = "helm";
@@ -99,10 +99,10 @@
         use flake github:robcohen/dotfiles#infrastructure
       fi
     fi
-    
+
     # Standard environment variables
     ${lib.concatStringsSep "\n" (lib.mapAttrsToList (name: value: "export ${name}=\"${value}\"") environmentVariables)}
-    
+
     # Infrastructure environment indicator
     export DIRENV_INFRA=1
   '';

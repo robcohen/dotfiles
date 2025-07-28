@@ -10,7 +10,7 @@
     theme = "catppuccin-mocha";
     package = pkgs.kdePackages.sddm;
     wayland.enable = true;  # Modern Wayland support (2025 best practice)
-    
+
     settings = {
       Theme = {
         Current = "catppuccin-mocha";
@@ -25,7 +25,7 @@
       };
     };
   };
-  
+
   # Install the beautiful Catppuccin SDDM theme
   environment.systemPackages = with pkgs; [
     (catppuccin-sddm.override {
@@ -37,11 +37,11 @@
     })
     catppuccin-cursors.mochaDark
   ];
-  
+
   # Set up wallpaper for SDDM login screen
-  environment.etc."nixos/wallpapers/sddm-wallpaper.png".source = 
+  environment.etc."nixos/wallpapers/sddm-wallpaper.png".source =
     ../../assets/backgrounds/nix-wallpaper-dracula.png;
-    
+
   # Ensure required fonts are available system-wide for SDDM
   fonts.packages = with pkgs; [
     jetbrains-mono

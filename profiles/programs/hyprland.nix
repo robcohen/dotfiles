@@ -3,7 +3,7 @@
 {
   wayland.windowManager.hyprland = {
     enable = true;
-    
+
     settings = {
       # Monitor configuration
       monitor = [
@@ -25,38 +25,60 @@
         gaps_in = 5;
         gaps_out = 20;
         border_size = 2;
-        "col.active_border" = "rgba(33ccffee) rgba(00ff99ee) 45deg";
-        "col.inactive_border" = "rgba(595959aa)";
+        "col.active_border" = "rgba(74c7ecff) rgba(89b4faff) rgba(cba6f7ff) 45deg";
+        "col.inactive_border" = "rgba(313244aa)";
         layout = "dwindle";
       };
 
       # Decoration
       decoration = {
-        rounding = 10;
+        rounding = 16;
+
         blur = {
           enabled = true;
-          size = 3;
-          passes = 1;
+          size = 8;
+          passes = 3;
+          xray = true;
+          contrast = 1.17;
+          brightness = 0.8;
         };
+
         shadow = {
           enabled = true;
-          range = 4;
+          range = 20;
           render_power = 3;
-          color = "rgba(1a1a1aee)";
+          color = "rgba(0d1117ee)";
+          offset = "0 8";
         };
+
+        # Glass-like effect
+        active_opacity = 0.95;
+        inactive_opacity = 0.85;
+        fullscreen_opacity = 1.0;
       };
 
       # Animations
       animations = {
         enabled = true;
-        bezier = "myBezier, 0.05, 0.9, 0.1, 1.05";
+
+        bezier = [
+          "wind, 0.05, 0.9, 0.1, 1.05"
+          "winIn, 0.1, 1.1, 0.1, 1.1"
+          "winOut, 0.3, -0.3, 0, 1"
+          "liner, 1, 1, 1, 1"
+          "linear, 0.0, 0.0, 1.0, 1.0"
+        ];
+
         animation = [
-          "windows, 1, 7, myBezier"
-          "windowsOut, 1, 7, default, popin 80%"
+          "windows, 1, 6, wind, slide"
+          "windowsIn, 1, 6, winIn, slide"
+          "windowsOut, 1, 5, winOut, slide"
+          "windowsMove, 1, 5, wind, slide"
           "border, 1, 10, default"
-          "borderangle, 1, 8, default"
-          "fade, 1, 7, default"
-          "workspaces, 1, 6, default"
+          "borderangle, 1, 100, linear, loop"
+          "fade, 1, 8, default"
+          "workspaces, 1, 5, wind"
+          "specialWorkspace, 1, 8, wind, slidevert"
         ];
       };
 
@@ -80,6 +102,12 @@
         disable_hyprland_logo = true;
         disable_splash_rendering = true;
         force_default_wallpaper = 0;
+        animate_manual_resizes = true;
+        animate_mouse_windowdragging = true;
+        enable_swallow = true;
+        swallow_regex = "^(Alacritty)$";
+        focus_on_activate = true;
+        vfr = true;
       };
 
       # Device configuration

@@ -66,7 +66,7 @@ config.sops.secrets."user/email".path          # Contains your email
 config.sops.secrets."user/realName".path       # Contains your real name
 config.sops.secrets."user/githubUsername".path # Contains your GitHub username
 config.sops.secrets."domains/primary".path     # Contains your primary domain
-config.sops.secrets."domains/vpn".path         # Contains your VPN domain  
+config.sops.secrets."domains/vpn".path         # Contains your VPN domain
 config.sops.secrets."domains/internal".path    # Contains your internal domain
 ```
 

@@ -22,11 +22,11 @@
   services.udev.extraRules = ''
     ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/backlight/%k/brightness"
     ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chmod g+w /sys/class/backlight/%k/brightness"
-    
+
     # Intel AX211 Bluetooth device authorization and power management
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0033", ATTR{authorized}="1"
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0033", ATTR{power/autosuspend}="-1"
-    
+
     # General Bluetooth class device rules
     ACTION=="add", SUBSYSTEM=="bluetooth", RUN+="${pkgs.coreutils}/bin/chmod 666 /dev/rfkill"
     ACTION=="add", ATTR{class}=="e0*", ATTR{authorized}="1"
@@ -83,7 +83,7 @@
     "fwupd.verbose=1"        # Verbose firmware logging
     "efi=debug"              # EFI debugging
     "lockdown=integrity"     # Kernel lockdown mode (integrity allows signed firmware)
-    
+
     # Bluetooth power management fixes
     "btusb.enable_autosuspend=0"  # Disable Bluetooth auto-suspend
     "usbcore.autosuspend=-1"      # Disable USB auto-suspend globally
@@ -226,7 +226,7 @@
     rules = ''
       # Allow all connected devices at boot
       allow with-connect-type "hotplug"
-      
+
       # Allow common device classes
       allow with-interface equals { 03:*:* } # All HID devices
       allow with-interface equals { 08:*:* } # All mass storage
@@ -234,13 +234,13 @@
       allow with-interface equals { 0e:*:* } # All video devices
       allow with-interface equals { 01:*:* } # All audio devices
       allow with-interface equals { ff:*:* } # Vendor-specific (including ADB)
-      
+
       # Bluetooth support
       allow with-interface equals { e0:*:* } # All Bluetooth controllers
-      
+
       # Allow your specific hub
       allow id 0bda:5409 # 3-Port USB 2.1 Hub
-      
+
       # Allow other common vendors
       allow id 0bda:* # Realtek devices
       allow id 8087:* # Intel devices

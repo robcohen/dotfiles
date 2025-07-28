@@ -9,18 +9,18 @@
       monospace = [ "Source Code Pro" "Liberation Mono" ];
       emoji = [ "Noto Color Emoji" ];
     };
-    
+
     hinting = {
       enable = true;
       autohint = false;
       style = "slight";
     };
-    
+
     subpixel = {
       lcdfilter = "default";
       rgba = "rgb";
     };
-    
+
     antialias = true;
   };
 }

@@ -62,7 +62,7 @@
     "net.ipv4.icmp_echo_ignore_broadcasts" = true;
     "net.ipv4.icmp_ignore_bogus_error_responses" = true;
     "net.ipv4.tcp_syncookies" = true;
-    
+
     # Memory protection
     "kernel.dmesg_restrict" = true;
     "kernel.kptr_restrict" = 2;
@@ -71,7 +71,7 @@
 
   # Secure boot (when available)
   boot.loader.systemd-boot.editor = false;
-  
+
   # Password policy
   security.pam.loginLimits = [
     { domain = "*"; type = "hard"; item = "maxlogins"; value = "3"; }

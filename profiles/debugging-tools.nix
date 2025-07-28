@@ -55,7 +55,7 @@ let
         echo ""
         echo "Available options:"
         echo "  packages  - Show package information"
-        echo "  services  - Show active services"  
+        echo "  services  - Show active services"
         echo "  features  - Show host features"
         echo "  warnings  - Show configuration warnings"
         echo "  all       - Show complete analysis"
@@ -67,11 +67,11 @@ let
     #!/bin/bash
     echo "🧹 Home Manager Cleanup"
     echo "======================"
-    
+
     echo "Current generations:"
     home-manager generations
     echo ""
-    
+
     read -p "Remove old generations? (keep last 5) [y/N]: " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -99,7 +99,7 @@ let
     echo ""
     echo "📍 XDG Directories:"
     echo "Config: $XDG_CONFIG_HOME"
-    echo "Data: $XDG_DATA_HOME" 
+    echo "Data: $XDG_DATA_HOME"
     echo "Cache: $XDG_CACHE_HOME"
     echo ""
     echo "🔧 Home Manager:"
@@ -124,39 +124,39 @@ in {
   # Create helpful documentation
   home.file.".config/home-manager/README.md".text = ''
     # Home Manager Configuration
-    
+
     This directory contains generated configuration files and analysis reports.
-    
+
     ## Quick Commands
-    
+
     - `hm-debug` - Show debug information
     - `hm-inspect [category]` - Inspect configuration details
     - `hm-cleanup` - Clean old generations
     - `hm-env` - Show environment information
-    
+
     ## Configuration Files
-    
+
     - `config-analysis.md` - Detailed configuration analysis
     - `host-info.txt` - Basic host information
-    
+
     ## Useful Home Manager Commands
-    
+
     ```bash
     # Switch configuration
     home-manager switch --flake ~/Documents/dotfiles/#user@${hostname}
-    
+
     # Show generations
     home-manager generations
-    
+
     # Show news
     home-manager news
-    
+
     # Remove old generations
     home-manager expire-generations '-7 days'
     ```
-    
+
     ## Configuration Location
-    
+
     Main configuration: `~/Documents/dotfiles/profiles/user.nix`
     Host-specific: `~/Documents/dotfiles/lib/vars.nix`
   '';

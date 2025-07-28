@@ -19,7 +19,7 @@ A comprehensive NixOS configuration using flakes and Home Manager, featuring des
    ```bash
    cp secrets.example.nix secrets.nix
    # Edit secrets.nix with your personal information
-   
+
    # Set up secure private secrets directory
    mkdir -p ~/.secrets
    chmod 700 ~/.secrets
@@ -38,7 +38,7 @@ A comprehensive NixOS configuration using flakes and Home Manager, featuring des
    ```bash
    # Generate new BIP39 mnemonic and set up SOPS
    ./scripts/bootstrap-secrets.sh --generate
-   
+
    # Or use existing mnemonic
    ./scripts/bootstrap-secrets.sh --mnemonic "your 24 words here"
    ```
@@ -209,7 +209,7 @@ echo "Save this mnemonic securely: $MNEMONIC"
 # 3. Initialize TPM
 tpm-init
 
-# 4. Create all keys from mnemonic  
+# 4. Create all keys from mnemonic
 bip39-unified-keys --mnemonic "$MNEMONIC" --setup-sops --comment "MyDevice"
 
 # 5. Verify keys are stored

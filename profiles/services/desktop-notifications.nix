@@ -43,19 +43,19 @@
           title = "Dunst";
           class = "Dunst";
         };
-        
+
         urgency_low = {
           background = "#222222";
           foreground = "#888888";
           timeout = 10;
         };
-        
+
         urgency_normal = {
           background = "#285577";
           foreground = "#ffffff";
           timeout = 10;
         };
-        
+
         urgency_critical = {
           background = "#900000";
           foreground = "#ffffff";

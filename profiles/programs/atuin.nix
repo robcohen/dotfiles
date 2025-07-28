@@ -11,18 +11,18 @@
       # Privacy settings
       auto_sync = false;
       sync_address = "";
-      
+
       # Search settings
       search_mode = "fuzzy";
       filter_mode = "global";
       style = "compact";
       inline_height = 10;
-      
+
       # History settings
       update_check = false;
       common_prefix = ["sudo"];
       common_subcommands = ["build" "test" "run"];
-      
+
     };
   };
 }

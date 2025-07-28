@@ -34,7 +34,7 @@
 
   swapDevices = [{
     device = "/swap/swapfile";
-    size = 16384;  # 16GB swap  
+    size = 16384;  # 16GB swap
   }];
 
   users.users.user.extraGroups = [ "libvirtd" "kvm" ];

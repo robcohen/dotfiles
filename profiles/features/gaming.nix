@@ -16,7 +16,7 @@
   };
 
   # Gaming-specific packages already handled conditionally in packages.nix
-  
+
   # Gaming-optimized XDG directories
   xdg.userDirs = {
     # Create dedicated gaming directories
@@ -26,7 +26,7 @@
   };
 
   # Gaming-specific session variables (already in host-specific.nix)
-  
+
   home.file.".local/share/applications/gaming-mode.desktop".text = ''
     [Desktop Entry]
     Type=Application

@@ -196,7 +196,7 @@ backup-validate
 
 # Test restore from specific backup type
 backup-restore-test local "tank/nfs/share"
-backup-restore-test offline "tank/nfs/share" 
+backup-restore-test offline "tank/nfs/share"
 backup-restore-test cloud "tank/nfs/share"
 
 # Run complete disaster recovery simulation
@@ -272,7 +272,7 @@ The system automatically monitors and alerts on:
 
 When scaling beyond personal use:
 1. **Geographic redundancy**: Deploy secondary site
-2. **Load balancing**: Add HAProxy for service distribution  
+2. **Load balancing**: Add HAProxy for service distribution
 3. **External monitoring**: Add external health checks
 4. **Compliance**: Implement audit logging and retention
 5. **Access control**: Add role-based authentication

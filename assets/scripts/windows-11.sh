@@ -49,4 +49,3 @@
     -object memory-backend-file,id=looking-glass,mem-path=/dev/kvmfr0,size=128M,share=yes \
     -object input-linux,id=kbd1,evdev=/dev/input/event3,grab_all=on,repeat=on \
     -object input-linux,id=mouse1,evdev=/dev/input/event2
-

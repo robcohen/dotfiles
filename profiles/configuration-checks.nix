@@ -4,7 +4,7 @@ let
   hasFeature = feature: builtins.elem feature hostFeatures;
   isDesktop = hostType == "desktop";
   isServer = hostType == "server";
-  
+
   # Configuration consistency checks
   checkWarnings = [
     {
@@ -24,11 +24,11 @@ let
       message = "⚠️  Host '${hostname}' has many features (${toString (builtins.length hostFeatures)}) - consider if all are needed";
     }
   ];
-  
+
   # Generate warnings for display
   activeWarnings = builtins.filter (w: w.condition) checkWarnings;
   warningMessages = map (w: w.message) activeWarnings;
-  
+
   # Security checks
   securityChecks = [
     {
@@ -40,10 +40,10 @@ let
       message = "🔒 Gaming and SSH both enabled - ensure SSH is properly secured";
     }
   ];
-  
+
   activeSecurityWarnings = builtins.filter (w: w.condition) securityChecks;
   securityMessages = map (w: w.message) activeSecurityWarnings;
-  
+
   # Performance recommendations
   performanceChecks = [
     {
@@ -55,49 +55,49 @@ let
       message = "🚀 Development setup - consider enabling direnv, nix-index for better workflow";
     }
   ];
-  
+
   activePerformanceRecommendations = builtins.filter (w: w.condition) performanceChecks;
   performanceMessages = map (w: w.message) activePerformanceRecommendations;
-  
+
   # Combine all messages
   allMessages = warningMessages ++ securityMessages ++ performanceMessages;
-  
+
 in {
   # Display configuration analysis
   home.file.".config/home-manager/config-analysis.md".text = ''
     # Home Manager Configuration Analysis
-    
-    **Host:** ${hostname}  
-    **Type:** ${hostType}  
-    **Features:** ${lib.concatStringsSep ", " hostFeatures}  
+
+    **Host:** ${hostname}
+    **Type:** ${hostType}
+    **Features:** ${lib.concatStringsSep ", " hostFeatures}
     **Generated:** Auto-generated configuration analysis
-    
+
     ## Configuration Summary
     - State Version: ${hostConfig.homeManagerStateVersion}
     - Features Count: ${toString (builtins.length hostFeatures)}
     - Host Type: ${if isDesktop then "Desktop Environment" else "Server Environment"}
-    
+
     ## Active Features Analysis
     ${lib.concatMapStrings (feature: "- ✅ **${feature}**: ${
       if feature == "gaming" then "Performance optimizations, MangoHUD, gaming packages"
-      else if feature == "development" then "Development tools, git enhancements, build environments" 
+      else if feature == "development" then "Development tools, git enhancements, build environments"
       else if feature == "multimedia" then "Media players, codecs, audio/video tools"
       else if feature == "headless" then "Server optimizations, minimal packages"
       else if feature == "backup" then "Backup tools and automation"
       else "Custom feature configuration"
     }\n") hostFeatures}
-    
+
     ${if allMessages != [] then ''
     ## Recommendations & Warnings
     ${lib.concatMapStrings (msg: "- ${msg}\n") allMessages}
     '' else "## Status\n✅ No warnings or recommendations - configuration looks good!"}
-    
+
     ## Configuration Status
     - Configured programs: ${toString (builtins.length (builtins.attrNames config.programs))}
     - Active services: ${toString (builtins.length (builtins.attrNames config.services))}
     - State version: ${config.home.stateVersion}
   '';
-  
+
   # Optional: Add warnings to build output (commented out to avoid spam)
   # warnings = allMessages;
 }

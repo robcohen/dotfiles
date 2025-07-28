@@ -3,7 +3,7 @@
 let
   # Simple hostname detection with fallback
   detectedHostname = "brix";  # Hardcode for now to avoid infinite recursion
-  
+
   unstable = import inputs.unstable-nixpkgs {
     system = pkgs.system;
     config.allowUnfree = true;
@@ -54,7 +54,7 @@ in {
     };
   };
 
-  # Pass config to other modules  
+  # Pass config to other modules
   _module.args = {
     hostname = detectedHostname;
     hostConfig = {};  # Simplified - no complex host config needed
@@ -124,11 +124,11 @@ in {
     hm-switch = "home-manager switch --flake ~/Documents/dotfiles/#user@${detectedHostname}";
     hm-news = "home-manager news --flake ~/Documents/dotfiles/#user@${detectedHostname}";
     hm-gens = "home-manager generations";
-    
+
     # Security
     security-scan = "~/.local/bin/security-scan";
     security-audit = "lynis audit system";
     rootkit-check = "sudo chkrootkit";
-    
+
   };
 }

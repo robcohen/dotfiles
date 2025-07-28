@@ -142,7 +142,7 @@ else
         echo "❌ BIP39 unified keys derivation failed" >&2
         exit 1
     fi
-    
+
     # Extract the age public key from .sops.yaml
     AGE_PUBLIC=$(grep -o 'age1[a-z0-9]*' "$DOTFILES_DIR/.sops.yaml" | head -1)
 fi
@@ -168,7 +168,7 @@ else
     # Ensure secrets directory exists
     mkdir -p "$SECRETS_DIR"
     chmod 700 "$SECRETS_DIR"
-    
+
     # Create initial secrets file if it doesn't exist
     if [[ ! -f "$SECRETS_FILE" ]]; then
         cat > "$SECRETS_FILE" << EOF
@@ -182,18 +182,18 @@ user:
   realName: "User Name"
   githubUsername: "username"
 
-# Domain configuration  
+# Domain configuration
 domains:
   primary: "example.com"
   vpn: "vpn.example.com"
   internal: "internal.example.com"
 EOF
-        
+
         # Encrypt the file with SOPS using the TPM-sealed age key
         # The unified keys system handles age key access automatically
         sops --encrypt --in-place "$SECRETS_FILE"
         chmod 600 "$SECRETS_FILE"
-        
+
         echo "✅ Created and encrypted initial secrets file"
     else
         echo "⚠️  Secrets file already exists, skipping creation"
@@ -213,7 +213,7 @@ else
     # Uncomment SOPS modules in flake.nix
     sed -i 's|# sops-nix.nixosModules.sops|sops-nix.nixosModules.sops|g' "$FLAKE_FILE"
     sed -i 's|# ./modules/sops.nix|./modules/sops.nix|g' "$FLAKE_FILE"
-    
+
     echo "✅ Enabled SOPS modules in flake.nix"
 fi
 
@@ -224,7 +224,7 @@ echo "🎉 Bootstrap complete!"
 echo "===================="
 echo ""
 echo "✅ TPM initialized with primary key"
-echo "✅ Age key derived from BIP39 mnemonic"  
+echo "✅ Age key derived from BIP39 mnemonic"
 echo "✅ SOPS configuration updated"
 echo "✅ Initial secrets file created"
 echo "✅ SOPS enabled in system configuration"

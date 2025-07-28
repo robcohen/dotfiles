@@ -3,11 +3,11 @@
 let
   hostname = builtins.readFile /etc/hostname;
   cleanHostname = lib.strings.removeSuffix "\n" hostname;
-  
+
   # Simple validation with defaults
   hostType = "desktop";
   hostFeatures = [];
-  
+
 in {
   # Make host config available to other modules
   _module.args = {

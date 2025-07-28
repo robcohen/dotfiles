@@ -10,7 +10,7 @@
   programs = {
     # File managers
     ranger.enable = true;
-    
+
     # Media
     mpv.enable = true;
   };
@@ -24,11 +24,11 @@
   home.packages = with pkgs; [
     # Image viewers
     feh
-    
-    # Archive tools  
+
+    # Archive tools
     p7zip
     unrar
-    
+
     # File managers (ranger configured via programs.ranger)
     # Terminal already configured via alacritty
   ];

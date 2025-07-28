@@ -32,7 +32,7 @@ in {
   programs = {
     # Desktop applications
     alacritty.enable = lib.mkDefault isDesktop;
-    
+
     # Server-specific configurations
     git.extraConfig = lib.mkMerge [
       (lib.mkIf isServer {
@@ -51,7 +51,7 @@ in {
 
     # Gaming-specific programs
     mangohud.enable = lib.mkDefault (hasFeature "gaming");
-    
+
     # Development tools
     direnv.enable = lib.mkDefault (hasFeature "development" || isDesktop);
   };

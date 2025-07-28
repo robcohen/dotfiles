@@ -9,7 +9,7 @@
   programs = {
     # Enhanced direnv already configured
     nix-index.enable = true;
-    
+
     # Version control enhancements
     git = {
       aliases = {
@@ -60,7 +60,7 @@
       [Makefile]
       indent_style = tab
     '';
-    
+
     ".gdbinit".text = ''
       set print pretty on
       set print array on

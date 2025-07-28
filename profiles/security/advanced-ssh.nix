@@ -9,34 +9,34 @@
       VisualHostKey yes
       StrictHostKeyChecking ask
       VerifyHostKeyDNS yes
-      
+
       # Note: ForwardAgent needed for SSH signing, so only disable for remote hosts
       ForwardX11 no
       ForwardX11Trusted no
       PermitLocalCommand no
-      
+
       # TPM2-PKCS11 support for hardware-backed keys (disabled to avoid RSA key conflict)
       # PKCS11Provider ${pkgs.tpm2-pkcs11}/lib/libtpm2_pkcs11.so
-      
+
       # Connection security
       HostbasedAuthentication no
       PubkeyAuthentication yes
       ChallengeResponseAuthentication no
-      
+
       # Modern key exchange
       PubkeyAcceptedKeyTypes ssh-ed25519,rsa-sha2-512,rsa-sha2-256
       HostKeyAlgorithms ssh-ed25519,rsa-sha2-512,rsa-sha2-256
-      
+
       # Prevent connection attacks
       IPQoS throughput
       UpdateHostKeys ask
-      
+
       # Security-focused connection timeouts
       ConnectTimeout 30
       BatchMode no
       CheckHostIP yes
     '';
-    
+
     # Host-specific security configurations
     matchBlocks = {
       "localhost" = {
@@ -45,7 +45,7 @@
           ForwardAgent = "yes";
         };
       };
-      
+
       "*.internal" = {
         # Internal network hosts
         user = "user";
@@ -55,7 +55,7 @@
           VerifyHostKeyDNS = "no";  # Internal DNS may not have SSH fingerprints
         };
       };
-      
+
       "github.com" = {
         # GitHub-specific security
         user = "git";
@@ -67,14 +67,14 @@
           IdentitiesOnly = "yes";  # Force only the specified identity file
         };
       };
-      
+
       "*" = {
         # Default settings for all other hosts
         extraOptions = {
           ForwardAgent = "no";  # Disable by default for security
         };
       };
-      
+
       "*.onion" = {
         # Tor hidden services
         extraOptions = {
@@ -90,7 +90,7 @@
   home.packages = with pkgs; [
     ssh-audit       # SSH server security scanner
     sshfs           # Secure filesystem over SSH
-    mosh            # Mobile shell for unreliable connections  
+    mosh            # Mobile shell for unreliable connections
     assh            # Advanced SSH config manager
   ];
 
@@ -100,13 +100,13 @@
       #!/bin/bash
       # SSH client security audit
       set -euo pipefail
-      
+
       echo "🔍 SSH Client Security Audit"
       echo "============================"
-      
+
       echo "📋 SSH Version:"
       ssh -V 2>&1
-      
+
       echo ""
       echo "🔑 Available Keys:"
       for keyfile in ~/.ssh/id_*; do
@@ -115,7 +115,7 @@
           ssh-keygen -l -f "$keyfile" 2>/dev/null || echo "  Invalid or encrypted key"
         fi
       done
-      
+
       echo ""
       echo "🛡️ SSH Agent Status:"
       if ssh-add -l >/dev/null 2>&1; then
@@ -124,7 +124,7 @@
       else
         echo "SSH agent not running or no keys loaded"
       fi
-      
+
       echo ""
       echo "📊 Known Hosts:"
       if [[ -f ~/.ssh/known_hosts ]]; then
@@ -133,11 +133,11 @@
       else
         echo "No known_hosts file found"
       fi
-      
+
       echo ""
       echo "⚙️ Configuration Test:"
       ssh -G localhost | grep -E "^(ciphers|macs|kexalgorithms|hostkeyalgorithms)"
-      
+
       echo ""
       echo "🔒 Security Recommendations:"
       echo "- Use Ed25519 keys for new hosts"
@@ -154,22 +154,22 @@
       #!/bin/bash
       # SSH key rotation helper
       set -euo pipefail
-      
+
       echo "🔄 SSH Key Rotation Helper"
       echo "========================="
-      
+
       read -p "Generate new Ed25519 key? [y/N]: " -n 1 -r
       echo ""
-      
+
       if [[ $REPLY =~ ^[Yy]$ ]]; then
         KEYNAME="id_ed25519_$(date +%Y%m%d)"
-        
+
         echo "Generating new key: $KEYNAME"
         ssh-keygen -t ed25519 -f ~/.ssh/"$KEYNAME" -C "$(whoami)@$(hostname)-$(date +%Y%m%d)"
-        
+
         echo "New public key:"
         cat ~/.ssh/"$KEYNAME.pub"
-        
+
         echo ""
         echo "Next steps:"
         echo "1. Add public key to your servers/services"
@@ -188,32 +188,32 @@
       #!/bin/bash
       # Secure SCP wrapper with integrity checking
       set -euo pipefail
-      
+
       if [[ $# -lt 2 ]]; then
         echo "Usage: secure-scp <source> <destination>"
         echo "Secure file transfer with integrity verification"
         exit 1
       fi
-      
+
       SOURCE="$1"
       DEST="$2"
-      
+
       # Generate checksum
       if [[ -f "$SOURCE" ]]; then
         CHECKSUM=$(sha256sum "$SOURCE" | cut -d' ' -f1)
         echo "Source SHA256: $CHECKSUM"
-        
+
         # Transfer file
         scp -o Compression=yes -o Cipher=chacha20-poly1305@openssh.com "$SOURCE" "$DEST"
-        
+
         # Verify on remote (if remote destination)
         if [[ "$DEST" =~ : ]]; then
           REMOTE_HOST=$(echo "$DEST" | cut -d: -f1)
           REMOTE_PATH=$(echo "$DEST" | cut -d: -f2)
-          
+
           echo "Verifying remote file integrity..."
           REMOTE_CHECKSUM=$(ssh "$REMOTE_HOST" "sha256sum '$REMOTE_PATH'" | cut -d' ' -f1)
-          
+
           if [[ "$CHECKSUM" == "$REMOTE_CHECKSUM" ]]; then
             echo "✅ File integrity verified"
           else

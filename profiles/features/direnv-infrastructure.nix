@@ -13,7 +13,7 @@
   home.file.".config/direnv/templates/infrastructure.envrc".text = ''
     # Infrastructure project environment
     # This will be automatically used when you have a flake.nix with infrastructure tools
-    
+
     if has nix; then
       if [[ -f flake.nix ]]; then
         echo "🔧 Loading project-specific tools..."
@@ -24,11 +24,11 @@
         use nix
       fi
     fi
-    
+
     # Infrastructure-specific environment variables
     export KUBECONFIG="$HOME/.kube/config"
     export TALOSCONFIG="$HOME/.talos/config"
-    
+
     # Prompt indicator when in infrastructure environment
     export DIRENV_INFRA=1
   '';
@@ -46,19 +46,19 @@
     (writeShellScriptBin "init-infra-project" ''
       #!/usr/bin/env bash
       set -euo pipefail
-      
+
       PROJECT_DIR="''${1:-.}"
       cd "$PROJECT_DIR"
-      
+
       if [[ ! -f .envrc ]]; then
         echo "🏗️  Initializing infrastructure project environment..."
-        
+
         # Copy the infrastructure envrc template
         cp ~/.config/direnv/templates/infrastructure.envrc .envrc
-        
+
         # Allow direnv to use it
         direnv allow
-        
+
         echo "✅ Infrastructure environment configured!"
         echo "💡 Tools available: kubectl, talosctl, terraform, helm, k9s"
         echo "🔗 Connect to VPN with: sudo tailscale up"
@@ -72,7 +72,7 @@
   home.activation.setupInfraDirectories = lib.hm.dag.entryAfter ["writeBoundary"] ''
     # Create Projects directory if it doesn't exist
     mkdir -p ~/Projects
-    
+
     # Auto-setup infrastructure project if robcohen.dev exists
     if [[ -d ~/Projects/robcohen.dev && ! -f ~/Projects/robcohen.dev/.envrc ]]; then
       cd ~/Projects/robcohen.dev

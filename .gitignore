@@ -7,6 +7,39 @@ secrets.nix
 secrets.yaml*
 .sops.yaml.backup
 
+# Additional sensitive files
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+*.jks
+*.keystore
+*.truststore
+.env
+.env.*
+!.env.example
+*.secret
+*.secrets
+
+# SSH keys
+id_rsa
+id_ecdsa
+id_ed25519
+
+# GPG keys
+*.gpg
+*.asc
+secring.*
+pubring.*
+
+# Configuration files that might contain secrets
+config.json
+settings.json
+credentials.json
+auth.json
+
 # Editor files
 .vscode/
 .idea/

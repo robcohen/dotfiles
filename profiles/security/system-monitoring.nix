@@ -23,10 +23,10 @@ in {
       #!/bin/bash
       # Comprehensive security scanning
       set -euo pipefail
-      
+
       echo "🔍 System Security Scan"
       echo "======================"
-      
+
       # Check for updates
       echo ""
       echo "📦 System Updates:"
@@ -39,25 +39,25 @@ in {
           echo "✅ Dotfiles up to date"
         fi
       fi
-      
+
       # Network security check
       echo ""
       echo "🌐 Network Security:"
       echo "Open ports on localhost:"
       netstat -tlnp 2>/dev/null | grep LISTEN | head -10
-      
+
       # Process monitoring
       echo ""
       echo "⚙️  Process Security:"
       echo "Processes with network connections:"
       netstat -tulnp 2>/dev/null | grep -E ":(22|80|443|8080)" | head -5
-      
+
       # File permissions audit
       echo ""
       echo "📁 File Security:"
       echo "World-writable files in home:"
       find "$HOME" -type f -perm -002 2>/dev/null | head -5 || echo "None found"
-      
+
       # SSH security
       echo ""
       echo "🔑 SSH Security:"
@@ -66,7 +66,7 @@ in {
       else
         echo "No authorized_keys file"
       fi
-      
+
       # GPG security
       echo ""
       echo "🔐 GPG Security:"
@@ -74,7 +74,7 @@ in {
         echo "GPG keys:"
         gpg --list-secret-keys --keyid-format short 2>/dev/null | grep -c "^sec" || echo "0"
       fi
-      
+
       # Nix security
       echo ""
       echo "📋 Nix Security:"
@@ -82,7 +82,7 @@ in {
         echo "Running vulnerability scan..."
         vulnix --system 2>/dev/null | head -5 || echo "No vulnerabilities found"
       fi
-      
+
       echo ""
       echo "✅ Security scan complete"
       echo "💡 Run 'lynis audit system' for detailed security audit"
@@ -96,10 +96,10 @@ in {
       #!/bin/bash
       # File integrity monitoring for important files
       set -euo pipefail
-      
+
       INTEGRITY_DIR="$HOME/.integrity"
       mkdir -p "$INTEGRITY_DIR"
-      
+
       # Important files to monitor
       IMPORTANT_FILES=(
         "$HOME/.ssh/authorized_keys"
@@ -109,7 +109,7 @@ in {
         "$HOME/.bashrc"
         "$HOME/.zshrc"
       )
-      
+
       case "''${1:-check}" in
         "init"|"baseline")
           echo "🔒 Creating integrity baseline..."
@@ -122,16 +122,16 @@ in {
           done
           echo "✅ Baseline created in $INTEGRITY_DIR/baseline.txt"
           ;;
-          
+
         "check"|"verify")
           if [[ ! -f "$INTEGRITY_DIR/baseline.txt" ]]; then
             echo "❌ No baseline found. Run 'integrity-check init' first"
             exit 1
           fi
-          
+
           echo "🔍 Checking file integrity..."
           CHANGES=0
-          
+
           while IFS=: read -r file expected_hash; do
             if [[ -f "$file" ]]; then
               current_hash=$(sha256sum "$file" | cut -d' ' -f1)
@@ -144,14 +144,14 @@ in {
               CHANGES=$((CHANGES + 1))
             fi
           done < "$INTEGRITY_DIR/baseline.txt"
-          
+
           if [[ $CHANGES -eq 0 ]]; then
             echo "✅ All monitored files are unchanged"
           else
             echo "⚠️  $CHANGES file(s) have changed or are missing"
           fi
           ;;
-          
+
         *)
           echo "Usage: integrity-check [init|check]"
           echo ""
@@ -170,10 +170,10 @@ in {
       #!/bin/bash
       # Simple network monitoring
       set -euo pipefail
-      
+
       echo "🌐 Network Security Monitor"
       echo "=========================="
-      
+
       # Active connections
       echo ""
       echo "Active network connections:"
@@ -181,7 +181,7 @@ in {
         port=$(echo "$line" | awk '{print $4}' | cut -d: -f2)
         echo "  Port $port: $(echo "$line" | awk '{print $1}')"
       done
-      
+
       # Recent connection attempts (if available)
       echo ""
       echo "Recent SSH attempts (last 10):"
@@ -190,7 +190,7 @@ in {
       else
         echo "  No auth log accessible"
       fi
-      
+
       # DNS resolution test
       echo ""
       echo "DNS Security Test:"
@@ -201,7 +201,7 @@ in {
           echo "  ❌ $domain resolution failed"
         fi
       done
-      
+
       # Basic port scan of localhost
       echo ""
       echo "Localhost port scan (common ports):"

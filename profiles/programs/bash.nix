@@ -5,7 +5,7 @@
   ...
 }: {
 
-  programs.bash = { 
+  programs.bash = {
     enable = true;
     enableCompletion = true;
     initExtra = ''
@@ -24,4 +24,4 @@
     historyControl = [ "ignoredups" "ignorespace" ];
     historySize = 10000;
   };
-} 
+}

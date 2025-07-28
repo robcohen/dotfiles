@@ -9,7 +9,7 @@ with lib;
     defaultSopsFile = "/home/user/.secrets/secrets.yaml";
     defaultSopsFormat = "yaml";
     validateSopsFiles = false;  # Allow building before secrets file exists
-    
+
     # Age configuration - let SOPS-nix manage the key
     age = {
       generateKey = true;
@@ -39,7 +39,7 @@ with lib;
         group = "root";
         mode = "0400";
       };
-      
+
       # Domain configuration secrets
       "domains/primary" = {
         owner = "root";

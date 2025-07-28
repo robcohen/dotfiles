@@ -12,7 +12,7 @@
         margin-top = 8;
         margin-left = 16;
         margin-right = 16;
-        
+
         modules-left = [ "hyprland/workspaces" "hyprland/mode" "hyprland/scratchpad" ];
         modules-center = [ "hyprland/window" ];
         modules-right = [ "tray" "idle_inhibitor" "pulseaudio" "network" "cpu" "memory" "temperature" "battery" "clock" ];
@@ -22,19 +22,23 @@
           all-outputs = true;
           format = "{icon}";
           format-icons = {
-            "1" = "󰲠";
-            "2" = "󰲢";
-            "3" = "󰲤";
-            "4" = "󰲦";
-            "5" = "󰲨";
-            "6" = "󰲪";
-            "7" = "󰲬";
-            "8" = "󰲮";
-            "9" = "󰲰";
+            "1" = "󰎤";
+            "2" = "󰎧";
+            "3" = "󰎪";
+            "4" = "󰎭";
+            "5" = "󰎱";
+            "6" = "󰎳";
+            "7" = "󰎶";
+            "8" = "󰎹";
+            "9" = "󰎼";
             "10" = "󰿬";
             urgent = "";
             focused = "";
-            default = "";
+            default = "󰊠";
+            active = "󰮯";
+          };
+          persistent-workspaces = {
+            "*" = 5;
           };
         };
 
@@ -144,8 +148,12 @@
       }
 
       window#waybar {
-        background: transparent;
+        background: rgba(17, 17, 27, 0.8);
         color: #cdd6f4;
+        border-radius: 16px;
+        margin: 8px 16px 0px 16px;
+        border: 2px solid rgba(137, 180, 250, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
       }
 
       tooltip {
@@ -169,13 +177,15 @@
       #temperature,
       #battery,
       #clock {
-        background: rgba(30, 30, 46, 0.9);
-        border-radius: 12px;
-        margin: 4px 2px;
-        padding: 6px 12px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(137, 180, 250, 0.3);
-        transition: all 0.3s ease;
+        background: linear-gradient(135deg, rgba(30, 30, 46, 0.95), rgba(24, 24, 37, 0.9));
+        border-radius: 14px;
+        margin: 6px 4px;
+        padding: 8px 16px;
+        border: 2px solid rgba(137, 180, 250, 0.2);
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        box-shadow:
+          0 4px 16px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
       }
 
       #workspaces {
@@ -194,15 +204,16 @@
       #workspaces button:hover {
         background: rgba(137, 180, 250, 0.2);
         color: #89b4fa;
-        transform: translateY(-1px);
       }
 
       #workspaces button.active {
-        background: linear-gradient(135deg, #89b4fa, #74c7ec);
-        color: #1e1e2e;
+        background: linear-gradient(135deg, #89b4fa, #74c7ec, #cba6f7);
+        color: #11111b;
         font-weight: bold;
-        transform: scale(1.1);
-        box-shadow: 0 4px 12px rgba(137, 180, 250, 0.4);
+        box-shadow:
+          0 6px 20px rgba(137, 180, 250, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.2);
       }
 
       #workspaces button.urgent {
@@ -212,8 +223,8 @@
       }
 
       @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
+        from { opacity: 1; }
+        to { opacity: 0.8; }
       }
 
       #window {
@@ -311,11 +322,15 @@
       }
 
       #clock {
-        background: linear-gradient(135deg, rgba(137, 180, 250, 0.2), rgba(116, 199, 236, 0.2));
-        border: 1px solid rgba(137, 180, 250, 0.6);
+        background: linear-gradient(135deg, rgba(137, 180, 250, 0.3), rgba(116, 199, 236, 0.25), rgba(203, 166, 247, 0.2));
+        border: 2px solid rgba(137, 180, 250, 0.4);
         color: #89b4fa;
         font-weight: bold;
-        box-shadow: 0 2px 8px rgba(137, 180, 250, 0.3);
+        font-size: 14px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        box-shadow:
+          0 4px 16px rgba(137, 180, 250, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
       }
 
       /* Hover effects */
@@ -339,7 +354,6 @@
       #temperature:hover,
       #battery:hover,
       #clock:hover {
-        transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(137, 180, 250, 0.2);
         border-color: rgba(137, 180, 250, 0.8);
       }

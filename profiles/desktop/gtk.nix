@@ -3,22 +3,22 @@
 {
   gtk = {
     enable = true;
-    
+
     theme = {
       name = "Adwaita-dark";
       package = pkgs.gnome-themes-extra;
     };
-    
+
     iconTheme = {
       name = "Adwaita";
       package = pkgs.adwaita-icon-theme;
     };
-    
+
     font = {
       name = "Noto Sans";
       size = 11;
     };
-    
+
     gtk3.extraConfig = {
       gtk-application-prefer-dark-theme = true;
       gtk-button-images = false;
@@ -30,7 +30,7 @@
       gtk-xft-hintstyle = "hintslight";
       gtk-xft-rgba = "rgb";
     };
-    
+
     gtk4.extraConfig = {
       gtk-application-prefer-dark-theme = true;
     };

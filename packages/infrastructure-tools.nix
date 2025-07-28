@@ -11,46 +11,46 @@
     kubectx
     k9s
     kustomize
-    
+
     # Talos Linux
     talosctl
-    
+
     # Infrastructure as Code
     terraform
     opentofu
     terragrunt
-    
+
     # Cloud providers
     awscli2
     google-cloud-sdk
     azure-cli
-    
+
     # Container tools
     docker
     docker-compose
     podman
     skopeo
-    
+
     # Security tools
     step-cli
     age
     sops
-    
+
     # Network tools
     tailscale
     headscale
-    
+
     # Monitoring tools
     grafana
     prometheus
-    
+
     # Development tools
     jq
     yq-go
     curl
     wget
     git
-    
+
     # Shell utilities
     fzf
     ripgrep

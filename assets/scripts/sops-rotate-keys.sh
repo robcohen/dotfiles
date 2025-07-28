@@ -62,7 +62,7 @@ echo "🔐 Re-encrypting secrets files..."
 for secrets_file in "$REPO_ROOT"/secrets*.yaml "$REPO_ROOT"/secrets/*.yaml; do
     if [[ -f "$secrets_file" ]] && grep -q "sops:" "$secrets_file"; then
         echo "  • Re-encrypting $(basename "$secrets_file")..."
-        
+
         # Test if we can decrypt with old key first
         if SOPS_AGE_KEY_FILE="$AGE_KEY_BACKUP" sops -d "$secrets_file" > /dev/null 2>&1; then
             # Decrypt with old key and re-encrypt with new key

@@ -21,9 +21,9 @@
     text = ''
       #!${pkgs.bash}/bin/bash
       # Initialize TPM hierarchy for SSH key storage
-      
+
       set -euo pipefail
-      
+
       usage() {
           echo "Usage: $0 [--force]"
           echo ""
@@ -35,47 +35,47 @@
           echo "This creates a primary key at handle 0x81000001 for storing SSH keys"
           exit 1
       }
-      
+
       FORCE=false
       if [[ "''${1:-}" == "--force" ]]; then
           FORCE=true
       elif [[ "''${1:-}" == "--help" ]] || [[ "''${1:-}" == "-h" ]]; then
           usage
       fi
-      
+
       echo "🔧 Initializing TPM for SSH key storage..."
-      
+
       # Suppress tabrmd warnings by using direct device access
       export TPM2TOOLS_TCTI="device:/dev/tpmrm0"
-      
+
       # Check if primary key already exists
       if tpm2_readpublic -c 0x81000001 >/dev/null 2>&1 && [[ "$FORCE" != "true" ]]; then
           echo "✅ TPM primary key already exists at handle 0x81000001"
           echo "   Use --force to recreate"
           exit 0
       fi
-      
+
       # Clear existing handle if forced
       if [[ "$FORCE" == "true" ]]; then
           echo "🗑️  Removing existing primary key..."
           tpm2_evictcontrol -C o -c 0x81000001 2>/dev/null || true
       fi
-      
+
       echo "🔐 Creating TPM primary key..."
-      
+
       # Suppress tabrmd warnings by using direct device access
       export TPM2TOOLS_TCTI="device:/dev/tpmrm0"
-      
+
       # Create primary key in owner hierarchy with proper attributes for being a parent
       tpm2_createprimary -C o -g sha256 -G ecc256 -c /tmp/primary.ctx \
           -a "fixedtpm|fixedparent|sensitivedataorigin|userwithauth|restricted|decrypt" 2>/dev/null
-      
-      # Make it persistent at handle 0x81000001  
+
+      # Make it persistent at handle 0x81000001
       tpm2_evictcontrol -C o -c /tmp/primary.ctx 0x81000001 2>/dev/null
-      
+
       # Clean up
       rm -f /tmp/primary.ctx
-      
+
       echo "✅ TPM initialized successfully"
       echo "   Primary key handle: 0x81000001"
       echo "   Ready for SSH key storage"
@@ -88,9 +88,9 @@
     text = ''
       #!${pkgs.bash}/bin/bash
       # TPM key management utility for listing and inspecting keys
-      
+
       set -euo pipefail
-      
+
       usage() {
           echo "Usage: $0 <command> [options]"
           echo "       $0 --help"
@@ -111,31 +111,31 @@
           echo "  $0 remove 0x81000100"
           exit 1
       }
-      
+
       if [[ $# -eq 0 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
           usage
       fi
-      
+
       COMMAND="$1"
-      
+
       case "$COMMAND" in
           "list")
               echo "📋 Persistent TPM handles:"
               echo ""
-              
+
               # Get all persistent handles
               HANDLES=$(tpm2_getcap handles-persistent 2>/dev/null | grep -E "0x81" | awk '{print $1}' || true)
-              
+
               if [[ -z "$HANDLES" ]]; then
                   echo "   No persistent handles found"
                   echo ""
                   echo "💡 Use: tpm-init to initialize TPM"
                   exit 0
               fi
-              
+
               printf "%-12s %-10s\\n" "Handle" "Status"
               printf "%-12s %-10s\\n" "--------" "--------"
-              
+
               for handle in $HANDLES; do
                   if tpm2_readpublic -c "$handle" >/dev/null 2>&1; then
                       printf "%-12s %-10s\\n" "$handle" "active"
@@ -144,47 +144,47 @@
                   fi
               done
               ;;
-              
+
           "info")
               if [[ $# -lt 2 ]]; then
                   echo "❌ Missing handle argument" >&2
                   echo "💡 Use: $0 info 0x81000100" >&2
                   exit 1
               fi
-              
+
               HANDLE="$2"
-              
+
               # Check if handle exists
               if ! tpm2_readpublic -c "$HANDLE" >/dev/null 2>&1; then
                   echo "❌ Handle $HANDLE not found in TPM" >&2
                   exit 1
               fi
-              
+
               echo "🔍 TPM Handle Information: $HANDLE"
               echo ""
               tpm2_readpublic -c "$HANDLE"
               ;;
-              
+
           "remove")
               if [[ $# -lt 2 ]]; then
                   echo "❌ Missing handle argument" >&2
                   echo "💡 Use: $0 remove 0x81000100" >&2
                   exit 1
               fi
-              
+
               HANDLE="$2"
-              
+
               # Check if handle exists
               if ! tpm2_readpublic -c "$HANDLE" >/dev/null 2>&1; then
                   echo "❌ Handle $HANDLE not found in TPM" >&2
                   exit 1
               fi
-              
+
               echo "⚠️  WARNING: About to permanently remove TPM key!"
               echo "   Handle: $HANDLE"
               echo ""
               read -p "Type 'YES' to confirm removal: " CONFIRM
-              
+
               if [[ "$CONFIRM" == "YES" ]]; then
                   echo "🗑️  Removing TPM key at handle $HANDLE..."
                   tpm2_evictcontrol -C o -c "$HANDLE"
@@ -194,7 +194,7 @@
                   exit 1
               fi
               ;;
-              
+
           *)
               echo "❌ Unknown command: $COMMAND" >&2
               echo "💡 Available commands: list, info, remove" >&2

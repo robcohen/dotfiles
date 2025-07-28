@@ -21,13 +21,13 @@ if [[ -f "$AGE_KEY_FILE" ]]; then
 else
     echo "📁 Creating age key directory..."
     mkdir -p "$AGE_DIR"
-    
+
     echo "🔑 Generating new age key..."
     age-keygen -o "$AGE_KEY_FILE"
-    
+
     echo "🔒 Setting secure permissions..."
     chmod 600 "$AGE_KEY_FILE"
-    
+
     AGE_PUBLIC_KEY=$(age-keygen -y "$AGE_KEY_FILE")
     echo "✓ Generated new age key with public key: $AGE_PUBLIC_KEY"
 fi
@@ -43,7 +43,7 @@ creation_rules:
     key_groups:
       - age:
           - *user
-  
+
   # Separate rules for different environments
   - path_regex: secrets/.*\.yaml$
     key_groups:
@@ -57,7 +57,7 @@ echo "✓ Updated $SOPS_CONFIG"
 if [[ -f "$SECRETS_FILE" ]]; then
     if grep -q "sops:" "$SECRETS_FILE" && grep -q "ENC\[" "$SECRETS_FILE"; then
         echo "✓ Encrypted secrets file already exists"
-        
+
         # Test decryption
         if sops -d "$SECRETS_FILE" > /dev/null 2>&1; then
             echo "✓ Successfully verified decryption access"
@@ -103,7 +103,7 @@ sops:
     pgp: []
     version: 3.9.0
 EOF
-    
+
     echo "🔐 Encrypting secrets file..."
     sops -e -i "$SECRETS_FILE"
     echo "✓ Created encrypted secrets.yaml"

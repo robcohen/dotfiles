@@ -3,7 +3,7 @@
 
 {
   # Infrastructure management tools (from shared package)
-  environment.systemPackages = 
+  environment.systemPackages =
     let
       infraTools = import ../../packages/infrastructure-tools.nix { inherit pkgs lib; };
     in
@@ -24,7 +24,7 @@
   };
 
   # DNS configuration for internal services (when VPN connected)
-  networking.extraHosts = 
+  networking.extraHosts =
     let
       primaryDomain = lib.strings.removeSuffix "\n" (builtins.readFile config.sops.secrets."domains/primary".path);
     in ''
@@ -35,7 +35,7 @@
     '';
 
   # kubectl configuration
-  environment.etc."kubectl/config".text = 
+  environment.etc."kubectl/config".text =
     let
       primaryDomain = lib.strings.removeSuffix "\n" (builtins.readFile config.sops.secrets."domains/primary".path);
     in ''
@@ -61,7 +61,7 @@
     '';
 
   # Create kube directory
-  systemd.tmpfiles.rules = 
+  systemd.tmpfiles.rules =
     let
       userName = lib.strings.removeSuffix "\n" (builtins.readFile config.sops.secrets."user/name".path);
     in [
