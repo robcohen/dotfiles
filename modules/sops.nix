@@ -74,4 +74,32 @@ with lib;
       RestartSec = "5s";
     };
   };
+
+  # Pre-activation check for secrets file
+  system.activationScripts.ensureSecretsFile = lib.stringAfter [ "users" ] ''
+    SECRETS_FILE="/home/user/.secrets/secrets.yaml"
+    if [ ! -f "$SECRETS_FILE" ]; then
+      echo ""
+      echo "⚠️  WARNING: SOPS secrets file not found!"
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "The file $SECRETS_FILE is required for SOPS."
+      echo ""
+      echo "Creating a placeholder file now. Run these commands:"
+      echo ""
+      echo "  mkdir -p ~/.secrets"
+      echo "  echo '{}' > ~/.secrets/secrets.yaml"
+      echo ""
+      echo "Then configure your secrets with sops later."
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      # Create the directory and placeholder file
+      mkdir -p "$(dirname "$SECRETS_FILE")"
+      echo '{}' > "$SECRETS_FILE"
+      chown user:users "$SECRETS_FILE"
+      chmod 600 "$SECRETS_FILE"
+      
+      echo "✓ Created placeholder secrets file at $SECRETS_FILE"
+      echo ""
+    fi
+  '';
 }

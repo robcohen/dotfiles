@@ -14,6 +14,7 @@
     ../common/security.nix
     ../common/tpm.nix
     ../common/sddm.nix
+    ../common/swap.nix
     ../virtualization.nix
   ];
 

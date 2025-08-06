@@ -62,11 +62,22 @@
           ];
         };
 
+	snix = stable-nixpkgs.lib.nixosSystem {
+	  inherit system;
+	  specialArgs = commonSpecialArgs;
+	  modules = [
+	    ./hosts/snix/configuration.nix
+            sops-nix.nixosModules.sops
+	    ./modules/sops.nix
+	  ];
+	};
+
       };
 
       homeConfigurations = {
         "user@slax" = mkHomeConfig;
         "user@brix" = mkHomeConfig;
+	"user@snix" = mkHomeConfig;
       };
 
       formatter.${system} = stable.nixpkgs-fmt;
@@ -217,3 +228,4 @@
         };
     };
 }
+

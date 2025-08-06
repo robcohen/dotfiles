@@ -12,7 +12,7 @@
   ];
 
 
-  networking.hostName = "brix";
+  networking.hostName = "snix";
   networking.networkmanager = {
     enable = true;
     wifi.macAddress = "random";
