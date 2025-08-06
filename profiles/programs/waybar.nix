@@ -15,7 +15,7 @@
 
         modules-left = [ "hyprland/workspaces" "hyprland/mode" "hyprland/scratchpad" ];
         modules-center = [ "hyprland/window" ];
-        modules-right = [ "tray" "idle_inhibitor" "pulseaudio" "network" "cpu" "memory" "temperature" "battery" "clock" ];
+        modules-right = [ "tray" "idle_inhibitor" "bluetooth" "custom/weather" "custom/performance" "pulseaudio" "battery" "custom/power" "clock" ];
 
         "hyprland/workspaces" = {
           disable-scroll = true;
@@ -81,20 +81,6 @@
           };
         };
 
-        cpu = {
-          format = "󰻠 {usage}%";
-          tooltip = false;
-        };
-
-        memory = {
-          format = "󰍛 {}%";
-        };
-
-        temperature = {
-          critical-threshold = 80;
-          format = "{icon} {temperatureC}°C";
-          format-icons = ["" "" ""];
-        };
 
         battery = {
           states = {
@@ -108,14 +94,6 @@
           format-icons = ["󰁺" "󰁻" "󰁼" "󰁽" "󰁾" "󰁿" "󰂀" "󰂁" "󰂂" "󰁹"];
         };
 
-        network = {
-          format-wifi = "󰤨 {essid} ({signalStrength}%)";
-          format-ethernet = "󰈀 {ipaddr}/{cidr}";
-          tooltip-format = "󰈀 {ifname} via {gwaddr}";
-          format-linked = "󰈀 {ifname} (No IP)";
-          format-disconnected = "󰤭 Disconnected";
-          format-alt = "{ifname}: {ipaddr}/{cidr}";
-        };
 
         pulseaudio = {
           format = "{icon} {volume}%";
@@ -135,6 +113,97 @@
           };
           on-click = "${pkgs.pavucontrol}/bin/pavucontrol";
         };
+
+        bluetooth = {
+          format = "󰂯";
+          format-disabled = "󰂲";
+          format-connected = "󰂱 {num_connections}";
+          tooltip-format = "{controller_alias}\t{controller_address}";
+          tooltip-format-connected = "{controller_alias}\t{controller_address}\n\n{device_enumerate}";
+          tooltip-format-enumerate-connected = "{device_alias}\t{device_address}";
+          on-click = "${pkgs.alacritty}/bin/alacritty -e ${pkgs.bluetuith}/bin/bluetuith";
+        };
+
+        "custom/weather" = {
+          format = "{}";
+          interval = 1800;
+          exec = "${pkgs.curl}/bin/curl -s 'wttr.in/Austin,TX?format=%c%t&u' | tr -d '\\n' || echo '󰖙 --°F'";
+          tooltip = false;
+        };
+
+        "custom/performance" = {
+          format = "{}";
+          interval = 5;
+          exec = "${pkgs.writeShellScript "performance-exec" ''
+            STATE_FILE="/tmp/waybar-perf-state"
+            
+            # Initialize state file if it doesn't exist
+            if [ ! -f "$STATE_FILE" ]; then
+              echo "cpu" > "$STATE_FILE"
+            fi
+            
+            STATE=$(cat "$STATE_FILE")
+            
+            case "$STATE" in
+              "cpu")
+                CPU=$(awk "/cpu / {u=\$2+\$4; t=\$2+\$3+\$4+\$5; print int(100*u/t)}" /proc/stat)
+                echo "󰻠 $CPU%"
+                ;;
+              "memory")
+                MEM=$(free | awk "/Mem:/ {printf \"%.0f\", \$3/\$2 * 100.0}")
+                echo "󰍛 $MEM%"
+                ;;
+              "disk")
+                DISK=$(df / | awk "NR==2 {print int(\$5)}")
+                echo "󰋊 $DISK%"
+                ;;
+            esac
+          ''}";
+          on-click = "${pkgs.writeShellScript "performance-click" ''
+            STATE_FILE="/tmp/waybar-perf-state"
+            
+            # Initialize state file if it doesn't exist
+            if [ ! -f "$STATE_FILE" ]; then
+              echo "cpu" > "$STATE_FILE"
+            fi
+            
+            STATE=$(cat "$STATE_FILE")
+            
+            case "$STATE" in
+              "cpu")
+                echo "memory" > "$STATE_FILE"
+                ;;
+              "memory")
+                echo "disk" > "$STATE_FILE"
+                ;;
+              "disk")
+                echo "cpu" > "$STATE_FILE"
+                ;;
+            esac
+          ''}";
+          tooltip = true;
+          tooltip-format = "Performance Monitor - Click to cycle through CPU/Memory/Disk";
+        };
+
+        "custom/power" = {
+          format = "⏻";
+          tooltip = false;
+          on-click = "${pkgs.rofi}/bin/rofi -show power-menu -modi power-menu:${pkgs.writeShellScript "rofi-power-menu" ''
+            case $@ in
+              "shutdown") echo "Shutdown" ;;
+              "reboot") echo "Reboot" ;;
+              "logout") echo "Logout" ;;
+              "") echo -e "shutdown\nreboot\nlogout" ;;
+            esac
+          ''} -theme-str 'window {width: 200px;} listview {lines: 3;}'";
+          on-click-right = "${pkgs.writeShellScript "power-action" ''
+            case $(echo -e "Shutdown\nReboot\nLogout" | ${pkgs.rofi}/bin/rofi -dmenu -p "Power Menu" -theme-str 'window {width: 200px;} listview {lines: 3;}') in
+              "Shutdown") systemctl poweroff ;;
+              "Reboot") systemctl reboot ;;
+              "Logout") hyprctl dispatch exit ;;
+            esac
+          ''}";
+        };
       };
     };
 
@@ -148,12 +217,14 @@
       }
 
       window#waybar {
-        background: rgba(17, 17, 27, 0.8);
+        background: linear-gradient(135deg, rgba(30, 30, 46, 0.95), rgba(24, 24, 37, 0.90));
         color: #cdd6f4;
         border-radius: 16px;
         margin: 8px 16px 0px 16px;
         border: 2px solid rgba(137, 180, 250, 0.3);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        box-shadow: 
+          0 8px 32px rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
       }
 
       tooltip {
@@ -171,21 +242,21 @@
       #tray,
       #idle_inhibitor,
       #pulseaudio,
-      #network,
-      #cpu,
-      #memory,
-      #temperature,
+      #bluetooth,
+      #custom-weather,
+      #custom-performance,
       #battery,
+      #custom-power,
       #clock {
-        background: linear-gradient(135deg, rgba(30, 30, 46, 0.95), rgba(24, 24, 37, 0.9));
-        border-radius: 14px;
-        margin: 6px 4px;
-        padding: 8px 16px;
-        border: 2px solid rgba(137, 180, 250, 0.2);
+        background: linear-gradient(135deg, rgba(30, 30, 46, 0.4), rgba(24, 24, 37, 0.3));
+        border-radius: 12px;
+        margin: 4px 3px;
+        padding: 8px 14px;
+        border: 1px solid rgba(137, 180, 250, 0.2);
         transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        box-shadow:
-          0 4px 16px rgba(0, 0, 0, 0.2),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        box-shadow: 
+          0 4px 16px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
       }
 
       #workspaces {
@@ -269,31 +340,14 @@
         background: rgba(243, 139, 168, 0.1);
       }
 
-      #network {
-        color: #74c7ec;
-      }
 
-      #network.disconnected {
-        color: #f38ba8;
-        background: rgba(243, 139, 168, 0.1);
-      }
-
-      #cpu {
+      #custom-performance {
         color: #fab387;
       }
 
-      #memory {
-        color: #cba6f7;
-      }
-
-      #temperature {
+      #custom-performance:hover {
         color: #f9e2af;
-      }
-
-      #temperature.critical {
-        color: #f38ba8;
-        background: rgba(243, 139, 168, 0.2);
-        animation: critical 1s infinite alternate;
+        background: rgba(250, 179, 135, 0.1);
       }
 
       @keyframes critical {
@@ -321,6 +375,36 @@
         animation: critical 1s infinite alternate;
       }
 
+      #bluetooth {
+        color: #89b4fa;
+      }
+
+      #bluetooth.disabled {
+        color: #6c7086;
+      }
+
+      #bluetooth.connected {
+        color: #a6e3a1;
+        background: rgba(166, 227, 161, 0.1);
+      }
+
+      #custom-weather {
+        color: #f9e2af;
+        font-size: 12px;
+        padding: 8px 12px;
+      }
+
+      #custom-power {
+        color: #f38ba8;
+        font-size: 16px;
+        padding: 8px 12px;
+      }
+
+      #custom-power:hover {
+        background: rgba(243, 139, 168, 0.2);
+        border-color: #f38ba8;
+      }
+
       #clock {
         background: linear-gradient(135deg, rgba(137, 180, 250, 0.3), rgba(116, 199, 236, 0.25), rgba(203, 166, 247, 0.2));
         border: 2px solid rgba(137, 180, 250, 0.4);
@@ -338,24 +422,32 @@
       #tray,
       #idle_inhibitor,
       #pulseaudio,
-      #network,
-      #cpu,
-      #memory,
-      #temperature,
+      #bluetooth,
+      #custom-weather,
+      #custom-performance,
       #battery,
+      #custom-power,
       #clock {
         transition: all 0.3s ease;
       }
 
+      #tray:hover,
+      #idle_inhibitor:hover,
       #pulseaudio:hover,
-      #network:hover,
-      #cpu:hover,
-      #memory:hover,
-      #temperature:hover,
+      #bluetooth:hover,
+      #custom-weather:hover,
+      #custom-performance:hover,
       #battery:hover,
+      #custom-power:hover,
       #clock:hover {
-        box-shadow: 0 4px 12px rgba(137, 180, 250, 0.2);
+        background: linear-gradient(135deg, rgba(137, 180, 250, 0.25), rgba(116, 199, 236, 0.20), rgba(203, 166, 247, 0.15));
         border-color: rgba(137, 180, 250, 0.8);
+        color: #ffffff;
+        box-shadow: 
+          0 8px 32px rgba(137, 180, 250, 0.4),
+          0 0 20px rgba(137, 180, 250, 0.3),
+          inset 0 2px 0 rgba(255, 255, 255, 0.2),
+          inset 0 -2px 0 rgba(0, 0, 0, 0.1);
       }
     '';
   };
