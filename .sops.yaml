@@ -1,5 +1,6 @@
 keys:
   - &user age1eeglpcf2lpmjnazddleqw3qgyhydfsv9karvc0nkshk7qz8vwskqxu4zx6
+  - &host age18dnrmm4h3ayp68h8ltqwunj9dvky5wt7wp2watdhm6r6jk5e65pq7vgvqq
 
 creation_rules:
   # Private secrets in ~/.secrets/
@@ -7,3 +8,4 @@ creation_rules:
     key_groups:
       - age:
           - *user
+          - *host
