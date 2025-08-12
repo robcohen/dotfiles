@@ -52,8 +52,8 @@
         };
 
         # Glass-like effect
-        active_opacity = 0.95;
-        inactive_opacity = 0.85;
+        active_opacity = 0.85;
+        inactive_opacity = 0.75;
         fullscreen_opacity = 1.0;
       };
 
@@ -121,14 +121,15 @@
 
       bind = [
         # Application launchers
-        "$mainMod, Q, exec, alacritty"
-        "$mainMod, C, killactive,"
+        "$mainMod, T, exec, alacritty"
+        "$mainMod, Q, killactive,"
         "$mainMod, M, exit,"
         "$mainMod, E, exec, ranger"
         "$mainMod, V, togglefloating,"
         "$mainMod, R, exec, rofi -show drun"
         "$mainMod, P, pseudo, # dwindle"
         "$mainMod, J, togglesplit, # dwindle"
+        "$mainMod, F, fullscreen,"
 
         # Move focus with mainMod + arrow keys
         "$mainMod, left, movefocus, l"
@@ -225,6 +226,7 @@
         "sleep 1 && swww img ~/Documents/dotfiles/assets/backgrounds/nix-wallpaper-dracula.png"
         "waybar"
         "dunst"
+        "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator"
         # Start authentication agent
         "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
       ];
