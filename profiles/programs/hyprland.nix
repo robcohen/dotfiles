@@ -6,7 +6,13 @@
 
     settings = {
       # Monitor configuration
+      # Format: name,resolution,position,scale
       monitor = [
+        # External monitor on the left
+        "HDMI-A-1,3840x2160@60,-2560x0,1.5"
+        # Laptop screen as primary on the right
+        "eDP-1,3840x2400@60,0x0,2.0"
+        # Fallback for any other monitors
         ",preferred,auto,auto"
       ];
 
@@ -122,7 +128,7 @@
       bind = [
         # Application launchers
         "$mainMod, T, exec, alacritty"
-        "$mainMod, Q, killactive,"
+        "$mainMod SHIFT, Q, killactive,"
         "$mainMod, M, exit,"
         "$mainMod, E, exec, ranger"
         "$mainMod, V, togglefloating,"
@@ -142,6 +148,18 @@
         "$mainMod, l, movefocus, r"
         "$mainMod, k, movefocus, u"
         "$mainMod, j, movefocus, d"
+        
+        # Swap/Move windows with mainMod + SHIFT + arrow keys
+        "$mainMod SHIFT, left, movewindow, l"
+        "$mainMod SHIFT, right, movewindow, r"
+        "$mainMod SHIFT, up, movewindow, u"
+        "$mainMod SHIFT, down, movewindow, d"
+        
+        # Swap/Move windows with mainMod + SHIFT + vim keys
+        "$mainMod SHIFT, h, movewindow, l"
+        "$mainMod SHIFT, l, movewindow, r"
+        "$mainMod SHIFT, k, movewindow, u"
+        "$mainMod SHIFT, j, movewindow, d"
 
         # Switch workspaces with mainMod + [0-9]
         "$mainMod, 1, workspace, 1"
@@ -170,6 +188,18 @@
         # Example special workspace (scratchpad)
         "$mainMod, S, togglespecialworkspace, magic"
         "$mainMod SHIFT, S, movetoworkspace, special:magic"
+
+        # Move windows between monitors
+        "$mainMod SHIFT, comma, movewindow, mon:l"  # Move to left monitor
+        "$mainMod SHIFT, period, movewindow, mon:r"  # Move to right monitor
+        "$mainMod SHIFT ALT, 1, movewindow, mon:eDP-1"  # Move to laptop screen
+        "$mainMod SHIFT ALT, 2, movewindow, mon:HDMI-A-1"  # Move to external monitor
+        
+        # Focus monitors
+        "$mainMod, comma, focusmonitor, l"  # Focus left monitor
+        "$mainMod, period, focusmonitor, r"  # Focus right monitor
+        "$mainMod ALT, 1, focusmonitor, eDP-1"  # Focus laptop screen
+        "$mainMod ALT, 2, focusmonitor, HDMI-A-1"  # Focus external monitor
 
         # Scroll through existing workspaces with mainMod + scroll
         "$mainMod, mouse_down, workspace, e+1"

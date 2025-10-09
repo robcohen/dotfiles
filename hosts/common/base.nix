@@ -46,8 +46,7 @@
 
   # Hyprland window manager
   programs.hyprland.enable = true;
-  services.displayManager.sddm.enable = true;
-  services.displayManager.sddm.wayland.enable = true;
+  # SDDM is configured in sddm.nix module
 
   services.dbus.enable = true;
   services.gnome.gnome-keyring.enable = true;

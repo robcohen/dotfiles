@@ -22,7 +22,24 @@
         Background = "/etc/nixos/wallpapers/sddm-wallpaper.png";
         DPIScale = 1;
         GreeterEnvironment = "QT_SCREEN_SCALE_FACTORS=1,QT_SCALE_FACTOR=1";
+        # Ensure display-manager starts after graphics are ready
+        DisplayServer = "wayland";
       };
+      Wayland = {
+        # Wayland-specific settings
+        CompositorCommand = "${pkgs.weston}/bin/weston --backend=drm";
+        # SessionDir is automatically detected by SDDM
+      };
+    };
+  };
+
+  # Ensure display manager waits for Plymouth to finish
+  systemd.services.display-manager = {
+    after = [ "plymouth-quit.service" "plymouth-quit-wait.service" ];
+    wants = [ "plymouth-quit.service" "plymouth-quit-wait.service" ];
+    # Add a small delay to ensure GPU is ready
+    serviceConfig = {
+      ExecStartPre = "${pkgs.coreutils}/bin/sleep 2";
     };
   };
 
