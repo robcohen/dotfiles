@@ -76,7 +76,7 @@
   # SystemD service to disable WiFi power management for MT7925e
   systemd.services.wifi-power-management-fix = {
     description = "Disable WiFi power management for MT7925e";
-    after = [ "network-online.target" ];
+    after = [ "network-pre.target" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       Type = "oneshot";
@@ -86,46 +86,6 @@
     };
   };
 
-  # SystemD service to properly initialize Bluetooth for MT7925
-  systemd.services.bluetooth-mt7925-fix = {
-    description = "Initialize MT7925 Bluetooth controller";
-    after = [ "network-pre.target" "systemd-modules-load.service" ];
-    before = [ "bluetooth.service" ];
-    wantedBy = [ "bluetooth.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStartPre = "${pkgs.coreutils}/bin/sleep 3";
-      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.kmod}/bin/modprobe -r btmtk btusb 2>/dev/null || true; ${pkgs.kmod}/bin/modprobe btmtk; ${pkgs.kmod}/bin/modprobe btusb; sleep 2; ${pkgs.util-linux}/bin/rfkill unblock bluetooth; if [ -e /sys/class/bluetooth/hci0 ]; then ${pkgs.bluez}/bin/hciconfig hci0 up 2>/dev/null || true; fi'";
-      Restart = "on-failure";
-      RestartSec = "5s";
-    };
-  };
-  
-  # Service to handle firmware loading issues
-  systemd.services.bluetooth-firmware-reload = {
-    description = "Reload MT7925 Bluetooth firmware if needed";
-    after = [ "bluetooth.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.bash}/bin/bash -c 'if ! ${pkgs.bluez}/bin/hciconfig hci0 &>/dev/null; then echo \"Bluetooth controller not found, attempting firmware reload\"; ${pkgs.kmod}/bin/modprobe -r btmtk btusb; sleep 1; ${pkgs.kmod}/bin/modprobe btmtk; ${pkgs.kmod}/bin/modprobe btusb; sleep 3; ${pkgs.util-linux}/bin/rfkill unblock bluetooth; fi'";
-      RemainAfterExit = false;
-      StandardOutput = "journal";
-    };
-  };
-
-  # Create firmware symlinks for MT7925 Bluetooth 
-  systemd.services.mt7925-firmware-links = {
-    description = "Create firmware symlinks for MT7925 Bluetooth";
-    wantedBy = [ "multi-user.target" ];
-    before = [ "bluetooth.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.coreutils}/bin/mkdir -p /lib/firmware/mediatek && ${pkgs.coreutils}/bin/ln -sf /run/current-system/firmware/mediatek/* /lib/firmware/mediatek/ 2>/dev/null || true'";
-    };
-  };
 
   # Allow Bluetooth firmware loading under kernel lockdown
   security.lockKernelModules = false; # Required for Bluetooth firmware loading
@@ -161,7 +121,6 @@
   boot.extraModulePackages = [ ];
   boot.extraModprobeConfig = ''
     options btusb reset=1 enable_autosuspend=0
-    options btmtk reset=1
     options bluetooth disable_ertm=1
     # MT7925e WiFi module options - disable power management for stability
     options mt7925e disable_aspm=1
@@ -234,7 +193,14 @@
     enable = true;
     allowedBridges = [ "virbr0" ];
     qemu.swtpm.enable = true;
+    qemu.runAsRoot = false;
   };
+
+  # Configure networking for libvirt
+  networking.firewall.checkReversePath = false;
+  networking.nftables.enable = false;  # Use iptables instead
+  networking.firewall.trustedInterfaces = [ "virbr0" ];
+
   virtualisation.waydroid.enable = true;
   programs.virt-manager.enable = true;
 
@@ -253,7 +219,7 @@
     size = 32768;  # 32GB swap
   }];
 
-  users.users.user.extraGroups = ["libvirtd" "adbusers" "tss"];
+  users.users.user.extraGroups = ["libvirtd" "adbusers" "tss" "disk"];
 
   environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
 
@@ -274,6 +240,8 @@
     bluez bluez-tools
     # WiFi tools for power management
     iw wirelesstools
+    # Networking tools for libvirt
+    dnsmasq
   ];
 
   # TPM firmware protection
@@ -341,6 +309,17 @@
   services.power-profiles-daemon.enable = false;     # Conflicts with TLP
   services.thermald.enable = true;                    # Thermal management
 
+  # Logind configuration for lid handling and screen locking
+  services.logind = {
+    lidSwitch = "lock";  # Lock screen when lid is closed
+    lidSwitchDocked = "lock";  # Lock even when docked
+    lidSwitchExternalPower = "lock";  # Lock even on AC power
+    extraConfig = ''
+      HandlePowerKey=suspend
+      IdleAction=lock
+      IdleActionSec=15min
+    '';
+  };
 
   # Better observability
   services.smartd.enable = true;  # Automatic disk health checks
@@ -349,7 +328,8 @@
   services.vnstat.enable = true;  # Network usage statistics
 
   # Security auditing
-  security.auditd.enable = true;  # System call auditing
+  # TODO: Re-enable after configuring comprehensive AppArmor profiles to avoid audit_log_subj_ctx errors
+  security.auditd.enable = false;  # System call auditing - temporarily disabled
 
   programs.adb.enable = true;
   services.usbmuxd.enable = true;
@@ -363,7 +343,10 @@
 
       # Allow Integrated Camera specifically (before class rules)
       allow id 5986:11af # Bison Integrated Camera
-      
+
+      # Allow MediaTek MT7925 Bluetooth explicitly (ThinkPad P16s Gen 4)
+      allow id 0e8d:e025 # MediaTek MT7925 Bluetooth
+
       # Allow common device classes
       allow with-interface equals { 03:*:* } # All HID devices
       allow with-interface equals { 08:*:* } # All mass storage
@@ -377,10 +360,10 @@
 
       # Allow your specific hub
       allow id 0bda:5409 # 3-Port USB 2.1 Hub
-      
+
       # Allow CASUE USB Keyboard
       allow id 2a7a:939f # CASUE USB KB
-      
+
       # Allow mouse
       allow id 1c4f:0034 # Usb Mouse
 
@@ -389,7 +372,9 @@
 
       # Allow other common vendors
       allow id 0bda:* # Realtek devices
+      allow id 05e3:* # Genesys Logic hubs
       allow id 8087:* # Intel devices
+      allow id 0e8d:* # MediaTek devices
     '';
   };
 

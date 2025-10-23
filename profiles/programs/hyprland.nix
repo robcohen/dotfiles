@@ -136,6 +136,7 @@
         "$mainMod, P, pseudo, # dwindle"
         "$mainMod, J, togglesplit, # dwindle"
         "$mainMod, F, fullscreen,"
+        "$mainMod, Z, exec, loginctl lock-session"  # Lock screen
 
         # Move focus with mainMod + arrow keys
         "$mainMod, left, movefocus, l"

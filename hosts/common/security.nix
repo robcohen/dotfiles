@@ -44,10 +44,11 @@
     flake = "github:robcxyz/dotfiles";
   };
 
-  # AppArmor security framework
+  # AppArmor security framework (relaxed configuration)
   security.apparmor = {
     enable = true;
-    killUnconfinedConfinables = true;
+    killUnconfinedConfinables = false;  # Don't kill unconfined processes
+    packages = [ pkgs.apparmor-profiles ];  # Basic system profiles
   };
 
   # Kernel security hardening

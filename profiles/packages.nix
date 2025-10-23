@@ -25,6 +25,7 @@ let
     networkmanagerapplet light xdg-utils
     ffmpeg v4l-utils home-assistant-cli pdftk seahorse
     grc wget unzip wl-clipboard-rs  # Removed duplicated tools: eza, bat, htop, btop, ripgrep, ranger
+    hyprlock hypridle  # Screen locking and idle management
   ];
 
   # Development packages (conditional)

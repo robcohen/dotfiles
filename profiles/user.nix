@@ -37,9 +37,11 @@ in {
     ./programs/zoxide.nix
     ./programs/atuin.nix
     ./programs/hyprland.nix
+    ./programs/hyprlock.nix
     ./programs/waybar.nix
     ./services/gpg-agent.nix
     ./services/syncthing.nix
+    ./services/hypridle.nix
     ./services/desktop-notifications.nix
     ./services/system-monitoring.nix
     # Security modules (import after base configurations)
@@ -58,7 +60,7 @@ in {
   _module.args = {
     hostname = detectedHostname;
     hostConfig = {};  # Simplified - no complex host config needed
-    hostFeatures = [];  # No features for simplified approach
+    hostFeatures = ["development"];
     hostType = "desktop";
   };
 
