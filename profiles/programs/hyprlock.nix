@@ -15,12 +15,12 @@
       background = [
         {
           path = "screenshot";  # Takes a screenshot and blurs it
-          blur_passes = 3;
-          blur_size = 8;
-          contrast = 0.8916;
-          brightness = 0.8172;
-          vibrancy = 0.1696;
-          vibrancy_darkness = 0.0;
+          blur_passes = 4;
+          blur_size = 10;
+          contrast = 0.6;
+          brightness = 0.3;  # Much dimmer (was 0.8172)
+          vibrancy = 0.1;
+          vibrancy_darkness = 0.5;
         }
       ];
 

@@ -207,8 +207,8 @@
         "$mainMod, mouse_up, workspace, e-1"
 
         # Screenshot bindings
-        ", Print, exec, grim -g \"$(slurp)\" - | wl-copy"
-        "$mainMod, Print, exec, grim - | wl-copy"
+        ", Print, exec, grim -g \"$(slurp)\" - | wl-copy --type image/png"
+        "$mainMod, Print, exec, grim - | wl-copy --type image/png"
 
         # Media keys
         ", XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ +5%"
