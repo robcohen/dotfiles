@@ -3,7 +3,12 @@
 {
   nixpkgs = {
     overlays = [];
-    config.allowUnfree = true;
+    config = {
+      allowUnfree = true;
+      permittedInsecurePackages = [
+        "python3.12-ecdsa-0.19.1"
+      ];
+    };
   };
 
   nix.registry = {

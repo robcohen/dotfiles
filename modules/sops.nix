@@ -91,13 +91,13 @@ with lib;
       echo ""
       echo "Then configure your secrets with sops later."
       echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-      
+
       # Create the directory and placeholder file
       mkdir -p "$(dirname "$SECRETS_FILE")"
       echo '{}' > "$SECRETS_FILE"
       chown user:users "$SECRETS_FILE"
       chmod 600 "$SECRETS_FILE"
-      
+
       echo "✓ Created placeholder secrets file at $SECRETS_FILE"
       echo ""
     fi

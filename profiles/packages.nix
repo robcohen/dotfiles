@@ -31,7 +31,7 @@ let
   # Development packages (conditional)
   devPackages = with pkgs; lib.optionals (hasFeature "development") [
     cmake octaveFull quickemu quickgui distrobox virt-viewer
-    llama-cpp fd yq tree
+    llama-cpp fd yq tree pre-commit
   ];
 
   # Gaming packages (conditional)
@@ -61,10 +61,10 @@ let
 
   # Productivity packages
   productivityPackages = with pkgs; [
-    rymdport anki
+    rymdport anki nil
   ] ++ (with unstable; [
-    gh onlyoffice-bin thunderbird firefox tor-browser
-    warp bitwarden obsidian ledger-live-desktop kdePackages.okular
+    gh onlyoffice-desktopeditors thunderbird firefox tor-browser
+    warp bitwarden-desktop obsidian ledger-live-desktop kdePackages.okular
     git-repo gpa zed-editor aichat logseq
   ]);
 
@@ -75,7 +75,7 @@ let
 
   # Development tools (conditional)
   devToolPackages = with unstable; lib.optionals (hasFeature "development") [
-    radicle-node devenv qflipper cachix opencode
+    radicle-node devenv qFlipper cachix opencode
   ];
 
 in {

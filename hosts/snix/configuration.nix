@@ -28,22 +28,22 @@
 
     # MediaTek MT7925 PCIe WiFi/Bluetooth combo device support
     ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x14c3", ATTR{device}=="0x7925", RUN+="${pkgs.kmod}/bin/modprobe btusb && ${pkgs.kmod}/bin/modprobe btmtk"
-    
+
     # Disable WiFi power management for MT7925e
     ACTION=="add", SUBSYSTEM=="net", KERNEL=="wlp*", DRIVERS=="mt7925e", RUN+="${pkgs.iw}/bin/iw dev %k set power_save off"
-    
+
     # MediaTek MT7925 Bluetooth USB device support (if it appears as USB)
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="e616", ATTR{authorized}="1"
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="e616", ATTR{power/autosuspend}="-1"
-    
-    # Intel AX211 Bluetooth device authorization and power management  
+
+    # Intel AX211 Bluetooth device authorization and power management
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0033", ATTR{authorized}="1"
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0033", ATTR{power/autosuspend}="-1"
 
     # General Bluetooth class device rules
     ACTION=="add", SUBSYSTEM=="bluetooth", RUN+="${pkgs.coreutils}/bin/chmod 666 /dev/rfkill"
     ACTION=="add", ATTR{class}=="e0*", ATTR{authorized}="1"
-    
+
     # Force Bluetooth module loading for MT7925
     ACTION=="add", SUBSYSTEM=="net", KERNEL=="wlp*", DRIVERS=="mt7925e", RUN+="${pkgs.kmod}/bin/modprobe btusb", RUN+="${pkgs.kmod}/bin/modprobe btmtk"
   '';
@@ -92,8 +92,8 @@
 
 
   hardware.enableRedistributableFirmware = true;
-  hardware.firmware = with pkgs; [ 
-    linux-firmware 
+  hardware.firmware = with pkgs; [
+    linux-firmware
     sof-firmware
     firmwareLinuxNonfree
     unstable.linux-firmware  # Use unstable for latest MT7925 firmware
@@ -144,7 +144,7 @@
     # Bluetooth power management fixes
     "btusb.enable_autosuspend=0"  # Disable Bluetooth auto-suspend
     "usbcore.autosuspend=-1"      # Disable USB auto-suspend globally
-    
+
     # Plymouth high resolution fix for AMD Radeon 860M
     "quiet"                        # Hide kernel messages for clean boot
     "splash"                       # Enable splash screen
@@ -169,7 +169,7 @@
 
   # Enable systemd in initrd for Plymouth LUKS integration
   boot.initrd.systemd.enable = true;
-  
+
   # Load AMD graphics driver early for proper Plymouth resolution
   boot.initrd.kernelModules = [ "amdgpu" ];
   boot.initrd.availableKernelModules = [ "amdgpu" ];

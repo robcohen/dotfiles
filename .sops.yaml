@@ -1,11 +1,9 @@
 keys:
-  - &user age1eeglpcf2lpmjnazddleqw3qgyhydfsv9karvc0nkshk7qz8vwskqxu4zx6
-  - &host age18dnrmm4h3ayp68h8ltqwunj9dvky5wt7wp2watdhm6r6jk5e65pq7vgvqq
+  - &snix age1y348p6q290u7szhcdh8ser8vd2uuea0vfc3edd3ejnxhywjdzvxsg2uvcg
 
 creation_rules:
   # Private secrets in ~/.secrets/
   - path_regex: .*/\.secrets/.*\.yaml$
     key_groups:
       - age:
-          - *user
-          - *host
+          - *snix

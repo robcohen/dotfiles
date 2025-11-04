@@ -149,13 +149,13 @@
         "$mainMod, l, movefocus, r"
         "$mainMod, k, movefocus, u"
         "$mainMod, j, movefocus, d"
-        
+
         # Swap/Move windows with mainMod + SHIFT + arrow keys
         "$mainMod SHIFT, left, movewindow, l"
         "$mainMod SHIFT, right, movewindow, r"
         "$mainMod SHIFT, up, movewindow, u"
         "$mainMod SHIFT, down, movewindow, d"
-        
+
         # Swap/Move windows with mainMod + SHIFT + vim keys
         "$mainMod SHIFT, h, movewindow, l"
         "$mainMod SHIFT, l, movewindow, r"
@@ -195,7 +195,7 @@
         "$mainMod SHIFT, period, movewindow, mon:r"  # Move to right monitor
         "$mainMod SHIFT ALT, 1, movewindow, mon:eDP-1"  # Move to laptop screen
         "$mainMod SHIFT ALT, 2, movewindow, mon:HDMI-A-1"  # Move to external monitor
-        
+
         # Focus monitors
         "$mainMod, comma, focusmonitor, l"  # Focus left monitor
         "$mainMod, period, focusmonitor, r"  # Focus right monitor

@@ -89,13 +89,16 @@ print('✅ Valid BIP39 mnemonic')
       fi
 
       # Derive key based on type
+      # Set PRIMARY_DOMAIN environment variable or it defaults to example.dev
+      PRIMARY_DOMAIN=''${PRIMARY_DOMAIN:-example.dev}
+
       case "$KEY_TYPE" in
         "root-ca")
-          DERIVATION_LABEL="robcohen.dev-root-ca-2024"
+          DERIVATION_LABEL="''${PRIMARY_DOMAIN}-root-ca-2024"
           KEY_BITS=4096
           ;;
         "intermediate-ca")
-          DERIVATION_LABEL="robcohen.dev-intermediate-ca-2024"
+          DERIVATION_LABEL="''${PRIMARY_DOMAIN}-intermediate-ca-2024"
           KEY_BITS=4096
           ;;
         *)
@@ -133,7 +136,8 @@ def hkdf_extract(salt, ikm):
     return hmac.new(salt, ikm, hashlib.sha256).digest()
 
 # Derive key material
-salt = b"robcohen.dev-ca-salt"
+# Use PRIMARY_DOMAIN from environment, or default to example.dev
+salt = b"$PRIMARY_DOMAIN-ca-salt"
 info = b"$DERIVATION_LABEL"
 prk = hkdf_extract(salt, seed)
 key_material = hkdf_expand(prk, info, 64)  # 512 bits
@@ -485,7 +489,7 @@ EOF
       authorityKeyIdentifier = keyid:always,issuer
       basicConstraints = critical, CA:true, pathlen:0
       keyUsage = critical, digitalSignature, cRLSign, keyCertSign
-      crlDistributionPoints = URI:http://files.internal.robcohen.dev/crl/intermediate.crl
+      crlDistributionPoints = URI:http://files.internal.''${primaryDomain}/crl/intermediate.crl
 
       [ crl_ext ]
       authorityKeyIdentifier=keyid:always
@@ -551,7 +555,7 @@ EOF
       authorityKeyIdentifier = keyid,issuer:always
       keyUsage = critical, digitalSignature, keyEncipherment
       extendedKeyUsage = serverAuth
-      crlDistributionPoints = URI:http://files.internal.robcohen.dev/crl/intermediate.crl
+      crlDistributionPoints = URI:http://files.internal.''${primaryDomain}/crl/intermediate.crl
 
       [ usr_cert ]
       basicConstraints = CA:FALSE

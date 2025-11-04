@@ -27,15 +27,7 @@
       };
 
 
-      stable = import stable-nixpkgs {
-        inherit system;
-        config = {
-          allowUnfree = true;
-          permittedInsecurePackages = [
-            "python3.12-ecdsa-0.19.1"
-          ];
-        };
-      };
+      stable = stable-nixpkgs.legacyPackages.${system};
 
       # Common specialArgs to reduce duplication
       commonSpecialArgs = {
@@ -236,4 +228,3 @@
         };
     };
 }
-

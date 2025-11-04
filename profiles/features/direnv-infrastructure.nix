@@ -73,10 +73,12 @@
     # Create Projects directory if it doesn't exist
     mkdir -p ~/Projects
 
-    # Auto-setup infrastructure project if robcohen.dev exists
-    if [[ -d ~/Projects/robcohen.dev && ! -f ~/Projects/robcohen.dev/.envrc ]]; then
-      cd ~/Projects/robcohen.dev
-      ${pkgs.bash}/bin/bash -c "init-infra-project ."
-    fi
+    # Auto-setup infrastructure projects (any directory with flake.nix)
+    for project_dir in ~/Projects/*/; do
+      if [[ -f "$project_dir/flake.nix" && ! -f "$project_dir/.envrc" ]]; then
+        cd "$project_dir"
+        ${pkgs.bash}/bin/bash -c "init-infra-project ."
+      fi
+    done
   '';
 }

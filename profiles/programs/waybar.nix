@@ -136,14 +136,14 @@
           interval = 5;
           exec = "${pkgs.writeShellScript "performance-exec" ''
             STATE_FILE="/tmp/waybar-perf-state"
-            
+
             # Initialize state file if it doesn't exist
             if [ ! -f "$STATE_FILE" ]; then
               echo "cpu" > "$STATE_FILE"
             fi
-            
+
             STATE=$(cat "$STATE_FILE")
-            
+
             case "$STATE" in
               "cpu")
                 CPU=$(awk "/cpu / {u=\$2+\$4; t=\$2+\$3+\$4+\$5; print int(100*u/t)}" /proc/stat)
@@ -161,14 +161,14 @@
           ''}";
           on-click = "${pkgs.writeShellScript "performance-click" ''
             STATE_FILE="/tmp/waybar-perf-state"
-            
+
             # Initialize state file if it doesn't exist
             if [ ! -f "$STATE_FILE" ]; then
               echo "cpu" > "$STATE_FILE"
             fi
-            
+
             STATE=$(cat "$STATE_FILE")
-            
+
             case "$STATE" in
               "cpu")
                 echo "memory" > "$STATE_FILE"
@@ -222,7 +222,7 @@
         border-radius: 16px;
         margin: 8px 16px 0px 16px;
         border: 2px solid rgba(137, 180, 250, 0.3);
-        box-shadow: 
+        box-shadow:
           0 8px 32px rgba(0, 0, 0, 0.4),
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
       }
@@ -254,7 +254,7 @@
         padding: 8px 14px;
         border: 1px solid rgba(137, 180, 250, 0.2);
         transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        box-shadow: 
+        box-shadow:
           0 4px 16px rgba(0, 0, 0, 0.15),
           inset 0 1px 0 rgba(255, 255, 255, 0.05);
       }
@@ -443,7 +443,7 @@
         background: linear-gradient(135deg, rgba(137, 180, 250, 0.25), rgba(116, 199, 236, 0.20), rgba(203, 166, 247, 0.15));
         border-color: rgba(137, 180, 250, 0.8);
         color: #ffffff;
-        box-shadow: 
+        box-shadow:
           0 8px 32px rgba(137, 180, 250, 0.4),
           0 0 20px rgba(137, 180, 250, 0.3),
           inset 0 2px 0 rgba(255, 255, 255, 0.2),

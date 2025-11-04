@@ -59,7 +59,7 @@
       "github.com" = {
         # GitHub-specific security
         user = "git";
-        identityFile = "~/.ssh/id_bip39_ed25519";
+        identityFile = "~/.ssh/id_ed25519";
         extraOptions = {
           StrictHostKeyChecking = "yes";
           VerifyHostKeyDNS = "yes";
