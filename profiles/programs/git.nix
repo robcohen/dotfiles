@@ -18,8 +18,7 @@
 #    signing.signByDefault = true;
     extraConfig = {
       core.editor = "\${EDITOR:-vim}";
-      # Cache git credentials for 15 minutes
-      credential.helper = "cache";
+      # No credential helper needed - using SSH keys for authentication
       # Sign all commits using ssh key (only if key exists)
       commit.gpgsign = true;
       gpg.format = "ssh";

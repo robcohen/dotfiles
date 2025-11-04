@@ -1,5 +1,6 @@
 keys:
   - &snix age1y348p6q290u7szhcdh8ser8vd2uuea0vfc3edd3ejnxhywjdzvxsg2uvcg
+  - &snix_host age18dnrmm4h3ayp68h8ltqwunj9dvky5wt7wp2watdhm6r6jk5e65pq7vgvqq
 
 creation_rules:
   # Private secrets in ~/.secrets/
@@ -7,3 +8,4 @@ creation_rules:
     key_groups:
       - age:
           - *snix
+          - *snix_host
