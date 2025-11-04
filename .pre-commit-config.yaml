@@ -17,7 +17,7 @@ repos:
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
         exclude: ^(flake\.lock|\.git/)
-        additional_dependencies: ['gibberish-detector']
+        additional_dependencies: ['gibberish-detector', 'pyyaml']
 
 # GitGuardian ggshield - requires API key setup
   # To enable: run `ggshield auth login` to set up API key
