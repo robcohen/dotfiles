@@ -41,9 +41,9 @@
     "video/mp4" = "mpv.desktop";
     "video/x-matroska" = "mpv.desktop";
     "video/webm" = "mpv.desktop";
-    "image/jpeg" = "feh.desktop";
-    "image/png" = "feh.desktop";
-    "image/gif" = "feh.desktop";
+    "image/jpeg" = "imv.desktop";
+    "image/png" = "imv.desktop";
+    "image/gif" = "imv.desktop";
   };
 
   # Multimedia-specific environment

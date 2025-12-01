@@ -57,9 +57,9 @@
           offset = "0 8";
         };
 
-        # Glass-like effect
-        active_opacity = 0.85;
-        inactive_opacity = 0.75;
+        # Window opacity (1.0 = fully opaque)
+        active_opacity = 1.0;
+        inactive_opacity = 0.95;
         fullscreen_opacity = 1.0;
       };
 
@@ -131,7 +131,7 @@
         "$mainMod, T, exec, alacritty"
         "$mainMod SHIFT, Q, killactive,"
         "$mainMod, M, exit,"
-        "$mainMod, E, exec, ranger"
+        "$mainMod, E, exec, thunar"
         "$mainMod, V, togglefloating,"
         "$mainMod, R, exec, fuzzel"
         "$mainMod, P, pseudo, # dwindle"
@@ -207,9 +207,17 @@
         "$mainMod, mouse_down, workspace, e+1"
         "$mainMod, mouse_up, workspace, e-1"
 
-        # Screenshot bindings
-        ", Print, exec, grim -g \"$(slurp)\" - | wl-copy --type image/png"
-        "$mainMod, Print, exec, grim - | wl-copy --type image/png"
+        # Screenshot bindings (hyprshot)
+        ", Print, exec, hyprshot -m region"           # Region screenshot
+        "$mainMod, Print, exec, hyprshot -m output"   # Current monitor
+        "$mainMod SHIFT, Print, exec, hyprshot -m window"  # Current window
+        "ALT, Print, exec, hyprshot -m region --clipboard-only"  # Region to clipboard only
+
+        # Clipboard history
+        "$mainMod, C, exec, cliphist list | fuzzel -d | cliphist decode | wl-copy"
+
+        # Notification center
+        "$mainMod, N, exec, swaync-client -t -sw"
 
         # Media keys
         ", XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ +5%"
@@ -257,7 +265,7 @@
         "swww-daemon"
         "sleep 1 && swww img ~/Documents/dotfiles/assets/backgrounds/nix-wallpaper-dracula.png"
         "waybar"
-        "dunst"
+        "swaync"  # Notification center (replaces dunst)
         "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator"
         # Start authentication agent
         "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"

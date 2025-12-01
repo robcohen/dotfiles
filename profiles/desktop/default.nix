@@ -8,9 +8,6 @@
 
   # Desktop-specific programs
   programs = {
-    # File managers
-    ranger.enable = true;
-
     # Media
     mpv.enable = true;
   };
@@ -22,14 +19,8 @@
 
   # Desktop-specific packages (non-duplicated)
   home.packages = with pkgs; [
-    # Image viewers
-    feh
-
     # Archive tools
     p7zip
     unrar
-
-    # File managers (ranger configured via programs.ranger)
-    # Terminal already configured via alacritty
   ];
 }

@@ -41,7 +41,14 @@ in {
     ./programs/waybar.nix
     ./programs/fuzzel.nix
     ./programs/wlogout.nix
+    ./programs/cliphist.nix
+    ./programs/hyprshot.nix
+    ./programs/thunar.nix
+    ./programs/imv.nix
+    ./programs/yazi.nix
+    ./programs/neovim.nix
     ./services/gpg-agent.nix
+    ./services/swaync.nix
     ./services/syncthing.nix
     ./services/hypridle.nix
     ./services/desktop-notifications.nix
