@@ -28,6 +28,7 @@
     isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [ "wheel" "networkmanager" "input" "video" ];
+    hashedPasswordFile = config.sops.secrets."user/hashedPassword".path;
   };
 
   i18n.defaultLocale = "en_US.UTF-8";
@@ -62,7 +63,7 @@
     # Hyprland essentials
     waybar          # Status bar
     dunst           # Notifications
-    rofi-wayland    # Application launcher
+    fuzzel          # Application launcher (native Wayland)
     swww            # Wallpaper daemon
     grim            # Screenshots
     slurp           # Screen selection

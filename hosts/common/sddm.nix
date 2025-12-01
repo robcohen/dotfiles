@@ -7,13 +7,13 @@
   # Enable SDDM display manager with modern settings
   services.displayManager.sddm = {
     enable = true;
-    theme = "catppuccin-mocha";
+    theme = "catppuccin-mocha-maroon";
     package = pkgs.kdePackages.sddm;
     wayland.enable = true;  # Modern Wayland support (2025 best practice)
 
     settings = {
       Theme = {
-        Current = "catppuccin-mocha";
+        Current = "catppuccin-mocha-maroon";
         CursorTheme = "catppuccin-mocha-dark-cursors";
         Font = "JetBrains Mono Nerd Font";
         FontSize = "12";
@@ -47,6 +47,7 @@
   environment.systemPackages = with pkgs; [
     (catppuccin-sddm.override {
       flavor = "mocha";
+      accent = "maroon";
       font = "JetBrains Mono Nerd Font";
       fontSize = "12";
       background = "${../../assets/backgrounds/nix-wallpaper-dracula.png}";
@@ -63,7 +64,7 @@
   fonts.packages = with pkgs; [
     jetbrains-mono
     noto-fonts
-    noto-fonts-emoji
+    noto-fonts-color-emoji
     pkgs.nerd-fonts.jetbrains-mono
   ];
 }

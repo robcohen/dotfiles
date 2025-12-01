@@ -31,10 +31,16 @@ if [[ -z "$LATEST_NIXOS" || -z "$LATEST_HM" ]]; then
   exit 1
 fi
 
-if [[ "$PINNED_NIXOS" != "$LATEST_NIXOS" || "$PINNED_HM" != "$LATEST_HM" ]]; then
-  echo "🚨 New upstream release(s) detected!"
+if [[ "$PINNED_NIXOS" != "$LATEST_NIXOS" && "$PINNED_HM" != "$LATEST_HM" ]]; then
+  echo "🚨 New upstream releases detected for both nixpkgs and home-manager!"
   echo "Update your flake.nix before running system update."
   exit 1
+elif [[ "$PINNED_NIXOS" != "$LATEST_NIXOS" ]]; then
+  echo "ℹ️  Newer nixpkgs branch available (nixos-$LATEST_NIXOS), but home-manager release-$LATEST_NIXOS not yet available."
+  echo "✅ Staying on current versions until both are ready."
+elif [[ "$PINNED_HM" != "$LATEST_HM" ]]; then
+  echo "ℹ️  Newer home-manager branch available (release-$LATEST_HM), but nixpkgs nixos-$LATEST_HM not yet available."
+  echo "✅ Staying on current versions until both are ready."
+else
+  echo "✅ No upstream release changes detected."
 fi
-
-echo "✅ No upstream release changes detected."

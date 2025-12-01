@@ -11,20 +11,24 @@
     enable = true;
 
     # Additional options for the git program
-    package = pkgs.gitAndTools.gitFull; # Install git wiith all the optional extras
-    userName = "user";  # Will be set via git config after SOPS setup
-    userEmail = "user@example.com";  # Will be set via git config after SOPS setup
+    package = pkgs.gitFull; # Install git with all the optional extras
 #    signing.key = "";
 #    signing.signByDefault = true;
-    extraConfig = {
+    settings = {
+      user = {
+        name = "user";  # Will be set via git config after SOPS setup
+        email = "user@example.com";  # Will be set via git config after SOPS setup
+        signingkey = "~/.ssh/id_ed25519.pub";  # Standard location
+      };
       core.editor = "\${EDITOR:-vim}";
       # No credential helper needed - using SSH keys for authentication
       # Sign all commits using ssh key (only if key exists)
       commit.gpgsign = true;
       gpg.format = "ssh";
-      user.signingkey = "~/.ssh/id_ed25519.pub";  # Standard location
       # SSH signature verification
       gpg.ssh.allowedSignersFile = "~/.ssh/allowed_signers";
+      # Default branch name for new repositories
+      init.defaultBranch = "main";
       push = {
         autoSetupRemote = true;
       };

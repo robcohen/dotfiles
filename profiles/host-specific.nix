@@ -34,7 +34,7 @@ in {
     alacritty.enable = lib.mkDefault isDesktop;
 
     # Server-specific configurations
-    git.extraConfig = lib.mkMerge [
+    git.settings = lib.mkMerge [
       (lib.mkIf isServer {
         # Server-specific git config
         core.autocrlf = false;

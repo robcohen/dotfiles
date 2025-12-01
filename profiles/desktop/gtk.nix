@@ -46,10 +46,10 @@
     };
   };
 
-  # Cursor theme
+  # Cursor theme (using bibata for complete cursor set)
   home.pointerCursor = {
-    name = "Adwaita";
-    package = pkgs.adwaita-icon-theme;
+    name = "Bibata-Modern-Classic";
+    package = pkgs.bibata-cursors;
     size = 24;
     gtk.enable = true;
     x11.enable = true;

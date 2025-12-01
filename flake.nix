@@ -4,19 +4,16 @@
   inputs = {
     # Version pinning: These versions should match any infrastructure repos
     # that import tools from this dotfiles repository
-    stable-nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    stable-nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     unstable-nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager/release-25.05";
+    home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "stable-nixpkgs";
-    hardware.url = "github:nixos/nixos-hardware";
     sops-nix.url = "github:Mic92/sops-nix";
     nixos-generators.url = "github:nix-community/nixos-generators";
     nixos-generators.inputs.nixpkgs.follows = "stable-nixpkgs";
-    bip39-cli.url = "github:monomadic/bip39-cli";
-    bip39-cli.flake = false;
   };
 
-  outputs = inputs@{ self, stable-nixpkgs, unstable-nixpkgs, home-manager, sops-nix, nixos-generators, bip39-cli, ... }:
+  outputs = inputs@{ self, stable-nixpkgs, unstable-nixpkgs, home-manager, sops-nix, nixos-generators, ... }:
     let
       system = "x86_64-linux";
 
@@ -80,7 +77,7 @@
 	"user@snix" = mkHomeConfig;
       };
 
-      formatter.${system} = stable.nixpkgs-fmt;
+      formatter.${system} = stable.nixfmt;
 
       # Infrastructure tests
       checks.${system} = {};
@@ -125,10 +122,6 @@
           slax-vm = mkImage ./hosts/slax/configuration.nix "vm";
           brix-vm = mkImage ./hosts/brix/configuration.nix "vm";
 
-          # Alternative formats
-          slax-qcow2 = mkImage ./hosts/slax/configuration.nix "qcow2";
-          brix-qcow2 = mkImage ./hosts/brix/configuration.nix "qcow2";
-
           # Generic emergency recovery ISO
           emergency-iso = nixos-generators.nixosGenerate {
             inherit system;
@@ -165,7 +158,7 @@
           # Default dotfiles development shell (unchanged behavior)
           default = stable.mkShell {
             buildInputs = with stable; [
-              nixpkgs-fmt
+              nixfmt
               sops
               age
               # Testing tools
@@ -200,10 +193,6 @@
               echo "Build VM images:"
               echo "  nix build .#slax-vm"
               echo "  nix build .#brix-vm"
-              echo ""
-              echo "Build QCOW2 images:"
-              echo "  nix build .#slax-qcow2"
-              echo "  nix build .#brix-qcow2"
               echo ""
               echo "Development shells available:"
               echo "  nix develop .#rust       - Rust development"

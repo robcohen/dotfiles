@@ -100,7 +100,6 @@
 
       # Gestures
       gestures = {
-        workspace_swipe = false;
       };
 
       # Misc settings
@@ -117,10 +116,12 @@
       };
 
       # Device configuration
-      device = {
-        name = "epic-mouse-v1";
-        sensitivity = -0.5;
-      };
+      device = [
+        {
+          name = "epic-mouse-v1";
+          sensitivity = -0.5;
+        }
+      ];
 
       # Key bindings
       "$mainMod" = "SUPER";
@@ -132,7 +133,7 @@
         "$mainMod, M, exit,"
         "$mainMod, E, exec, ranger"
         "$mainMod, V, togglefloating,"
-        "$mainMod, R, exec, rofi -show drun"
+        "$mainMod, R, exec, fuzzel"
         "$mainMod, P, pseudo, # dwindle"
         "$mainMod, J, togglesplit, # dwindle"
         "$mainMod, F, fullscreen,"

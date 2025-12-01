@@ -5,7 +5,7 @@ let
   detectedHostname = "brix";  # Hardcode for now to avoid infinite recursion
 
   unstable = import inputs.unstable-nixpkgs {
-    system = pkgs.system;
+    system = pkgs.stdenv.hostPlatform.system;
     config.allowUnfree = true;
   };
 in {
@@ -39,6 +39,8 @@ in {
     ./programs/hyprland.nix
     ./programs/hyprlock.nix
     ./programs/waybar.nix
+    ./programs/fuzzel.nix
+    ./programs/wlogout.nix
     ./services/gpg-agent.nix
     ./services/syncthing.nix
     ./services/hypridle.nix
@@ -95,7 +97,6 @@ in {
   home.packages = with pkgs; [
     age               # Modern encryption
     sops              # Secrets operations
-    chkrootkit        # Rootkit scanner
     lynis             # Security auditing tool
     vulnix            # Nix vulnerability scanner
     nmap              # Network scanner
@@ -130,7 +131,7 @@ in {
     # Security
     security-scan = "~/.local/bin/security-scan";
     security-audit = "lynis audit system";
-    rootkit-check = "sudo chkrootkit";
+    rootkit-check = "sudo lynis audit system --tests-from-group malware";
 
   };
 }

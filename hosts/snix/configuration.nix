@@ -1,5 +1,12 @@
 # hosts/brix/configuration.nix
-{ config, pkgs, lib, unstable, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  unstable,
+  inputs,
+  ...
+}:
 
 {
   imports = [
@@ -11,16 +18,14 @@
     ../common/swap.nix
   ];
 
-
   networking.hostName = "snix";
   networking.networkmanager = {
     enable = true;
-    wifi.macAddress = "preserve";  # Keep hardware MAC to prevent disconnections
+    wifi.macAddress = "preserve"; # Keep hardware MAC to prevent disconnections
     ethernet.macAddress = "random";
-    wifi.powersave = false;  # Disable WiFi power saving to prevent disconnections
-    wifi.scanRandMacAddress = false;  # Don't randomize MAC during scans
+    wifi.powersave = false; # Disable WiFi power saving to prevent disconnections
+    wifi.scanRandMacAddress = false; # Don't randomize MAC during scans
   };
-
 
   services.udev.extraRules = ''
     ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/backlight/%k/brightness"
@@ -86,17 +91,14 @@
     };
   };
 
-
   # Allow Bluetooth firmware loading under kernel lockdown
   security.lockKernelModules = false; # Required for Bluetooth firmware loading
-
 
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = with pkgs; [
     linux-firmware
     sof-firmware
-    firmwareLinuxNonfree
-    unstable.linux-firmware  # Use unstable for latest MT7925 firmware
+    unstable.linux-firmware # Use unstable for latest MT7925 firmware
   ];
   hardware.cpu.intel.updateMicrocode = true;
   hardware.ledger.enable = true;
@@ -104,19 +106,25 @@
     enable = true;
     extraPackages = with pkgs; [
       rocmPackages.clr.icd
-      amdvlk
       mesa
       vulkan-loader
       vulkan-validation-layers
       libva
-      vaapiVdpau
+      libva-vdpau-driver
       libvdpau-va-gl
     ];
   };
 
   # Try testing kernel for MT7925 Bluetooth fix
   boot.kernelPackages = pkgs.linuxPackages_testing;
-  boot.kernelModules = [ "amdgpu" "btusb" "btmtk" "btintel" "btrtl" "btbcm" ];
+  boot.kernelModules = [
+    "amdgpu"
+    "btusb"
+    "btmtk"
+    "btintel"
+    "btrtl"
+    "btbcm"
+  ];
   # Load Bluetooth modules after system is ready
   boot.extraModulePackages = [ ];
   boot.extraModprobeConfig = ''
@@ -133,32 +141,32 @@
   '';
   boot.kernelParams = [
     "iwlwifi.power_save=0"
-    "slab_nomerge"           # Prevent heap exploitation
-    "init_on_alloc=1"        # Zero memory on allocation
-    "init_on_free=1"         # Zero memory on free
-    "page_alloc.shuffle=1"   # Randomize page allocator
-    "fwupd.verbose=1"        # Verbose firmware logging
-    "efi=debug"              # EFI debugging
-    "lockdown=integrity"     # Kernel lockdown mode (integrity allows signed firmware)
+    "slab_nomerge" # Prevent heap exploitation
+    "init_on_alloc=1" # Zero memory on allocation
+    "init_on_free=1" # Zero memory on free
+    "page_alloc.shuffle=1" # Randomize page allocator
+    "fwupd.verbose=1" # Verbose firmware logging
+    "efi=debug" # EFI debugging
+    "lockdown=integrity" # Kernel lockdown mode (integrity allows signed firmware)
 
     # Bluetooth power management fixes
-    "btusb.enable_autosuspend=0"  # Disable Bluetooth auto-suspend
-    "usbcore.autosuspend=-1"      # Disable USB auto-suspend globally
+    "btusb.enable_autosuspend=0" # Disable Bluetooth auto-suspend
+    "usbcore.autosuspend=-1" # Disable USB auto-suspend globally
 
     # Plymouth high resolution fix for AMD Radeon 860M
-    "quiet"                        # Hide kernel messages for clean boot
-    "splash"                       # Enable splash screen
-    "vt.global_cursor_default=0"  # Hide cursor during boot
-    "amdgpu.dc=1"                 # Enable Display Core for better display handling
-    "amdgpu.dpm=1"                # Enable dynamic power management
-    "video=eDP-1:1920x1080@60"    # Force proper resolution (adjust if needed)
+    "quiet" # Hide kernel messages for clean boot
+    "splash" # Enable splash screen
+    "vt.global_cursor_default=0" # Hide cursor during boot
+    "amdgpu.dc=1" # Enable Display Core for better display handling
+    "amdgpu.dpm=1" # Enable dynamic power management
+    "video=eDP-1:1920x1080@60" # Force proper resolution (adjust if needed)
   ];
   boot.tmp.useTmpfs = true;
 
   # Plymouth boot splash screen with proper high resolution
   boot.plymouth = {
     enable = true;
-    theme = "bgrt";  # BGRT uses system firmware logo, clean and works well
+    theme = "bgrt"; # BGRT uses system firmware logo, clean and works well
     # High resolution settings for crisp display
     extraConfig = ''
       DeviceScale=2
@@ -169,6 +177,21 @@
 
   # Enable systemd in initrd for Plymouth LUKS integration
   boot.initrd.systemd.enable = true;
+
+  # Use Rust-based bashless init for faster boot (NixOS 25.11+)
+  # system.nixos-init.enable = true;
+  # system.etc.overlay.enable = true;
+  # services.userborn.enable = true;
+
+  # Store password files in /var/lib/nixos for persistence with immutable /etc
+  # services.userborn.passwordFilesLocation = "/var/lib/nixos";
+
+  # Ensure sops-nix decrypts secrets before userborn runs
+  # Note: sops-install-secrets-for-users handles neededForUsers secrets at early boot
+  #systemd.services.userborn = {
+  #  after = [ "sops-install-secrets-for-users.service" ];
+  #  wants = [ "sops-install-secrets-for-users.service" ];
+  #};
 
   # Load AMD graphics driver early for proper Plymouth resolution
   boot.initrd.kernelModules = [ "amdgpu" ];
@@ -181,7 +204,7 @@
     enable = true;
     editor = false;
     consoleMode = "0";
-    configurationLimit = 10;  # Limit boot entries
+    configurationLimit = 10; # Limit boot entries
   };
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -198,7 +221,7 @@
 
   # Configure networking for libvirt
   networking.firewall.checkReversePath = false;
-  networking.nftables.enable = false;  # Use iptables instead
+  networking.nftables.enable = false; # Use iptables instead
   networking.firewall.trustedInterfaces = [ "virbr0" ];
 
   virtualisation.waydroid.enable = true;
@@ -214,32 +237,54 @@
     };
   };
 
-  swapDevices = [{
-    device = "/swap/swapfile";
-    size = 32768;  # 32GB swap
-  }];
+  swapDevices = [
+    {
+      device = "/swap/swapfile";
+      size = 32768; # 32GB swap
+    }
+  ];
 
-  users.users.user.extraGroups = ["libvirtd" "adbusers" "tss" "disk"];
+  users.users.user.extraGroups = [
+    "libvirtd"
+    "adbusers"
+    "tss"
+    "disk"
+  ];
 
   environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
 
-
   environment.systemPackages = with pkgs; [
     # Container and device management
-    podman-compose libimobiledevice ifuse
+    podman-compose
+    libimobiledevice
+    ifuse
     # Graphics and hardware tools (system-level)
-    vulkan-tools vulkan-loader vulkan-validation-layers
-    libva-utils intel-gpu-tools mesa wayland wayland-utils wev efitools
+    vulkan-tools
+    vulkan-loader
+    vulkan-validation-layers
+    libva-utils
+    intel-gpu-tools
+    mesa
+    wayland
+    wayland-utils
+    wev
+    efitools
     # Hardware monitoring (requires root access)
-    lm_sensors smartmontools
+    lm_sensors
+    smartmontools
     # TPM and cryptographic tools
-    tpm2-tools tpm2-pkcs11 opensc
+    tpm2-tools
+    tpm2-pkcs11
+    opensc
     # BIP39 and key derivation
-    electrum python3Packages.mnemonic
+    electrum
+    python3Packages.mnemonic
     # Bluetooth debugging tools
-    bluez bluez-tools
+    bluez
+    bluez-tools
     # WiFi tools for power management
-    iw wirelesstools
+    iw
+    wirelesstools
     # Networking tools for libvirt
     dnsmasq
   ];
@@ -248,7 +293,7 @@
   security.tpm2 = {
     enable = true;
     tctiEnvironment.enable = true;
-    pkcs11.enable = true;  # Enable PKCS#11 interface
+    pkcs11.enable = true; # Enable PKCS#11 interface
   };
 
   # Smart card and PKCS#11 support
@@ -263,12 +308,11 @@
     ForwardToSyslog=yes
   '';
 
-
   # Sandbox Wine applications
   programs.firejail.enable = true;
 
   # SSD optimizations
-  services.fstrim.enable = true;  # Automatic TRIM
+  services.fstrim.enable = true; # Automatic TRIM
 
   # Container registry mirrors for faster pulls
   virtualisation.containers.registries.search = [
@@ -292,7 +336,7 @@
 
   # Power management
   services.tlp = {
-    enable = true;                         # Battery optimization
+    enable = true; # Battery optimization
     settings = {
       # Disable WiFi power management
       WIFI_PWR_ON_AC = "off";
@@ -301,35 +345,33 @@
       RUNTIME_PM_ON_AC = "on";
       RUNTIME_PM_ON_BAT = "on";
       # Blacklist MT7925e from runtime PM
-      RUNTIME_PM_BLACKLIST = "c2:00.0";  # MT7925e PCI address
+      RUNTIME_PM_BLACKLIST = "c2:00.0"; # MT7925e PCI address
       # Disable USB autosuspend which can affect Bluetooth
       USB_AUTOSUSPEND = 0;
     };
   };
-  services.power-profiles-daemon.enable = false;     # Conflicts with TLP
-  services.thermald.enable = true;                    # Thermal management
+  services.power-profiles-daemon.enable = false; # Conflicts with TLP
+  services.thermald.enable = true; # Thermal management
 
   # Logind configuration for lid handling and screen locking
-  services.logind = {
-    lidSwitch = "lock";  # Lock screen when lid is closed
-    lidSwitchDocked = "lock";  # Lock even when docked
-    lidSwitchExternalPower = "lock";  # Lock even on AC power
-    extraConfig = ''
-      HandlePowerKey=suspend
-      IdleAction=lock
-      IdleActionSec=15min
-    '';
+  services.logind.settings.Login = {
+    HandleLidSwitch = "lock"; # Lock screen when lid is closed
+    HandleLidSwitchDocked = "lock"; # Lock even when docked
+    HandleLidSwitchExternalPower = "lock"; # Lock even on AC power
+    HandlePowerKey = "suspend";
+    IdleAction = "lock";
+    IdleActionSec = "15min";
   };
 
   # Better observability
-  services.smartd.enable = true;  # Automatic disk health checks
+  services.smartd.enable = true; # Automatic disk health checks
 
   # Network monitoring
-  services.vnstat.enable = true;  # Network usage statistics
+  services.vnstat.enable = true; # Network usage statistics
 
   # Security auditing
   # TODO: Re-enable after configuring comprehensive AppArmor profiles to avoid audit_log_subj_ctx errors
-  security.auditd.enable = false;  # System call auditing - temporarily disabled
+  security.auditd.enable = false; # System call auditing - temporarily disabled
 
   programs.adb.enable = true;
   services.usbmuxd.enable = true;
@@ -386,12 +428,11 @@
 
     # Security settings - relaxed for Bluetooth compatibility
     uefiCapsuleSettings = {
-      DisableCapsuleUpdateOnDisk = false;  # Allow firmware updates for Bluetooth
-      RequireESRTFwMgmt = false;          # Relaxed for better firmware support
+      DisableCapsuleUpdateOnDisk = false; # Allow firmware updates for Bluetooth
+      RequireESRTFwMgmt = false; # Relaxed for better firmware support
     };
 
     # Use default package (no P2P firmware sharing for security)
   };
-
 
 }

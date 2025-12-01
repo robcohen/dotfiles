@@ -7,13 +7,13 @@
       mainBar = {
         layer = "top";
         position = "top";
-        height = 40;
+        height = 48;
         spacing = 4;
         margin-top = 8;
         margin-left = 16;
         margin-right = 16;
 
-        modules-left = [ "hyprland/workspaces" "hyprland/mode" "hyprland/scratchpad" ];
+        modules-left = [ "hyprland/workspaces" ];
         modules-center = [ "hyprland/window" ];
         modules-right = [ "tray" "idle_inhibitor" "bluetooth" "custom/weather" "custom/performance" "pulseaudio" "battery" "custom/power" "clock" ];
 
@@ -42,17 +42,6 @@
           };
         };
 
-        "hyprland/mode" = {
-          format = "<span style=\"italic\">{}</span>";
-        };
-
-        "hyprland/scratchpad" = {
-          format = "{icon} {count}";
-          show-empty = false;
-          format-icons = ["" ""];
-          tooltip = true;
-          tooltip-format = "{app}: {title}";
-        };
 
         "hyprland/window" = {
           format = "{}";
@@ -127,8 +116,43 @@
         "custom/weather" = {
           format = "{}";
           interval = 1800;
-          exec = "${pkgs.curl}/bin/curl -s 'wttr.in/Austin,TX?format=%c%t&u' | tr -d '\\n' || echo '󰖙 --°F'";
-          tooltip = false;
+          exec = "${pkgs.writeShellScript "weather-exec" ''
+            LOCATION_FILE="$HOME/.config/waybar/weather-location"
+
+            # Default location
+            if [ ! -f "$LOCATION_FILE" ]; then
+              mkdir -p "$(dirname "$LOCATION_FILE")"
+              echo "Austin,TX" > "$LOCATION_FILE"
+            fi
+
+            LOCATION=$(cat "$LOCATION_FILE")
+            # URL-encode the location (replace spaces with +)
+            ENCODED_LOCATION=$(echo "$LOCATION" | sed 's/ /+/g')
+            ${pkgs.curl}/bin/curl -s "wttr.in/$ENCODED_LOCATION?format=%c%t&u" 2>/dev/null | tr -d '\n' || echo '󰖙 --°F'
+          ''}";
+          on-click = "${pkgs.writeShellScript "weather-click" ''
+            LOCATION_FILE="$HOME/.config/waybar/weather-location"
+
+            # Get current location for placeholder
+            CURRENT=""
+            if [ -f "$LOCATION_FILE" ]; then
+              CURRENT=$(cat "$LOCATION_FILE")
+            fi
+
+            # Prompt for new location using fuzzel
+            NEW_LOCATION=$(echo "" | ${pkgs.fuzzel}/bin/fuzzel --dmenu --prompt "Location (zip or city): " --placeholder "$CURRENT")
+
+            # If user entered something, save it
+            if [ -n "$NEW_LOCATION" ]; then
+              mkdir -p "$(dirname "$LOCATION_FILE")"
+              echo "$NEW_LOCATION" > "$LOCATION_FILE"
+              # Signal waybar to refresh the weather module
+              pkill -RTMIN+8 waybar
+            fi
+          ''}";
+          signal = 8;
+          tooltip = true;
+          tooltip-format = "Click to change location";
         };
 
         "custom/performance" = {
@@ -187,22 +211,9 @@
 
         "custom/power" = {
           format = "⏻";
-          tooltip = false;
-          on-click = "${pkgs.rofi}/bin/rofi -show power-menu -modi power-menu:${pkgs.writeShellScript "rofi-power-menu" ''
-            case $@ in
-              "shutdown") echo "Shutdown" ;;
-              "reboot") echo "Reboot" ;;
-              "logout") echo "Logout" ;;
-              "") echo -e "shutdown\nreboot\nlogout" ;;
-            esac
-          ''} -theme-str 'window {width: 200px;} listview {lines: 3;}'";
-          on-click-right = "${pkgs.writeShellScript "power-action" ''
-            case $(echo -e "Shutdown\nReboot\nLogout" | ${pkgs.rofi}/bin/rofi -dmenu -p "Power Menu" -theme-str 'window {width: 200px;} listview {lines: 3;}') in
-              "Shutdown") systemctl poweroff ;;
-              "Reboot") systemctl reboot ;;
-              "Logout") hyprctl dispatch exit ;;
-            esac
-          ''}";
+          tooltip = true;
+          tooltip-format = "Power Menu";
+          on-click = "wlogout -b 3 -c 3 -r 2 -s -m 0";
         };
       };
     };
@@ -436,18 +447,11 @@
       #pulseaudio:hover,
       #bluetooth:hover,
       #custom-weather:hover,
-      #custom-performance:hover,
       #battery:hover,
-      #custom-power:hover,
       #clock:hover {
-        background: linear-gradient(135deg, rgba(137, 180, 250, 0.25), rgba(116, 199, 236, 0.20), rgba(203, 166, 247, 0.15));
-        border-color: rgba(137, 180, 250, 0.8);
-        color: #ffffff;
-        box-shadow:
-          0 8px 32px rgba(137, 180, 250, 0.4),
-          0 0 20px rgba(137, 180, 250, 0.3),
-          inset 0 2px 0 rgba(255, 255, 255, 0.2),
-          inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+        background: rgba(137, 180, 250, 0.15);
+        border-color: #89b4fa;
+        color: #89b4fa;
       }
     '';
   };

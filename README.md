@@ -37,10 +37,10 @@ A comprehensive NixOS configuration using flakes and Home Manager, featuring des
 4. **Bootstrap secrets (after system builds successfully):**
    ```bash
    # Generate new BIP39 mnemonic and set up SOPS
-   ./scripts/bootstrap-secrets.sh --generate
+   ./assets/scripts/bootstrap-secrets.sh --generate
 
    # Or use existing mnemonic
-   ./scripts/bootstrap-secrets.sh --mnemonic "your 24 words here"
+   ./assets/scripts/bootstrap-secrets.sh --mnemonic "your 24 words here"
    ```
 
 ## 📁 Repository Structure
@@ -163,10 +163,10 @@ This configuration includes an automated bootstrap process for BIP39/TPM key der
 # After your system builds successfully, run the bootstrap script:
 
 # Generate new BIP39 mnemonic and set up everything automatically
-./scripts/bootstrap-secrets.sh --generate
+./assets/scripts/bootstrap-secrets.sh --generate
 
 # Or use an existing BIP39 mnemonic
-./scripts/bootstrap-secrets.sh --mnemonic "word1 word2 ... word24"
+./assets/scripts/bootstrap-secrets.sh --mnemonic "word1 word2 ... word24"
 ```
 
 The bootstrap script will:

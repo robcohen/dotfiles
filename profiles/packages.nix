@@ -8,7 +8,7 @@ let
   # Core packages for all systems
   fonts = with pkgs; [
     source-code-pro font-awesome_4 font-awesome_5 font-awesome
-    noto-fonts noto-fonts-cjk-sans noto-fonts-emoji
+    noto-fonts noto-fonts-cjk-sans noto-fonts-color-emoji
     liberation_ttf fira-code fira-code-symbols proggyfonts
   ];
 
@@ -17,7 +17,7 @@ let
     gnupg pinentry-gnome3
     pciutils usbutils openssl binutils
     age sops vulnix niv vim
-    dmidecode dig libfido2 jq opensc pcsctools ccid
+    dmidecode dig libfido2 jq opensc pcsc-tools ccid
   ];
 
   # Desktop-specific packages
@@ -61,7 +61,7 @@ let
 
   # Productivity packages
   productivityPackages = with pkgs; [
-    rymdport anki nil
+    rymdport anki nil rclone
   ] ++ (with unstable; [
     gh onlyoffice-desktopeditors thunderbird firefox tor-browser
     warp bitwarden-desktop obsidian ledger-live-desktop kdePackages.okular

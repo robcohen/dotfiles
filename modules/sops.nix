@@ -56,6 +56,14 @@ with lib;
         group = "root";
         mode = "0400";
       };
+
+      # User password for userborn compatibility
+      "user/hashedPassword" = {
+        owner = "root";
+        group = "root";
+        mode = "0400";
+        neededForUsers = true;
+      };
     };
   };
 
