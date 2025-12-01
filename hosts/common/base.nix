@@ -67,7 +67,7 @@
     swww            # Wallpaper daemon
     grim            # Screenshots
     slurp           # Screen selection
-    wl-clipboard    # Clipboard utilities
+    wl-clipboard-rs # Clipboard utilities (Rust rewrite, faster)
     brightnessctl   # Brightness control
     pavucontrol     # Audio control GUI
   ];

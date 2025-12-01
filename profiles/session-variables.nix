@@ -2,7 +2,7 @@
 {
   home.sessionVariables = {
     ELECTRON_DEFAULT_BROWSER = "brave";
-    EDITOR = "vim";
+    EDITOR = "nvim";
     NIXOS_OZONE_WL = "1";
     LIBVA_DRIVER_NAME = "i965";
     MOZ_DISABLE_RDD_SANDBOX = "1";

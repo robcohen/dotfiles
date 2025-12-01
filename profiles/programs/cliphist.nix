@@ -2,9 +2,9 @@
 
 {
   # Cliphist - Clipboard manager for Wayland
+  # Note: wl-clipboard-rs is provided by hosts/common/base.nix
   home.packages = with pkgs; [
     cliphist
-    wl-clipboard
   ];
 
   # Clipboard history service
@@ -15,7 +15,7 @@
       After = [ "graphical-session.target" ];
     };
     Service = {
-      ExecStart = "${pkgs.wl-clipboard}/bin/wl-paste --watch ${pkgs.cliphist}/bin/cliphist store";
+      ExecStart = "${pkgs.wl-clipboard-rs}/bin/wl-paste --watch ${pkgs.cliphist}/bin/cliphist store";
       Restart = "on-failure";
     };
     Install = {
@@ -31,7 +31,7 @@
       After = [ "graphical-session.target" ];
     };
     Service = {
-      ExecStart = "${pkgs.wl-clipboard}/bin/wl-paste --type image --watch ${pkgs.cliphist}/bin/cliphist store";
+      ExecStart = "${pkgs.wl-clipboard-rs}/bin/wl-paste --type image --watch ${pkgs.cliphist}/bin/cliphist store";
       Restart = "on-failure";
     };
     Install = {
