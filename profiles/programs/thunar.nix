@@ -17,6 +17,4 @@
     "inode/directory" = [ "thunar.desktop" ];
   };
 
-  # Enable tumbler service for thumbnails
-  services.tumbler.enable = true;
 }
