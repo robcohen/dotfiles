@@ -1,6 +1,9 @@
 { config, pkgs, lib, ... }:
 
 {
+  # Force GTK dark theme for Thunar
+  home.sessionVariables.GTK_THEME = "Adwaita:dark";
+
   # Thunar - GTK file manager
   home.packages = with pkgs; [
     xfce.thunar

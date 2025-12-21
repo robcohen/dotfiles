@@ -11,7 +11,17 @@ let
   };
 
 in {
-  home.packages = [ unstable.ungoogled-chromium ];
+  programs.chromium = {
+    enable = true;
+    package = unstable.ungoogled-chromium;
+    extensions = [
+      # Chromium Web Store - enables installing extensions from Chrome Web Store
+      {
+        id = "ocaahdebbfolfmndjeplogmgcagdmblk";
+        updateUrl = "https://raw.githubusercontent.com/nicohman/nicohman.github.io/master/nicochrome.xml";
+      }
+    ];
+  };
 
   programs.browserpass.enable = true;
   programs.browserpass.browsers = [ "chromium" ];

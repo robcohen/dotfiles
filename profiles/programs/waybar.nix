@@ -15,7 +15,7 @@
 
         modules-left = [ "hyprland/workspaces" ];
         modules-center = [ "hyprland/window" ];
-        modules-right = [ "tray" "idle_inhibitor" "bluetooth" "custom/weather" "custom/performance" "pulseaudio" "battery" "custom/power" "clock" ];
+        modules-right = [ "tray" "custom/notifications" "idle_inhibitor" "bluetooth" "custom/weather" "custom/performance" "pulseaudio" "battery" "custom/power" "clock" ];
 
         "hyprland/workspaces" = {
           disable-scroll = true;
@@ -215,6 +215,18 @@
           tooltip-format = "Power Menu";
           on-click = "wlogout -b 3 -c 3 -r 2 -s -m 0";
         };
+
+        "custom/notifications" = {
+          format = "{}";
+          tooltip = true;
+          tooltip-format = "Notifications";
+          on-click = "swaync-client -t -sw";
+          on-click-right = "swaync-client -d -sw";
+          return-type = "json";
+          exec-if = "which swaync-client";
+          exec = "swaync-client -swb";
+          escape = true;
+        };
       };
     };
 
@@ -251,6 +263,7 @@
       #scratchpad,
       #window,
       #tray,
+      #custom-notifications,
       #idle_inhibitor,
       #pulseaudio,
       #bluetooth,
@@ -330,6 +343,29 @@
       @keyframes attention {
         0% { background: rgba(243, 139, 168, 0.2); }
         100% { background: rgba(243, 139, 168, 0.4); }
+      }
+
+      #custom-notifications {
+        color: #cba6f7;
+      }
+
+      #custom-notifications.notification-count-0 {
+        color: #6c7086;
+      }
+
+      #custom-notifications.dnd-notification {
+        color: #f38ba8;
+      }
+
+      #custom-notifications.has-notifications {
+        color: #a6e3a1;
+        background: rgba(166, 227, 161, 0.15);
+        border-color: rgba(166, 227, 161, 0.4);
+      }
+
+      #custom-notifications:hover {
+        background: rgba(203, 166, 247, 0.2);
+        border-color: #cba6f7;
       }
 
       #idle_inhibitor {

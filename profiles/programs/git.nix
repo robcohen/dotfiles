@@ -16,8 +16,8 @@
 #    signing.signByDefault = true;
     settings = {
       user = {
-        name = "user";  # Will be set via git config after SOPS setup
-        email = "user@example.com";  # Will be set via git config after SOPS setup
+        name = "robcohen";
+        email = "robcohen@users.noreply.github.com";
         signingkey = "~/.ssh/id_ed25519.pub";  # Standard location
       };
       core.editor = "\${EDITOR:-vim}";
@@ -38,7 +38,7 @@
   # Create SSH allowed signers file for local verification
   home.activation.createAllowedSigners = lib.hm.dag.entryAfter ["writeBoundary"] ''
     if [[ -f ~/.ssh/id_ed25519.pub ]]; then
-      echo "user@example.com $(cat ~/.ssh/id_ed25519.pub)" > ~/.ssh/allowed_signers
+      echo "robcohen@users.noreply.github.com $(cat ~/.ssh/id_ed25519.pub)" > ~/.ssh/allowed_signers
       chmod 644 ~/.ssh/allowed_signers
     fi
   '';

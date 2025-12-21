@@ -31,6 +31,11 @@
     ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chgrp video /sys/class/backlight/%k/brightness"
     ACTION=="add", SUBSYSTEM=="backlight", RUN+="${pkgs.coreutils}/bin/chmod g+w /sys/class/backlight/%k/brightness"
 
+    # Flipper Zero serial port
+    SUBSYSTEMS=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="5740", ATTRS{manufacturer}=="Flipper Devices Inc.", TAG+="uaccess"
+    # Flipper Zero DFU mode
+    SUBSYSTEMS=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="df11", ATTRS{manufacturer}=="STMicroelectronics", TAG+="uaccess"
+
     # MediaTek MT7925 PCIe WiFi/Bluetooth combo device support
     ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x14c3", ATTR{device}=="0x7925", RUN+="${pkgs.kmod}/bin/modprobe btusb && ${pkgs.kmod}/bin/modprobe btmtk"
 
@@ -88,6 +93,17 @@
       RemainAfterExit = true;
       ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.iw}/bin/iw dev wlp194s0 set power_save off 2>/dev/null || true; echo 0 > /sys/module/mt76_connac_lib/parameters/pm_enable 2>/dev/null || true'";
       ExecStartPost = "${pkgs.coreutils}/bin/sleep 2";
+    };
+  };
+
+  # Restart NetworkManager after suspend/hibernate to fix WiFi connectivity issues
+  systemd.services.wifi-resume = {
+    description = "Restart NetworkManager after suspend";
+    after = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
+    wantedBy = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.systemd}/bin/systemctl restart NetworkManager.service";
     };
   };
 
@@ -249,6 +265,7 @@
     "adbusers"
     "tss"
     "disk"
+    "dialout"
   ];
 
   environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
@@ -411,6 +428,10 @@
 
       # Allow Ledger hardware wallets
       allow id 2c97:* # All Ledger devices
+
+      # Flipper Zero
+      allow id 0483:5740 # Flipper Zero serial
+      allow id 0483:df11 # Flipper Zero DFU mode
 
       # Allow other common vendors
       allow id 0bda:* # Realtek devices
