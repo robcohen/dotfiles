@@ -14,6 +14,11 @@ in {
   programs.chromium = {
     enable = true;
     package = unstable.ungoogled-chromium;
+    commandLineArgs = [
+      # WebRTC leak prevention
+      "--webrtc-ip-handling-policy=disable_non_proxied_udp"
+      "--enforce-webrtc-ip-permission-check"
+    ];
     extensions = [
       # Chromium Web Store - enables installing extensions from Chrome Web Store
       {
@@ -26,7 +31,8 @@ in {
   programs.browserpass.enable = true;
   programs.browserpass.browsers = [ "chromium" ];
 
-  home.file.".config/chromium-browser/Default/Preferences".text = builtins.toJSON {
+  # Note: Preferences file may be overwritten by browser; commandLineArgs above are more reliable
+  home.file.".config/chromium/Default/Preferences".text = builtins.toJSON {
     browser = {
       enabled_labs_experiments = [ ];
     };

@@ -20,6 +20,7 @@ in {
     ./programs/bash.nix
     ./programs/alacritty.nix
     ./programs/ungoogled-chromium.nix
+    ./programs/firefox.nix
     ./programs/git.nix
     ./programs/zsh.nix
     ./programs/npm.nix
