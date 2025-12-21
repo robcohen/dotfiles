@@ -15,9 +15,11 @@ in {
     enable = true;
     package = unstable.ungoogled-chromium;
     commandLineArgs = [
-      # WebRTC leak prevention
-      "--webrtc-ip-handling-policy=disable_non_proxied_udp"
-      "--enforce-webrtc-ip-permission-check"
+      # WebRTC leak prevention - most restrictive setting
+      "--webrtc-ip-handling-policy=default_public_interface_only"
+      "--force-webrtc-ip-handling-policy"
+      "--disable-webrtc-hw-encoding"
+      "--disable-webrtc-hw-decoding"
     ];
     extensions = [
       # Chromium Web Store - enables installing extensions from Chrome Web Store
@@ -31,8 +33,11 @@ in {
   programs.browserpass.enable = true;
   programs.browserpass.browsers = [ "chromium" ];
 
-  # Note: Preferences file may be overwritten by browser; commandLineArgs above are more reliable
-  home.file.".config/chromium/Default/Preferences".text = builtins.toJSON {
+  # Force overwrite browser-modified Preferences
+  # Run `diff-browser-prefs` before `home-manager switch` to review changes
+  home.file.".config/chromium/Default/Preferences" = {
+    force = true;
+    text = builtins.toJSON {
     browser = {
       enabled_labs_experiments = [ ];
     };
@@ -87,5 +92,6 @@ in {
         media_stream_camera = 2;  # Block
       };
     };
+  };
   };
 }
