@@ -16,6 +16,7 @@
     ../common/tpm.nix
     ../common/sddm.nix
     ../common/swap.nix
+    ../../modules/tailscale-mullvad.nix
   ];
 
   networking.hostName = "snix";
@@ -236,7 +237,7 @@
   };
 
   # Configure networking for libvirt
-  networking.firewall.checkReversePath = false;
+  # Note: checkReversePath is set to "loose" by tailscale-mullvad.nix
   networking.nftables.enable = false; # Use iptables instead
   networking.firewall.trustedInterfaces = [ "virbr0" ];
 

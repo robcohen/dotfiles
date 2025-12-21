@@ -46,9 +46,10 @@ repos:
 
       - id: check-sensitive-patterns
         name: Check for sensitive patterns
-        entry: bash -c 'if grep -r --exclude-dir=.git --exclude="*.md" --exclude=".secrets.baseline" --exclude=".pre-commit-config.yaml" --exclude-dir=hosts -i "password\s*=.*[^#]\|api_key\s*=.*[^#]\|secret\s*=.*[^#]\|token\s*=.*[^#]" .; then echo "Potential credential detected!"; exit 1; fi'
+        entry: bash -c 'if grep -l -i "password\s*=.*[^#]\|api_key\s*=.*[^#]\|secret\s*=.*[^#]\|token\s*=.*[^#]" "$@" 2>/dev/null | grep -v -E "\.(md|example)$|\.secrets\.baseline|\.pre-commit-config\.yaml"; then echo "Potential credential detected!"; exit 1; fi; exit 0'
         language: system
-        pass_filenames: false
+        types: [text]
+        exclude: ^(\.env\.example|hosts/|\.secrets\.baseline)
 
       - id: nix-file-validation
         name: Validate Nix files

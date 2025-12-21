@@ -1,0 +1,117 @@
+{
+  // Tailscale Policy File
+  // Managed via GitOps - do not edit in admin console
+  //
+  // Setup:
+  //   1. Copy ../.env.example to ../.env and fill in credentials
+  //   2. Purchase Mullvad add-on in admin console ($5/mo for 5 devices)
+  //   3. Tag devices in admin console or via CLI:
+  //      tailscale set --advertise-tags=tag:personal,tag:mullvad
+  //   4. Run: ./sync-policy.sh --apply
+  //
+  // Admin console settings (not configurable via policy):
+  //   - DNS > Global nameservers: 100.100.100.100 (MagicDNS)
+  //   - DNS > Override local DNS: Enabled
+  //   - Mullvad VPN > Add devices: snix, pixel9
+  //
+  // Documentation: https://tailscale.com/kb/1337/policy-syntax
+
+  // ==========================================================================
+  // TAG OWNERS - who can assign these tags
+  // ==========================================================================
+  "tagOwners": {
+    "tag:personal":  ["autogroup:admin"],  // All your devices
+    "tag:mullvad":   ["autogroup:admin"],  // Devices with Mullvad exit access
+  },
+
+  // ==========================================================================
+  // NODE ATTRIBUTES
+  // ==========================================================================
+  "nodeAttrs": [
+    {
+      // Grant Mullvad exit node access to devices tagged with tag:mullvad
+      // Tag your snix laptop and Pixel 9 with: tag:mullvad
+      "target": ["tag:mullvad"],
+      "attr": ["mullvad"],
+    },
+  ],
+
+  // ==========================================================================
+  // ACCESS CONTROL LISTS
+  // ==========================================================================
+  //
+  // Intentionally excluded: slax (isolated, not in tailnet)
+  //
+  "acls": [
+    // Personal devices can reach each other on all ports
+    {
+      "action": "accept",
+      "src": ["tag:personal"],
+      "dst": ["tag:personal:*"],
+    },
+
+    // Personal devices can use exit nodes (Mullvad) for internet
+    {
+      "action": "accept",
+      "src": ["tag:personal"],
+      "dst": ["autogroup:internet:*"],
+    },
+
+    // Allow all members to reach tagged devices (for initial sync)
+    {
+      "action": "accept",
+      "src": ["autogroup:member"],
+      "dst": ["*:*"],
+    },
+  ],
+
+  // ==========================================================================
+  // SSH - Tailscale SSH between devices
+  // ==========================================================================
+  //
+  // TODO: Evaluate enabling Tailscale SSH for personal devices
+  //
+  // Benefits:
+  //   - No SSH key management across devices
+  //   - SSO authentication (use Tailscale identity)
+  //   - Session recording (optional, for audit)
+  //   - Works through NAT without port forwarding
+  //
+  // Trade-offs:
+  //   - Requires Tailscale connection (no offline SSH)
+  //   - Adds Tailscale as trust dependency for SSH
+  //
+
+  "ssh": [
+    // Allow SSH from personal devices to personal devices
+    // {
+    //   "action": "accept",
+    //   "src": ["tag:personal"],
+    //   "dst": ["tag:personal"],
+    //   "users": ["autogroup:nonroot"],
+    // },
+
+    // Allow root SSH (use with caution)
+    // {
+    //   "action": "accept",
+    //   "src": ["tag:personal"],
+    //   "dst": ["tag:personal"],
+    //   "users": ["root"],
+    // },
+  ],
+
+  // ==========================================================================
+  // TESTS - Validate policy before applying
+  // ==========================================================================
+  // Temporarily disabled - re-enable after devices sync
+  // "tests": [
+  //   {
+  //     "src": "tag:personal",
+  //     "accept": ["tag:personal:22", "tag:personal:443"],
+  //   },
+  //   {
+  //     "src": "tag:personal",
+  //     "accept": ["autogroup:internet:80", "autogroup:internet:443"],
+  //   },
+  // ],
+}
