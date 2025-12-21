@@ -1,0 +1,17 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlist"
+paths = [
+  '''\.secrets\.baseline$''',
+  '''flake\.lock$''',
+]
+# Allow sha256 hashes in nix files (package checksums, not secrets)
+regexes = [
+  '''sha256\s*=\s*["'][a-zA-Z0-9+/=-]+["']''',
+  '''sha256-[a-zA-Z0-9+/=]+''',
+]

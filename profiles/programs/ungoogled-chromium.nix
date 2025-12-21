@@ -10,6 +10,38 @@ let
     system = pkgs.stdenv.hostPlatform.system;
   };
 
+  # Helper to fetch extensions from Chrome Web Store
+  fetchChromeExtension = { id, version, sha256 }: {
+    inherit id version;
+    crxPath = builtins.fetchurl {
+      name = "${id}.crx";
+      url = "https://clients2.google.com/service/update2/crx?response=redirect&prodversion=120&acceptformat=crx2,crx3&x=id%3D${id}%26installsource%3Dondemand%26uc";
+      inherit sha256;
+    };
+  };
+
+  # Chromium Web Store - enables installing extensions from Chrome Web Store
+  # https://github.com/NeverDecaf/chromium-web-store
+  chromium-web-store = {
+    id = "ocaahdebbfolfmndjeplogmgcagdmblk";
+    version = "1.5.5.2";
+    crxPath = builtins.fetchurl {
+      url = "https://github.com/NeverDecaf/chromium-web-store/releases/download/v1.5.5.2/Chromium.Web.Store.crx";
+      sha256 = "0fm5qz4gkn8z2chwlk0j1ngwgpadw2vyb56h8ifcfij0qziiyn09";  # pragma: allowlist secret
+    };
+  };
+
+  # Bitwarden - password manager (unpacked from GitHub releases)
+  # https://github.com/bitwarden/clients
+  bitwarden = {
+    version = "2025.12.0";
+    src = pkgs.fetchzip {
+      url = "https://github.com/bitwarden/clients/releases/download/browser-v2025.12.0/dist-chrome-2025.12.0.zip";
+      sha256 = "sha256-DLEGooAOt/u3dc8iuU1p6Q3+RMx6o1of9EAn6ZMSynU=";  # pragma: allowlist secret
+      stripRoot = false;
+    };
+  };
+
 in {
   programs.chromium = {
     enable = true;
@@ -20,13 +52,14 @@ in {
       "--force-webrtc-ip-handling-policy"
       "--disable-webrtc-hw-encoding"
       "--disable-webrtc-hw-decoding"
+      # Hide shortcuts on new tab page
+      "--disable-top-sites"
+      # Load unpacked extensions from GitHub
+      "--load-extension=${bitwarden.src}"
     ];
     extensions = [
-      # Chromium Web Store - enables installing extensions from Chrome Web Store
-      {
-        id = "ocaahdebbfolfmndjeplogmgcagdmblk";
-        updateUrl = "https://raw.githubusercontent.com/nicohman/nicohman.github.io/master/nicochrome.xml";
-      }
+      chromium-web-store
+      # bitwarden loaded as unpacked extension below
     ];
   };
 
@@ -91,6 +124,13 @@ in {
         media_stream_mic = 2;  # Block
         media_stream_camera = 2;  # Block
       };
+    };
+
+    # Pinned extensions in toolbar
+    extensions = {
+      pinned_extensions = [
+        "ccekafbpibgjbnpbojfdepdjolfflbmd"  # Bitwarden (unpacked)
+      ];
     };
   };
   };

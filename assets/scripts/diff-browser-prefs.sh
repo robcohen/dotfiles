@@ -18,7 +18,7 @@ if [[ -f "$CHROMIUM_CURRENT" ]]; then
 
   # Pretty-print both and diff
   diff -u \
-    <(nix eval --raw -f "$DOTFILES" homeConfigurations.\"user@snix\".config.home.file.\".config/chromium/Default/Preferences\".text 2>/dev/null | jq -S '.' 2>/dev/null || echo "{}") \
+    <(nix eval --raw "$DOTFILES#homeConfigurations.\"user@snix\".config.home.file.\".config/chromium/Default/Preferences\".text" 2>/dev/null | jq -S '.' 2>/dev/null || echo "{}") \
     <(jq -S '.' "$CHROMIUM_CURRENT" 2>/dev/null || echo "{}") \
     | head -100 || true
 
