@@ -99,19 +99,4 @@
     //   "users": ["root"],
     // },
   ],
-
-  // ==========================================================================
-  // TESTS - Validate policy before applying
-  // ==========================================================================
-  // Temporarily disabled - re-enable after devices sync
-  // "tests": [
-  //   {
-  //     "src": "tag:personal",
-  //     "accept": ["tag:personal:22", "tag:personal:443"],
-  //   },
-  //   {
-  //     "src": "tag:personal",
-  //     "accept": ["autogroup:internet:80", "autogroup:internet:443"],
-  //   },
-  // ],
 }
