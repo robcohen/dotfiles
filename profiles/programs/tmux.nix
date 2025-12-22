@@ -12,8 +12,8 @@
     position:
       x: C
       y: C
-    custom_variables: {}
-    macros: {}
+    custom_variables: []
+    macros: []
     items:
       - name: Panes
         key: p
@@ -87,6 +87,9 @@
           - name: Choose session
             key: s
             command: choose-session
+      - name: "? All keybindings"
+        key: "?"
+        command: "list-keys -N"
   '';
 
   programs.tmux = {

@@ -35,7 +35,7 @@ NC='\033[0m'
 # Check prerequisites
 check_env() {
   local missing=0
-  for var in TS_OAUTH_CLIENT_ID TS_OAUTH_SECRET TS_TAILNET; do
+  for var in TS_OAUTH_CLIENT_ID TS_OAUTH_SECRET TS_TAILNET CONTROLD_RESOLVER_ID; do
     if [[ -z "${!var:-}" ]]; then
       echo -e "${RED}Missing required env var: ${var}${NC}"
       missing=1
@@ -45,8 +45,23 @@ check_env() {
     echo ""
     echo "Create OAuth client at: https://login.tailscale.com/admin/settings/oauth"
     echo "Required scope: acl (read/write)"
+    echo ""
+    echo "Also ensure CONTROLD_RESOLVER_ID is set in .env"
     exit 1
   fi
+}
+
+# Substitute environment variables in policy file
+# Returns path to temp file with substitutions applied
+substitute_env_vars() {
+  local temp_file
+  temp_file=$(mktemp)
+
+  # Substitute ${VAR} patterns with actual values
+  sed -e "s|\${CONTROLD_RESOLVER_ID}|${CONTROLD_RESOLVER_ID}|g" \
+      "$POLICY_FILE" > "$temp_file"
+
+  echo "$temp_file"
 }
 
 # Get OAuth access token
@@ -67,6 +82,7 @@ get_current_policy() {
 # Validate policy (dry-run)
 validate_policy() {
   local token="$1"
+  local policy_file="$2"
   echo -e "${YELLOW}Validating policy...${NC}"
 
   local response
@@ -74,7 +90,7 @@ validate_policy() {
     "https://api.tailscale.com/api/v2/tailnet/${TS_TAILNET}/acl/validate" \
     -H "Authorization: Bearer ${token}" \
     -H "Content-Type: application/hujson" \
-    --data-binary "@${POLICY_FILE}")
+    --data-binary "@${policy_file}")
 
   local http_code
   http_code=$(echo "$response" | tail -1)
@@ -101,6 +117,7 @@ validate_policy() {
 # Apply policy
 apply_policy() {
   local token="$1"
+  local policy_file="$2"
   echo -e "${YELLOW}Applying policy...${NC}"
 
   local response
@@ -109,7 +126,7 @@ apply_policy() {
     -X POST \
     -H "Authorization: Bearer ${token}" \
     -H "Content-Type: application/hujson" \
-    --data-binary "@${POLICY_FILE}")
+    --data-binary "@${policy_file}")
 
   local http_code
   http_code=$(echo "$response" | tail -1)
@@ -135,12 +152,13 @@ strip_comments() {
 # Show diff between current and new policy
 show_diff() {
   local token="$1"
+  local policy_file="$2"
   echo -e "${YELLOW}Current vs new policy:${NC}"
 
   local current
   current=$(get_current_policy "$token" | strip_comments | jq -S '.' 2>/dev/null || get_current_policy "$token")
   local new
-  new=$(cat "$POLICY_FILE" | strip_comments | jq -S '.' 2>/dev/null || cat "$POLICY_FILE")
+  new=$(cat "$policy_file" | strip_comments | jq -S '.' 2>/dev/null || cat "$policy_file")
 
   diff -u <(echo "$current") <(echo "$new") || true
 }
@@ -162,6 +180,11 @@ main() {
   echo "Tailnet: ${TS_TAILNET}"
   echo ""
 
+  # Create temp file with environment variables substituted
+  local processed_policy
+  processed_policy=$(substitute_env_vars)
+  trap "rm -f '$processed_policy'" EXIT
+
   local token
   token=$(get_token)
   if [[ -z "$token" || "$token" == "null" ]]; then
@@ -169,16 +192,16 @@ main() {
     exit 1
   fi
 
-  show_diff "$token"
+  show_diff "$token" "$processed_policy"
   echo ""
 
-  if ! validate_policy "$token"; then
+  if ! validate_policy "$token" "$processed_policy"; then
     exit 1
   fi
 
   if $apply; then
     echo ""
-    apply_policy "$token"
+    apply_policy "$token" "$processed_policy"
   else
     echo ""
     echo -e "${YELLOW}Dry-run complete. Run with --apply to apply changes.${NC}"

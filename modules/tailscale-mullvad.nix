@@ -1,9 +1,13 @@
 # Tailscale + Mullvad exit node configuration with DNS leak prevention
 #
+# DNS: Control D via Tailscale integration (routes through MagicDNS)
+# VPN: Mullvad exit nodes for traffic routing
+#
 # Prerequisites:
 #   1. Purchase Mullvad add-on in Tailscale admin console ($5/mo for 5 devices)
 #   2. Add devices to Mullvad access list in admin console
-#   3. Enable "Override local DNS" in DNS settings
+#   3. Configure Control D as global nameserver in Tailscale DNS settings
+#   4. Enable "Override local DNS" in DNS settings
 #
 # Usage:
 #   tailscale up                              # Connect to tailnet
@@ -26,7 +30,8 @@
   services.resolved = {
     enable = true;
     dnssec = "allow-downgrade";
-    # Fallback DNS only used if Tailscale DNS fails
+    # Fail-closed: no fallback DNS to prevent leaks if Tailscale DNS fails.
+    # This means no DNS resolution if Tailscale is disconnected - intentional.
     fallbackDns = [ ];
     # Don't cache to ensure fresh Tailscale DNS responses
     extraConfig = ''
@@ -46,16 +51,14 @@
     trustedInterfaces = [ "tailscale0" ];
 
     extraCommands = ''
+      # =======================================================================
+      # DNS Leak Prevention (IPv4)
+      # =======================================================================
       # Block DNS queries that bypass Tailscale when exit node is active
-      # These rules only apply when traffic would go out a non-tailscale interface
 
-      # Allow DNS to Tailscale's MagicDNS (100.100.100.100)
+      # Allow DNS to Tailscale's MagicDNS (Control D routes through this)
       iptables -I OUTPUT -p udp --dport 53 -d 100.100.100.100 -j ACCEPT
       iptables -I OUTPUT -p tcp --dport 53 -d 100.100.100.100 -j ACCEPT
-
-      # Allow DNS to Mullvad's DNS (when using their exit nodes)
-      iptables -I OUTPUT -p udp --dport 53 -d 10.64.0.1 -j ACCEPT
-      iptables -I OUTPUT -p tcp --dport 53 -d 10.64.0.1 -j ACCEPT
 
       # Allow DNS over Tailscale interface
       iptables -I OUTPUT -o tailscale0 -p udp --dport 53 -j ACCEPT
@@ -64,27 +67,52 @@
       # Allow localhost DNS (for systemd-resolved stub)
       iptables -I OUTPUT -p udp --dport 53 -d 127.0.0.53 -j ACCEPT
       iptables -I OUTPUT -p tcp --dport 53 -d 127.0.0.53 -j ACCEPT
+      iptables -I OUTPUT -p udp --dport 53 -d 127.0.0.1 -j ACCEPT
+      iptables -I OUTPUT -p tcp --dport 53 -d 127.0.0.1 -j ACCEPT
+
+      # DROP all other DNS traffic (must be last)
+      iptables -A OUTPUT -p udp --dport 53 -j DROP
+      iptables -A OUTPUT -p tcp --dport 53 -j DROP
+
+      # =======================================================================
+      # DNS Leak Prevention (IPv6)
+      # =======================================================================
+
+      # Allow DNS over Tailscale interface
+      ip6tables -I OUTPUT -o tailscale0 -p udp --dport 53 -j ACCEPT
+      ip6tables -I OUTPUT -o tailscale0 -p tcp --dport 53 -j ACCEPT
+
+      # Allow localhost DNS (for systemd-resolved stub)
+      ip6tables -I OUTPUT -p udp --dport 53 -d ::1 -j ACCEPT
+      ip6tables -I OUTPUT -p tcp --dport 53 -d ::1 -j ACCEPT
+
+      # DROP all other IPv6 DNS traffic (must be last)
+      ip6tables -A OUTPUT -p udp --dport 53 -j DROP
+      ip6tables -A OUTPUT -p tcp --dport 53 -j DROP
     '';
 
     extraStopCommands = ''
+      # Clean up IPv4 rules
       iptables -D OUTPUT -p udp --dport 53 -d 100.100.100.100 -j ACCEPT 2>/dev/null || true
       iptables -D OUTPUT -p tcp --dport 53 -d 100.100.100.100 -j ACCEPT 2>/dev/null || true
-      iptables -D OUTPUT -p udp --dport 53 -d 10.64.0.1 -j ACCEPT 2>/dev/null || true
-      iptables -D OUTPUT -p tcp --dport 53 -d 10.64.0.1 -j ACCEPT 2>/dev/null || true
       iptables -D OUTPUT -o tailscale0 -p udp --dport 53 -j ACCEPT 2>/dev/null || true
       iptables -D OUTPUT -o tailscale0 -p tcp --dport 53 -j ACCEPT 2>/dev/null || true
       iptables -D OUTPUT -p udp --dport 53 -d 127.0.0.53 -j ACCEPT 2>/dev/null || true
       iptables -D OUTPUT -p tcp --dport 53 -d 127.0.0.53 -j ACCEPT 2>/dev/null || true
+      iptables -D OUTPUT -p udp --dport 53 -d 127.0.0.1 -j ACCEPT 2>/dev/null || true
+      iptables -D OUTPUT -p tcp --dport 53 -d 127.0.0.1 -j ACCEPT 2>/dev/null || true
+      iptables -D OUTPUT -p udp --dport 53 -j DROP 2>/dev/null || true
+      iptables -D OUTPUT -p tcp --dport 53 -j DROP 2>/dev/null || true
+
+      # Clean up IPv6 rules
+      ip6tables -D OUTPUT -o tailscale0 -p udp --dport 53 -j ACCEPT 2>/dev/null || true
+      ip6tables -D OUTPUT -o tailscale0 -p tcp --dport 53 -j ACCEPT 2>/dev/null || true
+      ip6tables -D OUTPUT -p udp --dport 53 -d ::1 -j ACCEPT 2>/dev/null || true
+      ip6tables -D OUTPUT -p tcp --dport 53 -d ::1 -j ACCEPT 2>/dev/null || true
+      ip6tables -D OUTPUT -p udp --dport 53 -j DROP 2>/dev/null || true
+      ip6tables -D OUTPUT -p tcp --dport 53 -j DROP 2>/dev/null || true
     '';
   };
-
-  # Disable DHCP-provided DNS on tailscale0 interface
-  networking.dhcpcd.extraConfig = ''
-    nohook resolv.conf
-    interface tailscale0
-      nogateway
-      noipv6rs
-  '';
 
   # Helper scripts
   environment.systemPackages = with pkgs; [

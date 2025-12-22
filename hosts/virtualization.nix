@@ -26,10 +26,7 @@
     enable = true;
     qemu = {
       package = pkgs.qemu_kvm;
-      ovmf = {
-        enable = true;
-        packages = [ pkgs.OVMFFull.fd ];
-      };
+      # ovmf is now included by default in NixOS 25.11+
       swtpm.enable = true;
     };
   };

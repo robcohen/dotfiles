@@ -1,4 +1,4 @@
-# hosts/brix/configuration.nix
+# hosts/snix/configuration.nix
 {
   config,
   pkgs,
@@ -17,15 +17,17 @@
     ../common/sddm.nix
     ../common/swap.nix
     ../../modules/tailscale-mullvad.nix
+    ../../modules/hardware/mt7925.nix
   ];
+
+  # MediaTek MT7925 WiFi/Bluetooth - see modules/hardware/mt7925.nix for details
+  hardware.mediatek.mt7925.enable = true;
 
   networking.hostName = "snix";
   networking.networkmanager = {
     enable = true;
-    wifi.macAddress = "preserve"; # Keep hardware MAC to prevent disconnections
     ethernet.macAddress = "random";
-    wifi.powersave = false; # Disable WiFi power saving to prevent disconnections
-    wifi.scanRandMacAddress = false; # Don't randomize MAC during scans
+    # WiFi settings are in modules/hardware/mt7925.nix
   };
 
   services.udev.extraRules = ''
@@ -37,16 +39,6 @@
     # Flipper Zero DFU mode
     SUBSYSTEMS=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="df11", ATTRS{manufacturer}=="STMicroelectronics", TAG+="uaccess"
 
-    # MediaTek MT7925 PCIe WiFi/Bluetooth combo device support
-    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x14c3", ATTR{device}=="0x7925", RUN+="${pkgs.kmod}/bin/modprobe btusb && ${pkgs.kmod}/bin/modprobe btmtk"
-
-    # Disable WiFi power management for MT7925e
-    ACTION=="add", SUBSYSTEM=="net", KERNEL=="wlp*", DRIVERS=="mt7925e", RUN+="${pkgs.iw}/bin/iw dev %k set power_save off"
-
-    # MediaTek MT7925 Bluetooth USB device support (if it appears as USB)
-    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="e616", ATTR{authorized}="1"
-    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0e8d", ATTR{idProduct}=="e616", ATTR{power/autosuspend}="-1"
-
     # Intel AX211 Bluetooth device authorization and power management
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0033", ATTR{authorized}="1"
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0033", ATTR{power/autosuspend}="-1"
@@ -55,8 +47,7 @@
     ACTION=="add", SUBSYSTEM=="bluetooth", RUN+="${pkgs.coreutils}/bin/chmod 666 /dev/rfkill"
     ACTION=="add", ATTR{class}=="e0*", ATTR{authorized}="1"
 
-    # Force Bluetooth module loading for MT7925
-    ACTION=="add", SUBSYSTEM=="net", KERNEL=="wlp*", DRIVERS=="mt7925e", RUN+="${pkgs.kmod}/bin/modprobe btusb", RUN+="${pkgs.kmod}/bin/modprobe btmtk"
+    # MT7925-specific rules are in modules/hardware/mt7925.nix
   '';
 
   hardware.bluetooth.enable = true;
@@ -68,48 +59,15 @@
       ControllerMode = "dual";
       JustWorksRepairing = "confirm";
       Privacy = "device";
-      # Enhanced timeout and retry settings for firmware loading
-      DiscoverableTimeout = 0;
-      PairableTimeout = 0;
-      AutoConnectTimeout = 60;
-      # Experimental features that may help with MT7925
-      Experimental = true;
-      KernelExperimental = true;
     };
     Policy = {
       AutoEnable = true;
-      ReconnectAttempts = 7;
-      ReconnectIntervals = "1,2,4,8,16,32,64";
     };
+    # MT7925-specific settings are merged from modules/hardware/mt7925.nix
   };
   services.blueman.enable = true;
 
-  # SystemD service to disable WiFi power management for MT7925e
-  systemd.services.wifi-power-management-fix = {
-    description = "Disable WiFi power management for MT7925e";
-    after = [ "network-pre.target" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.iw}/bin/iw dev wlp194s0 set power_save off 2>/dev/null || true; echo 0 > /sys/module/mt76_connac_lib/parameters/pm_enable 2>/dev/null || true'";
-      ExecStartPost = "${pkgs.coreutils}/bin/sleep 2";
-    };
-  };
-
-  # Restart NetworkManager after suspend/hibernate to fix WiFi connectivity issues
-  systemd.services.wifi-resume = {
-    description = "Restart NetworkManager after suspend";
-    after = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
-    wantedBy = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.systemd}/bin/systemctl restart NetworkManager.service";
-    };
-  };
-
-  # Allow Bluetooth firmware loading under kernel lockdown
-  security.lockKernelModules = false; # Required for Bluetooth firmware loading
+  # MT7925 systemd services are in modules/hardware/mt7925.nix
 
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = with pkgs; [
@@ -132,43 +90,21 @@
     ];
   };
 
-  # Try testing kernel for MT7925 Bluetooth fix
-  boot.kernelPackages = pkgs.linuxPackages_testing;
+  # Kernel and WiFi/Bluetooth modules are configured in modules/hardware/mt7925.nix
   boot.kernelModules = [
     "amdgpu"
-    "btusb"
-    "btmtk"
-    "btintel"
-    "btrtl"
-    "btbcm"
   ];
-  # Load Bluetooth modules after system is ready
-  boot.extraModulePackages = [ ];
-  boot.extraModprobeConfig = ''
-    options btusb reset=1 enable_autosuspend=0
-    options bluetooth disable_ertm=1
-    # MT7925e WiFi module options - disable power management for stability
-    options mt7925e disable_aspm=1
-    options mt76_connac_lib pm_enable=0
-    options mt7925e power_save=0
-    # MediaTek WiFi common options
-    options mt76 disable_usb_sg=1
-    # Force firmware loading retry
-    options firmware_class path=/run/current-system/firmware
-  '';
   boot.kernelParams = [
-    "iwlwifi.power_save=0"
+    # Security hardening
     "slab_nomerge" # Prevent heap exploitation
     "init_on_alloc=1" # Zero memory on allocation
     "init_on_free=1" # Zero memory on free
     "page_alloc.shuffle=1" # Randomize page allocator
-    "fwupd.verbose=1" # Verbose firmware logging
-    "efi=debug" # EFI debugging
     "lockdown=integrity" # Kernel lockdown mode (integrity allows signed firmware)
 
-    # Bluetooth power management fixes
-    "btusb.enable_autosuspend=0" # Disable Bluetooth auto-suspend
-    "usbcore.autosuspend=-1" # Disable USB auto-suspend globally
+    # Debugging
+    "fwupd.verbose=1" # Verbose firmware logging
+    "efi=debug" # EFI debugging
 
     # Plymouth high resolution fix for AMD Radeon 860M
     "quiet" # Hide kernel messages for clean boot
@@ -177,6 +113,8 @@
     "amdgpu.dc=1" # Enable Display Core for better display handling
     "amdgpu.dpm=1" # Enable dynamic power management
     "video=eDP-1:1920x1080@60" # Force proper resolution (adjust if needed)
+
+    # WiFi/Bluetooth power management params are in modules/hardware/mt7925.nix
   ];
   boot.tmp.useTmpfs = true;
 
@@ -355,18 +293,7 @@
   # Power management
   services.tlp = {
     enable = true; # Battery optimization
-    settings = {
-      # Disable WiFi power management
-      WIFI_PWR_ON_AC = "off";
-      WIFI_PWR_ON_BAT = "off";
-      # Disable runtime power management for PCI devices (including WiFi)
-      RUNTIME_PM_ON_AC = "on";
-      RUNTIME_PM_ON_BAT = "on";
-      # Blacklist MT7925e from runtime PM
-      RUNTIME_PM_BLACKLIST = "c2:00.0"; # MT7925e PCI address
-      # Disable USB autosuspend which can affect Bluetooth
-      USB_AUTOSUSPEND = 0;
-    };
+    # WiFi/Bluetooth power settings are merged from modules/hardware/mt7925.nix
   };
   services.power-profiles-daemon.enable = false; # Conflicts with TLP
   services.thermald.enable = true; # Thermal management
@@ -404,9 +331,6 @@
       # Allow Integrated Camera specifically (before class rules)
       allow id 5986:11af # Bison Integrated Camera
 
-      # Allow MediaTek MT7925 Bluetooth explicitly (ThinkPad P16s Gen 4)
-      allow id 0e8d:e025 # MediaTek MT7925 Bluetooth
-
       # Allow common device classes
       allow with-interface equals { 03:*:* } # All HID devices
       allow with-interface equals { 08:*:* } # All mass storage
@@ -438,7 +362,8 @@
       allow id 0bda:* # Realtek devices
       allow id 05e3:* # Genesys Logic hubs
       allow id 8087:* # Intel devices
-      allow id 0e8d:* # MediaTek devices
+
+      # MT7925 Bluetooth rules are appended from modules/hardware/mt7925.nix
     '';
   };
 

@@ -10,12 +10,11 @@
   //   4. Run: ./sync-policy.sh --apply
   //
   // Admin console settings (not configurable via policy):
-  //   - DNS > Global nameservers: 100.100.100.100 (MagicDNS)
+  //   - DNS > Global nameservers: Control D (add via dropdown)
   //   - DNS > Override local DNS: Enabled
   //   - Mullvad VPN > Add devices: snix, pixel9
   //
   // TODO: Potential improvements
-  //   - Tighten autogroup:member ACL (currently allows all destinations)
   //   - Add DNS config to sync-policy.sh for full declarative setup
   //   - Evaluate enabling Tailscale SSH (see SSH section below)
   //   - Auto-select nearest Mullvad exit node on connect
@@ -40,6 +39,12 @@
       "target": ["tag:mullvad"],
       "attr": ["mullvad"],
     },
+    {
+      // Use Control D DNS for all personal devices
+      // CONTROLD_RESOLVER_ID is substituted from .env by sync-policy.sh
+      "target": ["tag:personal"],
+      "attr": ["controld:${CONTROLD_RESOLVER_ID}"],
+    },
   ],
 
   // ==========================================================================
@@ -63,12 +68,16 @@
       "dst": ["autogroup:internet:*"],
     },
 
-    // Allow all members to reach tagged devices (for initial sync)
-    {
-      "action": "accept",
-      "src": ["autogroup:member"],
-      "dst": ["*:*"],
-    },
+    // REMOVED: Overly permissive rule that bypassed tag-based access control
+    // This was intended for initial sync but allowed any member to reach any destination.
+    // Ensure all devices have proper tags (tag:personal, tag:mullvad) assigned before deploying.
+    // If you need temporary access for a new device, add it to tag:personal first.
+    //
+    // {
+    //   "action": "accept",
+    //   "src": ["autogroup:member"],
+    //   "dst": ["*:*"],
+    // },
   ],
 
   // ==========================================================================
