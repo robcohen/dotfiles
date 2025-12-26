@@ -13,9 +13,9 @@ in {
       packages = infraTools.infrastructureTools;
 
       shellHook = ''
-        echo "🏗️  Infrastructure Development Environment"
-        echo "📦 Tools: $(echo ${builtins.toString infraTools.infrastructureTools} | wc -w) packages loaded"
-        echo "🔧 kubectl, terraform, helm, k9s, and more available"
+        echo "Infrastructure Development Environment"
+        echo "Tools: $(echo ${builtins.toString infraTools.infrastructureTools} | wc -w) packages loaded"
+        echo "kubectl, tofu, helm, k9s, and more available"
 
         # Set common infrastructure environment
         export KUBECONFIG="$HOME/.kube/config"
@@ -24,7 +24,7 @@ in {
         # Helpful aliases
         alias k="kubectl"
         alias kx="kubectx"
-        alias tf="terraform"
+        alias tf="tofu"
         alias tg="terragrunt"
       '';
     };
@@ -39,8 +39,8 @@ in {
       ];
 
       shellHook = ''
-        echo "☸️  Kubernetes Development Environment"
-        echo "🔧 kubectl, helm, k9s, stern available"
+        echo "Kubernetes Development Environment"
+        echo "kubectl, helm, k9s, stern available"
 
         export KUBECONFIG="$HOME/.kube/config"
         alias k="kubectl"
@@ -58,8 +58,8 @@ in {
       ];
 
       shellHook = ''
-        echo "🔒 Security Development Environment"
-        echo "🔧 sops, age, step-cli, vault available"
+        echo "Security Development Environment"
+        echo "sops, age, step-cli, openbao available"
       '';
     };
   };

@@ -267,6 +267,7 @@
         "waybar"
         "swaync"  # Notification center (replaces dunst)
         "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator"
+        "${pkgs.trayscale}/bin/trayscale --hide-window"
         # Start authentication agent
         "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
       ];

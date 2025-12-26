@@ -35,18 +35,31 @@ NC='\033[0m'
 # Check prerequisites
 check_env() {
   local missing=0
+
+  # Check required commands
+  for cmd in hujsonfmt jq curl; do
+    if ! command -v "$cmd" &>/dev/null; then
+      echo -e "${RED}Missing required command: ${cmd}${NC}"
+      missing=1
+    fi
+  done
+
+  # Check required env vars
   for var in TS_OAUTH_CLIENT_ID TS_OAUTH_SECRET TS_TAILNET CONTROLD_RESOLVER_ID; do
     if [[ -z "${!var:-}" ]]; then
       echo -e "${RED}Missing required env var: ${var}${NC}"
       missing=1
     fi
   done
+
   if [[ $missing -eq 1 ]]; then
+    echo ""
+    echo "Install missing commands: nix shell nixpkgs#hujsonfmt nixpkgs#jq nixpkgs#curl"
     echo ""
     echo "Create OAuth client at: https://login.tailscale.com/admin/settings/oauth"
     echo "Required scope: acl (read/write)"
     echo ""
-    echo "Also ensure CONTROLD_RESOLVER_ID is set in .env"
+    echo "Ensure CONTROLD_RESOLVER_ID is set in .env"
     exit 1
   fi
 }
@@ -143,24 +156,34 @@ apply_policy() {
   fi
 }
 
-# Strip comments from HuJSON for parsing
-strip_comments() {
-  # Remove // comments and trailing commas (basic HuJSON -> JSON)
-  sed -e 's|//.*||g' -e 's/,[[:space:]]*}/}/g' -e 's/,[[:space:]]*\]/]/g' | tr -d '\n' | tr -s ' '
+# Convert HuJSON to normalized JSON for comparison
+# Uses hujsonfmt (Tailscale's official tool) to strip comments and trailing commas
+normalize_json() {
+  hujsonfmt -s | jq -S '.'
 }
 
 # Show diff between current and new policy
+# Returns 0 if there are changes, 1 if no changes
 show_diff() {
   local token="$1"
   local policy_file="$2"
-  echo -e "${YELLOW}Current vs new policy:${NC}"
 
   local current
-  current=$(get_current_policy "$token" | strip_comments | jq -S '.' 2>/dev/null || get_current_policy "$token")
+  current=$(get_current_policy "$token" | normalize_json)
   local new
-  new=$(cat "$policy_file" | strip_comments | jq -S '.' 2>/dev/null || cat "$policy_file")
+  new=$(cat "$policy_file" | normalize_json)
 
-  diff -u <(echo "$current") <(echo "$new") || true
+  local diff_output
+  diff_output=$(diff -u <(echo "$current") <(echo "$new")) || true
+
+  if [[ -z "$diff_output" ]]; then
+    echo -e "${GREEN}No changes detected - policy is already in sync${NC}"
+    return 1
+  else
+    echo -e "${YELLOW}Changes to apply:${NC}"
+    echo "$diff_output"
+    return 0
+  fi
 }
 
 main() {
@@ -192,7 +215,10 @@ main() {
     exit 1
   fi
 
-  show_diff "$token" "$processed_policy"
+  local has_changes=true
+  if ! show_diff "$token" "$processed_policy"; then
+    has_changes=false
+  fi
   echo ""
 
   if ! validate_policy "$token" "$processed_policy"; then
@@ -200,11 +226,19 @@ main() {
   fi
 
   if $apply; then
-    echo ""
-    apply_policy "$token" "$processed_policy"
+    if $has_changes; then
+      echo ""
+      apply_policy "$token" "$processed_policy"
+    else
+      echo -e "${GREEN}Nothing to apply.${NC}"
+    fi
   else
     echo ""
-    echo -e "${YELLOW}Dry-run complete. Run with --apply to apply changes.${NC}"
+    if $has_changes; then
+      echo -e "${YELLOW}Dry-run complete. Run with --apply to apply changes.${NC}"
+    else
+      echo -e "${GREEN}Policy is in sync. No action needed.${NC}"
+    fi
   fi
 }
 

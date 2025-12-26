@@ -28,7 +28,11 @@
     isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [ "wheel" "networkmanager" "input" "video" ];
-    hashedPasswordFile = config.sops.secrets."user/hashedPassword".path;
+    # Use sops secret for password if available, with fallback for VM/ISO/appliance builds
+    hashedPasswordFile = lib.mkIf (config ? sops && config.sops.secrets ? "user/hashedPassword")
+      config.sops.secrets."user/hashedPassword".path;
+    # Fallback: allow initial password for builds without sops (change on first boot)
+    initialPassword = lib.mkIf (!(config ? sops && config.sops.secrets ? "user/hashedPassword")) "changeme";
   };
 
   i18n.defaultLocale = "en_US.UTF-8";
@@ -72,5 +76,6 @@
     pavucontrol     # Audio control GUI
   ];
 
-  system.stateVersion = "23.11";
+  # Default for existing hosts; new hosts can override with their installation version
+  system.stateVersion = lib.mkDefault "23.11";
 }

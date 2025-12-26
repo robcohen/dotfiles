@@ -1,0 +1,121 @@
+# hosts/nixtv-server/windows/docker-compose.yml
+# GPU-accelerated services running on Windows host
+#
+# Prerequisites:
+#   - Docker Desktop with WSL2 backend
+#   - NVIDIA GPU with drivers installed
+#   - NVIDIA Container Toolkit (comes with Docker Desktop now)
+#
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f
+#   docker compose down
+#
+# Access:
+#   - Jellyfin: http://localhost:8096
+#   - Ollama:   http://localhost:11434
+
+services:
+  # ===========================================================================
+  # Jellyfin - Media streaming with GPU transcoding
+  # ===========================================================================
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, video]
+    ports:
+      - "8096:8096"     # Web UI
+      - "8920:8920"     # HTTPS (optional)
+      - "1900:1900/udp" # DLNA discovery
+      - "7359:7359/udp" # Client discovery
+    volumes:
+      - D:\AppData\Jellyfin\config:/config
+      - D:\AppData\Jellyfin\cache:/cache
+      - D:\Media:/media:ro
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+
+  # ===========================================================================
+  # Ollama - Local LLM inference
+  # ===========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, compute]
+    ports:
+      - "11434:11434"
+    volumes:
+      - D:\AppData\Ollama:/root/.ollama
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+
+  # ===========================================================================
+  # Open WebUI - Chat interface for Ollama
+  # ===========================================================================
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    volumes:
+      - D:\AppData\OpenWebUI:/app/backend/data
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - ollama
+
+  # ===========================================================================
+  # LocalAI - OpenAI-compatible API (optional alternative to Ollama)
+  # ===========================================================================
+  # localai:
+  #   image: localai/localai:latest-aio-gpu-nvidia-cuda-12
+  #   container_name: localai
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - D:\AppData\LocalAI\models:/models
+  #   environment:
+  #     - NVIDIA_VISIBLE_DEVICES=all
+
+  # ===========================================================================
+  # Whisper - Speech-to-text (optional)
+  # ===========================================================================
+  # whisper:
+  #   image: onerahmet/openai-whisper-asr-webservice:latest-gpu
+  #   container_name: whisper
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+  #   ports:
+  #     - "9000:9000"
+  #   environment:
+  #     - ASR_MODEL=base

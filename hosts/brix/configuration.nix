@@ -9,7 +9,20 @@
     ../common/tpm.nix
     ../common/sddm.nix
     ../common/swap.nix
+    ../../modules/virtualization.nix
   ];
+
+  # Virtualization
+  virtualization.vms = {
+    enable = true;
+    podman.enable = true;
+    waydroid.enable = true;
+    macos.enable = true;
+    microvm = {
+      enable = true;
+      rednix.enable = true;
+    };
+  };
 
 
   networking.hostName = "brix";
@@ -114,37 +127,20 @@
   # systemd.packages = [ pkgs.observatory ];
   # systemd.services.monitord.wantedBy = [ "multi-user.target" ];
 
-  virtualisation.libvirtd = {
-    enable = true;
-    allowedBridges = [ "virbr0" ];
-    qemu.swtpm.enable = true;
-  };
-  virtualisation.waydroid.enable = true;
-  programs.virt-manager.enable = true;
-
-  virtualisation.podman = {
-    enable = true;
-    dockerCompat = true;
-    dockerSocket.enable = true;
-    defaultNetwork.settings = {
-      dns_enabled = true;
-      ipv6_enabled = false;
-    };
-  };
 
   swapDevices = [{
     device = "/swap/swapfile";
     size = 32768;  # 32GB swap
   }];
 
-  users.users.user.extraGroups = ["libvirtd" "adbusers" "tss"];
+  users.users.user.extraGroups = [ "tss" ];
 
   environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
 
 
   environment.systemPackages = with pkgs; [
-    # Container and device management
-    podman-compose libimobiledevice ifuse
+    # Device management
+    libimobiledevice ifuse
     # Graphics and hardware tools (system-level)
     vulkan-tools vulkan-loader vulkan-validation-layers
     libva-utils intel-gpu-tools mesa wayland wayland-utils wev efitools
@@ -182,24 +178,11 @@
   # SSD optimizations
   services.fstrim.enable = true;  # Automatic TRIM
 
-  # Container registry mirrors for faster pulls
-  virtualisation.containers.registries.search = [
-    "docker.io"
-    "quay.io"
-    "ghcr.io"
-  ];
-
   # Automatic cleanup
   nix.gc = {
     automatic = true;
     dates = "weekly";
     options = "--delete-older-than 30d";
-  };
-
-  virtualisation.podman.autoPrune = {
-    enable = true;
-    dates = "weekly";
-    flags = [ "--all" ];
   };
 
   # Power management
@@ -217,7 +200,6 @@
   # Security auditing
   security.auditd.enable = true;  # System call auditing
 
-  programs.adb.enable = true;
   services.usbmuxd.enable = true;
 
   # USB device security with Bluetooth support (more permissive)

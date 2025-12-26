@@ -15,8 +15,24 @@
     ../common/tpm.nix
     ../common/sddm.nix
     ../common/swap.nix
-    ../virtualization.nix
+    ../../modules/virtualization.nix
   ];
+
+  # Virtualization with GPU passthrough for Looking Glass
+  virtualization.vms = {
+    enable = true;
+    podman.enable = true;
+    gpuPassthrough = {
+      enable = true;
+      gpuIds = "10de:2504,10de:228e"; # NVIDIA GPU
+      iommu = "intel";
+    };
+    macos.enable = true;
+    microvm = {
+      enable = true;
+      rednix.enable = true;
+    };
+  };
 
 
   networking = {
@@ -38,9 +54,9 @@
     size = 16384;  # 16GB swap
   }];
 
-  users.users.user.extraGroups = [ "libvirtd" "kvm" ];
-
-
+  # Bootloader
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
 
   services.fstrim.enable = true;
 

@@ -16,7 +16,6 @@
     talosctl
 
     # Infrastructure as Code
-    terraform
     opentofu
     terragrunt
 
@@ -39,6 +38,7 @@
     # Network tools
     tailscale
     headscale
+    hujsonfmt  # Tailscale's HuJSON formatter for policy files
 
     # Monitoring tools
     grafana
@@ -71,11 +71,9 @@
     argocd
   ];
 
-  terraformTools = with pkgs; [
-    terraform
+  tofuTools = with pkgs; [
     opentofu
     terragrunt
-    terraform-docs
     tflint
     checkov
   ];
@@ -84,7 +82,7 @@
     step-cli
     age
     sops
-    vault
+    openbao  # Open-source fork of Vault
     cosign
     trivy
   ];

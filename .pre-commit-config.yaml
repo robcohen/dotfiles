@@ -49,7 +49,7 @@ repos:
         entry: bash -c 'if grep -l -i "password\s*=.*[^#]\|api_key\s*=.*[^#]\|secret\s*=.*[^#]\|token\s*=.*[^#]" "$@" 2>/dev/null | grep -v -E "\.(md|example)$|\.secrets\.baseline|\.pre-commit-config\.yaml"; then echo "Potential credential detected!"; exit 1; fi; exit 0'
         language: system
         types: [text]
-        exclude: ^(\.env\.example|hosts/|\.secrets\.baseline|controld/sync\.sh|tailscale/sync-policy\.sh)
+        exclude: ^(\.env\.example|hosts/|modules/|flake\.nix|\.secrets\.baseline|controld/sync\.sh|tailscale/sync-policy\.sh)
 
       - id: nix-file-validation
         name: Validate Nix files

@@ -11,9 +11,15 @@
     sops-nix.url = "github:Mic92/sops-nix";
     nixos-generators.url = "github:nix-community/nixos-generators";
     nixos-generators.inputs.nixpkgs.follows = "stable-nixpkgs";
+
+    # MicroVMs for ephemeral security testing
+    microvm.url = "github:microvm-nix/microvm.nix";
+    microvm.inputs.nixpkgs.follows = "stable-nixpkgs";
+    rednix.url = "github:redcode-labs/RedNix";
+    rednix.inputs.nixpkgs.follows = "unstable-nixpkgs";
   };
 
-  outputs = inputs@{ self, stable-nixpkgs, unstable-nixpkgs, home-manager, sops-nix, nixos-generators, ... }:
+  outputs = inputs@{ self, stable-nixpkgs, unstable-nixpkgs, home-manager, sops-nix, nixos-generators, microvm, rednix, ... }:
     let
       system = "x86_64-linux";
 
@@ -29,6 +35,7 @@
       # Common specialArgs to reduce duplication
       commonSpecialArgs = {
         inherit inputs unstable;
+        inherit microvm rednix;
       };
 
       mkHomeConfig = home-manager.lib.homeManagerConfiguration {
@@ -43,9 +50,9 @@
           specialArgs = commonSpecialArgs;
           modules = [
             ./hosts/slax/configuration.nix
-            # SOPS will be enabled manually after key setup
             sops-nix.nixosModules.sops
             ./modules/sops.nix
+            microvm.nixosModules.host
           ];
         };
 
@@ -56,18 +63,38 @@
             ./hosts/brix/configuration.nix
             sops-nix.nixosModules.sops
             ./modules/sops.nix
+            microvm.nixosModules.host
           ];
         };
 
-	snix = stable-nixpkgs.lib.nixosSystem {
-	  inherit system;
-	  specialArgs = commonSpecialArgs;
-	  modules = [
-	    ./hosts/snix/configuration.nix
+        snix = stable-nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = commonSpecialArgs;
+          modules = [
+            ./hosts/snix/configuration.nix
             sops-nix.nixosModules.sops
-	    ./modules/sops.nix
-	  ];
-	};
+            ./modules/sops.nix
+            microvm.nixosModules.host
+          ];
+        };
+
+        nixtv-server = stable-nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = commonSpecialArgs;
+          modules = [
+            ./hosts/nixtv-server/configuration.nix
+            # No sops for dedicated HTPC appliance
+            # No microvm for HTPC
+          ];
+        };
+
+        nixtv-player = stable-nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = commonSpecialArgs;
+          modules = [
+            ./hosts/nixtv-player/configuration.nix
+          ];
+        };
 
       };
 
@@ -89,7 +116,12 @@
           mkImage = hostConfig: format: nixos-generators.nixosGenerate {
             inherit system format;
             specialArgs = commonSpecialArgs;
-            modules = [ hostConfig ];
+            modules = [
+              hostConfig
+              sops-nix.nixosModules.sops
+              ./modules/sops.nix
+              microvm.nixosModules.host
+            ];
           };
 
           # Function to generate live ISO with SSH access
@@ -100,6 +132,7 @@
               hostConfig
               sops-nix.nixosModules.sops
               ./modules/sops.nix
+              microvm.nixosModules.host
               ({ config, lib, ... }: {
                 services.openssh.enable = true;
                 # Disable graphical services for live ISO
@@ -117,12 +150,86 @@
           # Live ISOs for each host
           slax-live-iso = mkLiveISO ./hosts/slax/configuration.nix;
           brix-live-iso = mkLiveISO ./hosts/brix/configuration.nix;
+          nixtv-server-iso = nixos-generators.nixosGenerate {
+            inherit system;
+            specialArgs = commonSpecialArgs;
+            modules = [
+              ./hosts/nixtv-server/configuration.nix
+              ({ lib, ... }: {
+                # ISO-specific overrides
+                services.cage.enable = lib.mkForce false;
+                services.displayManager.autoLogin.enable = lib.mkForce false;
+                boot.loader.timeout = lib.mkForce 10;
+              })
+            ];
+            format = "iso";
+          };
+
+          nixtv-player-iso = nixos-generators.nixosGenerate {
+            inherit system;
+            specialArgs = commonSpecialArgs;
+            modules = [
+              ./hosts/nixtv-player/configuration.nix
+              ({ lib, ... }: {
+                services.cage.enable = lib.mkForce false;
+                services.displayManager.autoLogin.enable = lib.mkForce false;
+                boot.loader.timeout = lib.mkForce 10;
+              })
+            ];
+            format = "iso";
+          };
 
           # VM images for each host
           slax-vm = mkImage ./hosts/slax/configuration.nix "vm";
           brix-vm = mkImage ./hosts/brix/configuration.nix "vm";
+          nixtv-server-vm = (stable-nixpkgs.lib.nixosSystem {
+            inherit system;
+            specialArgs = commonSpecialArgs;
+            modules = [
+              "${stable-nixpkgs}/nixos/modules/virtualisation/qemu-vm.nix"
+              ./hosts/nixtv-server/configuration.nix
+              ({ lib, pkgs, ... }: {
+                virtualisation = {
+                  memorySize = 4096;
+                  cores = 4;
+                  graphics = true;
+                };
+                # Use X11 Kodi in VM for easier testing
+                services.cage.enable = lib.mkForce false;
+                services.xserver = {
+                  enable = true;
+                  desktopManager.kodi.enable = true;
+                  displayManager.lightdm.enable = true;
+                };
+              })
+            ];
+          }).config.system.build.vm;
+
+          nixtv-player-vm = (stable-nixpkgs.lib.nixosSystem {
+            inherit system;
+            specialArgs = commonSpecialArgs;
+            modules = [
+              "${stable-nixpkgs}/nixos/modules/virtualisation/qemu-vm.nix"
+              ./hosts/nixtv-player/configuration.nix
+              ({ lib, pkgs, ... }: {
+                virtualisation = {
+                  memorySize = 2048;
+                  cores = 2;
+                  graphics = true;
+                };
+                services.cage.enable = lib.mkForce false;
+                services.xserver = {
+                  enable = true;
+                  desktopManager.kodi.enable = true;
+                  displayManager.lightdm.enable = true;
+                };
+              })
+            ];
+          }).config.system.build.vm;
 
           # Generic emergency recovery ISO
+          # Note: For SSH access, add your public key to authorized_keys after boot
+          # or set EMERGENCY_SSH_KEY environment variable before building
           emergency-iso = nixos-generators.nixosGenerate {
             inherit system;
             specialArgs = commonSpecialArgs;
@@ -130,12 +237,31 @@
               ./hosts/common/base.nix
               sops-nix.nixosModules.sops
               ./modules/sops.nix
-              ({ config, lib, ... }: {
-                services.openssh.enable = true;
-                users.users.root.openssh.authorizedKeys.keys =
-                  lib.strings.splitString "\n" (lib.strings.removeSuffix "\n"
-                    (builtins.readFile config.sops.secrets."ssh/emergencyKeys".path));
-              })
+              microvm.nixosModules.host
+              ({ config, lib, pkgs, ... }:
+                let
+                  # Allow setting SSH key via environment variable for builds
+                  envKey = builtins.getEnv "EMERGENCY_SSH_KEY";
+                in {
+                  services.openssh = {
+                    enable = true;
+                    settings.PermitRootLogin = "yes";
+                  };
+                  # Use env key if provided, otherwise allow password auth temporarily
+                  users.users.root = {
+                    openssh.authorizedKeys.keys = lib.optional (envKey != "") envKey;
+                    # Temporary initial password - change immediately after boot
+                    hashedInitialPassword = "$6$oRekJppvDJ4Guceg$xcOjqHPI5bmpZ8EOb1yytjpwUSEiLnNKpjIdDM4.jPoMUdOXozjabyqhky8xJy3snn.fh3Ra7.GiJAg4GSbVg/";
+                  };
+                  # Warning message on login
+                  environment.etc."motd".text = ''
+                    ╔══════════════════════════════════════════════════════════════╗
+                    ║  EMERGENCY RECOVERY ISO                                       ║
+                    ║  Change the root password immediately: passwd                 ║
+                    ║  Add your SSH key: ssh-copy-id root@<this-host>              ║
+                    ╚══════════════════════════════════════════════════════════════╝
+                  '';
+                })
             ];
             format = "iso";
           };

@@ -12,7 +12,7 @@
   // Admin console settings (not configurable via policy):
   //   - DNS > Global nameservers: Control D (add via dropdown)
   //   - DNS > Override local DNS: Enabled
-  //   - Mullvad VPN > Add devices: snix, pixel9
+  //   - Mullvad VPN > Add devices: snix, pixel9, nixtv-win
   //
   // TODO: Potential improvements
   //   - Add DNS config to sync-policy.sh for full declarative setup

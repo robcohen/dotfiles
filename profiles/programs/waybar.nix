@@ -15,7 +15,7 @@
 
         modules-left = [ "hyprland/workspaces" ];
         modules-center = [ "hyprland/window" ];
-        modules-right = [ "tray" "custom/notifications" "idle_inhibitor" "bluetooth" "custom/weather" "custom/performance" "pulseaudio" "battery" "custom/power" "clock" ];
+        modules-right = [ "tray" "custom/vpn" "custom/notifications" "idle_inhibitor" "bluetooth" "custom/weather" "custom/performance" "pulseaudio" "battery" "custom/power" "clock" ];
 
         "hyprland/workspaces" = {
           disable-scroll = true;
@@ -227,6 +227,37 @@
           exec = "swaync-client -swb";
           escape = true;
         };
+
+        "custom/vpn" = {
+          format = "{}";
+          interval = 60;
+          return-type = "json";
+          exec = "${pkgs.writeShellScript "vpn-check" ''
+            # Check Mullvad connection status via their API
+            RESULT=$(${pkgs.curl}/bin/curl -s --connect-timeout 5 "https://am.i.mullvad.net/json" 2>/dev/null)
+
+            if [ -z "$RESULT" ]; then
+              echo '{"text": "󰌆 ?", "tooltip": "Could not check VPN status", "class": "unknown"}'
+              exit 0
+            fi
+
+            MULLVAD=$(echo "$RESULT" | ${pkgs.jq}/bin/jq -r '.mullvad_exit_ip // false')
+            IP=$(echo "$RESULT" | ${pkgs.jq}/bin/jq -r '.ip // "unknown"')
+            CITY=$(echo "$RESULT" | ${pkgs.jq}/bin/jq -r '.city // "unknown"')
+            COUNTRY=$(echo "$RESULT" | ${pkgs.jq}/bin/jq -r '.country // "unknown"')
+            HOST=$(echo "$RESULT" | ${pkgs.jq}/bin/jq -r '.mullvad_exit_ip_hostname // "none"')
+
+            if [ "$MULLVAD" = "true" ]; then
+              echo "{\"text\": \"󰒃 SAFE\", \"tooltip\": \"Protected via Mullvad\\n$HOST\\n$CITY, $COUNTRY\\nIP: $IP\", \"class\": \"connected\"}"
+            else
+              echo "{\"text\": \"󰦞 LEAK\", \"tooltip\": \"NOT PROTECTED!\\nIP: $IP\\n$CITY, $COUNTRY\", \"class\": \"disconnected\"}"
+            fi
+          ''}";
+          on-click = "${pkgs.writeShellScript "vpn-click" ''
+            # Open Mullvad connection check in browser
+            ${pkgs.xdg-utils}/bin/xdg-open "https://mullvad.net/check" &
+          ''}";
+        };
       };
     };
 
@@ -263,6 +294,7 @@
       #scratchpad,
       #window,
       #tray,
+      #custom-vpn,
       #custom-notifications,
       #idle_inhibitor,
       #pulseaudio,
@@ -365,6 +397,23 @@
 
       #custom-notifications:hover {
         background: rgba(203, 166, 247, 0.2);
+      }
+
+      #custom-vpn.connected {
+        color: #a6e3a1;
+        background: rgba(166, 227, 161, 0.15);
+        border-color: rgba(166, 227, 161, 0.4);
+      }
+
+      #custom-vpn.disconnected {
+        color: #f38ba8;
+        background: rgba(243, 139, 168, 0.25);
+        border-color: rgba(243, 139, 168, 0.6);
+        animation: pulse 1s infinite;
+      }
+
+      #custom-vpn.unknown {
+        color: #fab387;
         border-color: #cba6f7;
       }
 

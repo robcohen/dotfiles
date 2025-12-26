@@ -18,7 +18,20 @@
     ../common/swap.nix
     ../../modules/tailscale-mullvad.nix
     ../../modules/hardware/mt7925.nix
+    ../../modules/virtualization.nix
   ];
+
+  # Virtualization
+  virtualization.vms = {
+    enable = true;
+    podman.enable = true;
+    waydroid.enable = true;
+    macos.enable = true;
+    microvm = {
+      enable = true;
+      rednix.enable = true;
+    };
+  };
 
   # MediaTek MT7925 WiFi/Bluetooth - see modules/hardware/mt7925.nix for details
   hardware.mediatek.mt7925.enable = true;
@@ -167,30 +180,9 @@
   # systemd.packages = [ pkgs.observatory ];
   # systemd.services.monitord.wantedBy = [ "multi-user.target" ];
 
-  virtualisation.libvirtd = {
-    enable = true;
-    allowedBridges = [ "virbr0" ];
-    qemu.swtpm.enable = true;
-    qemu.runAsRoot = false;
-  };
-
   # Configure networking for libvirt
   # Note: checkReversePath is set to "loose" by tailscale-mullvad.nix
   networking.nftables.enable = false; # Use iptables instead
-  networking.firewall.trustedInterfaces = [ "virbr0" ];
-
-  virtualisation.waydroid.enable = true;
-  programs.virt-manager.enable = true;
-
-  virtualisation.podman = {
-    enable = true;
-    dockerCompat = true;
-    dockerSocket.enable = true;
-    defaultNetwork.settings = {
-      dns_enabled = true;
-      ipv6_enabled = false;
-    };
-  };
 
   swapDevices = [
     {
@@ -200,8 +192,6 @@
   ];
 
   users.users.user.extraGroups = [
-    "libvirtd"
-    "adbusers"
     "tss"
     "disk"
     "dialout"
@@ -210,8 +200,7 @@
   environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
 
   environment.systemPackages = with pkgs; [
-    # Container and device management
-    podman-compose
+    # Device management
     libimobiledevice
     ifuse
     # Graphics and hardware tools (system-level)
@@ -241,8 +230,10 @@
     # WiFi tools for power management
     iw
     wirelesstools
-    # Networking tools for libvirt
-    dnsmasq
+    # Tailscale tray icon
+    trayscale
+    # Windows remote management
+    evil-winrm
   ];
 
   # TPM firmware protection
@@ -270,24 +261,11 @@
   # SSD optimizations
   services.fstrim.enable = true; # Automatic TRIM
 
-  # Container registry mirrors for faster pulls
-  virtualisation.containers.registries.search = [
-    "docker.io"
-    "quay.io"
-    "ghcr.io"
-  ];
-
   # Automatic cleanup
   nix.gc = {
     automatic = true;
     dates = "weekly";
     options = "--delete-older-than 30d";
-  };
-
-  virtualisation.podman.autoPrune = {
-    enable = true;
-    dates = "weekly";
-    flags = [ "--all" ];
   };
 
   # Power management
@@ -318,7 +296,6 @@
   # TODO: Re-enable after configuring comprehensive AppArmor profiles to avoid audit_log_subj_ctx errors
   security.auditd.enable = false; # System call auditing - temporarily disabled
 
-  programs.adb.enable = true;
   services.usbmuxd.enable = true;
 
   # USB device security with Bluetooth support (more permissive)
