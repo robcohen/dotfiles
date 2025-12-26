@@ -27,7 +27,6 @@
 #   - qBittorrent: http://nixtv-win:8080
 #   - Tdarr:       http://nixtv-win:8265
 #   - Uptime Kuma: http://nixtv-win:3001
-#   - Notifiarr:   http://nixtv-win:5454
 
 services:
   # ===========================================================================
@@ -329,21 +328,6 @@ services:
       - nodeName=WindowsNode
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-
-  # ===========================================================================
-  # Notifiarr - Notifications for *arr apps
-  # ===========================================================================
-  notifiarr:
-    image: golift/notifiarr:latest
-    container_name: notifiarr
-    restart: unless-stopped
-    ports:
-      - "5454:5454"
-    volumes:
-      - /mnt/c/ProgramData/nixtv/Notifiarr:/config
-    environment:
-      - TZ=${TZ:-America/New_York}
-      - DN_API_KEY=${NOTIFIARR_API_KEY:-}
 
   # ===========================================================================
   # Uptime Kuma - Service monitoring

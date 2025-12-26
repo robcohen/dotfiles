@@ -32,7 +32,6 @@ function New-DirectoryStructure {
         "$($Config.paths.appData)\Tdarr\configs",
         "$($Config.paths.appData)\Tdarr\logs",
         "$($Config.paths.appData)\Tdarr\transcode_cache",
-        "$($Config.paths.appData)\Notifiarr",
         "$($Config.paths.appData)\UptimeKuma",
         "$($Config.paths.appData)\Scripts",
         "$($Config.paths.appData)\Tailscale",

@@ -72,7 +72,6 @@ function Get-Configuration {
                 qbittorrent = @{ port = 8080; protocol = "TCP" }
                 tdarr = @{ port = 8265; protocol = "TCP" }
                 flaresolverr = @{ port = 8191; protocol = "TCP" }
-                notifiarr = @{ port = 5454; protocol = "TCP" }
                 uptimekuma = @{ port = 3001; protocol = "TCP" }
             }
             requirements = @{
