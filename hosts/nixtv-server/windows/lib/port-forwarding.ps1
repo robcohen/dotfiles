@@ -1,9 +1,40 @@
 # lib/port-forwarding.ps1 - WSL2 port forwarding via netsh portproxy
 
+function Get-TailscaleIP {
+    Write-Log "Getting Tailscale IP address..."
+
+    try {
+        $tailscale = Get-TailscaleExecutable
+        if ($tailscale) {
+            $status = & $tailscale ip -4 2>&1
+            if ($status -match '^100\.') {
+                Write-Log "  Tailscale IP: $status" -Level Success
+                return $status.Trim()
+            }
+        }
+
+        # Fallback: check network adapters
+        $tailscaleAdapter = Get-NetIPAddress -AddressFamily IPv4 |
+            Where-Object { $_.IPAddress -match '^100\.' } |
+            Select-Object -First 1
+
+        if ($tailscaleAdapter) {
+            Write-Log "  Tailscale IP: $($tailscaleAdapter.IPAddress)" -Level Success
+            return $tailscaleAdapter.IPAddress
+        }
+
+        Write-Log "  Tailscale IP not found - is Tailscale connected?" -Level Warning
+        return $null
+    } catch {
+        Write-Log "  Failed to get Tailscale IP: $_" -Level Warning
+        return $null
+    }
+}
+
 function Set-PortForwarding {
     param($Services)
 
-    Write-Log "Configuring port forwarding from Windows to WSL2..."
+    Write-Log "Configuring port forwarding (Tailscale only)..."
 
     # Ensure IP Helper service is running (required for portproxy)
     $iphlpsvc = Get-Service -Name iphlpsvc -ErrorAction SilentlyContinue
@@ -11,6 +42,13 @@ function Set-PortForwarding {
         Write-Log "  Starting IP Helper service..."
         Start-Service -Name iphlpsvc
         Set-Service -Name iphlpsvc -StartupType Automatic
+    }
+
+    # Get Tailscale IP to bind to
+    $tailscaleIP = Get-TailscaleIP
+    if (-not $tailscaleIP) {
+        Write-Log "  Cannot get Tailscale IP - services will not be accessible" -Level Error
+        return $false
     }
 
     # Get WSL2 IP
@@ -30,22 +68,20 @@ function Set-PortForwarding {
 
         $port = $service.port
 
-        # Check if rule already exists
-        $existing = netsh interface portproxy show v4tov4 | Select-String -Pattern "0.0.0.0\s+$port"
-
-        if ($existing) {
-            # Update existing rule with new WSL IP
-            netsh interface portproxy delete v4tov4 listenport=$port listenaddress=0.0.0.0 2>&1 | Out-Null
-        }
+        # Remove any existing rules for this port (old 0.0.0.0 or stale Tailscale IP)
+        netsh interface portproxy delete v4tov4 listenport=$port listenaddress=0.0.0.0 2>&1 | Out-Null
+        netsh interface portproxy delete v4tov4 listenport=$port listenaddress=$tailscaleIP 2>&1 | Out-Null
 
         try {
-            netsh interface portproxy add v4tov4 listenport=$port listenaddress=0.0.0.0 connectport=$port connectaddress=$wslIP 2>&1 | Out-Null
-            Write-Log "  Port $port -> $wslIP:$port ($serviceName)" -Level Success
+            # Bind only to Tailscale IP - not accessible from LAN or internet
+            netsh interface portproxy add v4tov4 listenport=$port listenaddress=$tailscaleIP connectport=$port connectaddress=$wslIP 2>&1 | Out-Null
+            Write-Log "  $tailscaleIP:$port -> $wslIP:$port ($serviceName)" -Level Success
         } catch {
             Write-Log "  Failed to forward port $port : $_" -Level Warning
         }
     }
 
+    Write-Log "  Services only accessible via Tailscale at $tailscaleIP" -Level Success
     return $true
 }
 
@@ -53,6 +89,8 @@ function Remove-PortForwarding {
     param($Services)
 
     Write-Log "Removing port forwarding rules..."
+
+    $tailscaleIP = Get-TailscaleIP
 
     foreach ($serviceName in $Services.PSObject.Properties.Name) {
         $service = $Services.$serviceName
@@ -63,12 +101,12 @@ function Remove-PortForwarding {
 
         $port = $service.port
 
-        try {
-            netsh interface portproxy delete v4tov4 listenport=$port listenaddress=0.0.0.0 2>&1 | Out-Null
-            Write-Log "  Removed port forward for $port" -Level Success
-        } catch {
-            Write-Log "  No rule found for port $port"
+        # Remove both old-style (0.0.0.0) and new-style (Tailscale IP) rules
+        netsh interface portproxy delete v4tov4 listenport=$port listenaddress=0.0.0.0 2>&1 | Out-Null
+        if ($tailscaleIP) {
+            netsh interface portproxy delete v4tov4 listenport=$port listenaddress=$tailscaleIP 2>&1 | Out-Null
         }
+        Write-Log "  Removed port forward for $port" -Level Success
     }
 }
 

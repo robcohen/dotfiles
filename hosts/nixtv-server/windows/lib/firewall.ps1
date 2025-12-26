@@ -1,34 +1,42 @@
 # lib/firewall.ps1 - Firewall rules configuration
 
+# Tailscale CGNAT range
+$Script:TailscaleSubnet = "100.64.0.0/10"
+
 function Set-FirewallRules {
     param($Services)
 
-    Write-Log "Configuring firewall rules..."
+    Write-Log "Configuring firewall rules (Tailscale only)..."
 
     foreach ($serviceName in $Services.PSObject.Properties.Name) {
         $service = $Services.$serviceName
         $ruleName = "nixtv-$serviceName"
 
-        # Check if rule exists
+        # Remove old rule if it exists (may have wrong settings)
         $existing = Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
-
         if ($existing) {
-            Write-Log "  Rule '$ruleName' already exists"
-        } else {
-            try {
-                New-NetFirewallRule `
-                    -DisplayName $ruleName `
-                    -Direction Inbound `
-                    -Protocol $service.protocol `
-                    -LocalPort $service.port `
-                    -Action Allow `
-                    -Profile Private,Domain | Out-Null
-                Write-Log "  Created rule: $ruleName ($($service.protocol)/$($service.port))" -Level Success
-            } catch {
-                Write-Log "  Failed to create rule '$ruleName': $_" -Level Warning
-            }
+            Remove-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
+            Write-Log "  Removed old rule: $ruleName"
+        }
+
+        try {
+            # Create rule that only allows Tailscale traffic
+            New-NetFirewallRule `
+                -DisplayName $ruleName `
+                -Direction Inbound `
+                -Protocol $service.protocol `
+                -LocalPort $service.port `
+                -RemoteAddress $Script:TailscaleSubnet `
+                -Action Allow `
+                -Profile Any | Out-Null
+            Write-Log "  Created rule: $ruleName ($($service.protocol)/$($service.port)) [Tailscale only]" -Level Success
+        } catch {
+            Write-Log "  Failed to create rule '$ruleName': $_" -Level Warning
         }
     }
+
+    # Block these ports from non-Tailscale sources
+    Write-Log "  Service ports restricted to Tailscale network (100.64.0.0/10)" -Level Success
 }
 
 function Set-DnsLeakPreventionRules {
