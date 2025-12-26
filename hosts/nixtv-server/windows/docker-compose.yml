@@ -175,7 +175,7 @@ services:
   # Readarr - Book/audiobook management
   # ===========================================================================
   readarr:
-    image: lscr.io/linuxserver/readarr:develop
+    image: ghcr.io/hotio/readarr:latest
     container_name: readarr
     restart: unless-stopped
     ports:
@@ -363,7 +363,7 @@ services:
     container_name: watchtower
     restart: unless-stopped
     volumes:
-      - //var/run/podman/podman.sock:/var/run/docker.sock
+      - /run/user/1000/podman/podman.sock:/var/run/docker.sock
     environment:
       - TZ=America/New_York
       - WATCHTOWER_CLEANUP=true
