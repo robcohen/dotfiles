@@ -12,7 +12,9 @@
 #   podman-compose down
 #
 # Web UIs:
+#   - Homarr:      http://localhost:7575  (Dashboard - start here!)
 #   - Jellyfin:    http://localhost:8096
+#   - Jellyseerr:  http://localhost:5055
 #   - Ollama:      http://localhost:11434
 #   - Open WebUI:  http://localhost:3000
 #   - Radarr:      http://localhost:7878
@@ -22,6 +24,9 @@
 #   - Readarr:     http://localhost:8787
 #   - Bazarr:      http://localhost:6767
 #   - qBittorrent: http://localhost:8080
+#   - Tdarr:       http://localhost:8265
+#   - Uptime Kuma: http://localhost:3001
+#   - Notifiarr:   http://localhost:5454
 
 services:
   # ===========================================================================
@@ -225,3 +230,141 @@ services:
       - PGID=1000
       - TZ=America/New_York
       - WEBUI_PORT=8080
+
+  # ===========================================================================
+  # Homarr - Dashboard for all services
+  # ===========================================================================
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    restart: unless-stopped
+    ports:
+      - "7575:7575"
+    volumes:
+      - C:\ProgramData\nixtv\Homarr\configs:/app/data/configs
+      - C:\ProgramData\nixtv\Homarr\icons:/app/public/icons
+      - C:\ProgramData\nixtv\Homarr\data:/data
+    environment:
+      - TZ=America/New_York
+
+  # ===========================================================================
+  # Jellyseerr - Media request management
+  # ===========================================================================
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    restart: unless-stopped
+    ports:
+      - "5055:5055"
+    volumes:
+      - C:\ProgramData\nixtv\Jellyseerr:/app/config
+    environment:
+      - TZ=America/New_York
+    depends_on:
+      - jellyfin
+      - radarr
+      - sonarr
+
+  # ===========================================================================
+  # Flaresolverr - Cloudflare bypass for indexers
+  # ===========================================================================
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: unless-stopped
+    ports:
+      - "8191:8191"
+    environment:
+      - LOG_LEVEL=info
+      - TZ=America/New_York
+
+  # ===========================================================================
+  # Recyclarr - TRaSH Guides sync for Radarr/Sonarr
+  # ===========================================================================
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: recyclarr
+    restart: unless-stopped
+    volumes:
+      - C:\ProgramData\nixtv\Recyclarr:/config
+    environment:
+      - TZ=America/New_York
+      - RECYCLARR_CREATE_CONFIG=true
+
+  # ===========================================================================
+  # Tdarr - Media transcoding with GPU
+  # ===========================================================================
+  tdarr:
+    image: ghcr.io/haveagitgat/tdarr:latest
+    container_name: tdarr
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, video]
+    ports:
+      - "8265:8265"   # Web UI
+      - "8266:8266"   # Server port
+    volumes:
+      - C:\ProgramData\nixtv\Tdarr\server:/app/server
+      - C:\ProgramData\nixtv\Tdarr\configs:/app/configs
+      - C:\ProgramData\nixtv\Tdarr\logs:/app/logs
+      - C:\Media:/media
+      - C:\ProgramData\nixtv\Tdarr\transcode_cache:/temp
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - inContainer=true
+      - nodeName=WindowsNode
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+
+  # ===========================================================================
+  # Notifiarr - Notifications for *arr apps
+  # ===========================================================================
+  notifiarr:
+    image: golift/notifiarr:latest
+    container_name: notifiarr
+    restart: unless-stopped
+    ports:
+      - "5454:5454"
+    volumes:
+      - C:\ProgramData\nixtv\Notifiarr:/config
+    environment:
+      - TZ=America/New_York
+
+  # ===========================================================================
+  # Uptime Kuma - Service monitoring
+  # ===========================================================================
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - C:\ProgramData\nixtv\UptimeKuma:/app/data
+
+  # ===========================================================================
+  # Watchtower - Auto-update containers
+  # ===========================================================================
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=America/New_York
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 4 * * *
+      - WATCHTOWER_NOTIFICATIONS=shoutrrr
+      # Configure notifications via Notifiarr or other service
