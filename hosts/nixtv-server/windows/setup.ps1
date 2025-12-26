@@ -65,9 +65,9 @@ function Get-Configuration {
 
         $defaultConfig = @{
             paths = @{
-                media = "D:\Media"
-                appData = "D:\AppData"
-                vms = "D:\VMs"
+                media = "C:\Media"
+                appData = "C:\ProgramData\nixtv"
+                vms = "C:\VMs"
             }
             vm = @{
                 name = "nixtv-server"
