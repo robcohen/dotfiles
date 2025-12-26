@@ -5,28 +5,29 @@
 #   - Podman Desktop with WSL2 backend
 #   - NVIDIA GPU with drivers installed
 #   - NVIDIA Container Toolkit for Podman
+#   - Copy .env.example to .env and configure
 #
 # Usage:
 #   podman-compose up -d
 #   podman-compose logs -f
 #   podman-compose down
 #
-# Web UIs:
-#   - Homarr:      http://localhost:7575  (Dashboard - start here!)
-#   - Jellyfin:    http://localhost:8096
-#   - Jellyseerr:  http://localhost:5055
-#   - Ollama:      http://localhost:11434
-#   - Open WebUI:  http://localhost:3000
-#   - Radarr:      http://localhost:7878
-#   - Sonarr:      http://localhost:8989
-#   - Prowlarr:    http://localhost:9696
-#   - Lidarr:      http://localhost:8686
-#   - Readarr:     http://localhost:8787
-#   - Bazarr:      http://localhost:6767
-#   - qBittorrent: http://localhost:8080
-#   - Tdarr:       http://localhost:8265
-#   - Uptime Kuma: http://localhost:3001
-#   - Notifiarr:   http://localhost:5454
+# Web UIs (via Tailscale only):
+#   - Homarr:      http://nixtv-win:7575  (Dashboard - start here!)
+#   - Jellyfin:    http://nixtv-win:8096
+#   - Jellyseerr:  http://nixtv-win:5055
+#   - Ollama:      http://nixtv-win:11434
+#   - Open WebUI:  http://nixtv-win:3000
+#   - Radarr:      http://nixtv-win:7878
+#   - Sonarr:      http://nixtv-win:8989
+#   - Prowlarr:    http://nixtv-win:9696
+#   - Lidarr:      http://nixtv-win:8686
+#   - Readarr:     http://nixtv-win:8787
+#   - Bazarr:      http://nixtv-win:6767
+#   - qBittorrent: http://nixtv-win:8080
+#   - Tdarr:       http://nixtv-win:8265
+#   - Uptime Kuma: http://nixtv-win:3001
+#   - Notifiarr:   http://nixtv-win:5454
 
 services:
   # ===========================================================================
@@ -107,9 +108,9 @@ services:
     volumes:
       - /mnt/c/ProgramData/nixtv/Prowlarr:/config
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
 
   # ===========================================================================
   # Radarr - Movie management
@@ -125,9 +126,9 @@ services:
       - /mnt/c/Media/Movies:/movies
       - /mnt/c/Media/Downloads:/downloads
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
     depends_on:
       - prowlarr
 
@@ -145,9 +146,9 @@ services:
       - /mnt/c/Media/TV:/tv
       - /mnt/c/Media/Downloads:/downloads
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
     depends_on:
       - prowlarr
 
@@ -165,9 +166,9 @@ services:
       - /mnt/c/Media/Music:/music
       - /mnt/c/Media/Downloads:/downloads
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
     depends_on:
       - prowlarr
 
@@ -185,9 +186,9 @@ services:
       - /mnt/c/Media/Books:/books
       - /mnt/c/Media/Downloads:/downloads
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
     depends_on:
       - prowlarr
 
@@ -205,9 +206,9 @@ services:
       - /mnt/c/Media/Movies:/movies
       - /mnt/c/Media/TV:/tv
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
     depends_on:
       - radarr
       - sonarr
@@ -227,9 +228,9 @@ services:
       - /mnt/c/ProgramData/nixtv/qBittorrent:/config
       - /mnt/c/Media/Downloads:/downloads
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
       - WEBUI_PORT=8080
 
   # ===========================================================================
@@ -246,7 +247,7 @@ services:
       - /mnt/c/ProgramData/nixtv/Homarr/icons:/app/public/icons
       - /mnt/c/ProgramData/nixtv/Homarr/data:/data
     environment:
-      - TZ=America/New_York
+      - TZ=${TZ:-America/New_York}
 
   # ===========================================================================
   # Jellyseerr - Media request management
@@ -260,7 +261,7 @@ services:
     volumes:
       - /mnt/c/ProgramData/nixtv/Jellyseerr:/app/config
     environment:
-      - TZ=America/New_York
+      - TZ=${TZ:-America/New_York}
     depends_on:
       - jellyfin
       - radarr
@@ -277,7 +278,7 @@ services:
       - "8191:8191"
     environment:
       - LOG_LEVEL=info
-      - TZ=America/New_York
+      - TZ=${TZ:-America/New_York}
 
   # ===========================================================================
   # Recyclarr - TRaSH Guides sync for Radarr/Sonarr
@@ -289,7 +290,7 @@ services:
     volumes:
       - /mnt/c/ProgramData/nixtv/Recyclarr:/config
     environment:
-      - TZ=America/New_York
+      - TZ=${TZ:-America/New_York}
       - RECYCLARR_CREATE_CONFIG=true
 
   # ===========================================================================
@@ -317,9 +318,9 @@ services:
       - /mnt/c/Media:/media
       - /mnt/c/ProgramData/nixtv/Tdarr/transcode_cache:/temp
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
       - serverIP=0.0.0.0
       - serverPort=8266
       - webUIPort=8265
@@ -341,7 +342,8 @@ services:
     volumes:
       - /mnt/c/ProgramData/nixtv/Notifiarr:/config
     environment:
-      - TZ=America/New_York
+      - TZ=${TZ:-America/New_York}
+      - DN_API_KEY=${NOTIFIARR_API_KEY:-}
 
   # ===========================================================================
   # Uptime Kuma - Service monitoring
@@ -365,8 +367,8 @@ services:
     volumes:
       - /run/user/1000/podman/podman.sock:/var/run/docker.sock
     environment:
-      - TZ=America/New_York
+      - TZ=${TZ:-America/New_York}
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_SCHEDULE=0 0 4 * * *
-      - WATCHTOWER_NOTIFICATIONS=shoutrrr
-      # Configure notifications via Notifiarr or other service
+      - WATCHTOWER_NOTIFICATIONS=${WATCHTOWER_NOTIFICATION_URL:+shoutrrr}
+      - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL:-}

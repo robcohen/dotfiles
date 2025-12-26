@@ -28,6 +28,7 @@ $ErrorActionPreference = "Stop"
 $libPath = Join-Path $PSScriptRoot "lib"
 
 . "$libPath\common.ps1"
+. "$libPath\env.ps1"
 . "$libPath\checks.ps1"
 . "$libPath\windows-features.ps1"
 . "$libPath\packages.ps1"
@@ -214,6 +215,12 @@ function Main {
 
     Write-Log "Starting nixtv-server Windows setup..." -Level Info
     Write-Log "Config: $ConfigPath"
+
+    # Initialize and load environment variables
+    if (-not (Test-EnvFile)) {
+        Initialize-EnvFile
+    }
+    Import-EnvFile
 
     # Load configuration
     $config = Get-Configuration -Path $ConfigPath
