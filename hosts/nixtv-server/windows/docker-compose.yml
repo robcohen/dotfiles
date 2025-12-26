@@ -36,14 +36,14 @@ services:
     image: jellyfin/jellyfin:latest
     container_name: jellyfin
     restart: unless-stopped
-    # GPU passthrough for NVIDIA
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu, video]
+    # GPU passthrough for NVIDIA (uncomment after configuring CDI)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu, video]
     ports:
       - "8096:8096"     # Web UI
       - "8920:8920"     # HTTPS (optional)
@@ -64,13 +64,14 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu, compute]
+    # GPU passthrough (uncomment after configuring CDI)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu, compute]
     ports:
       - "11434:11434"
     volumes:
@@ -298,13 +299,14 @@ services:
     image: ghcr.io/haveagitgat/tdarr:latest
     container_name: tdarr
     restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu, video]
+    # GPU passthrough (uncomment after configuring CDI)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu, video]
     ports:
       - "8265:8265"   # Web UI
       - "8266:8266"   # Server port
