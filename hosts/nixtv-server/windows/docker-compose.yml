@@ -50,9 +50,9 @@ services:
       - "1900:1900/udp" # DLNA discovery
       - "7359:7359/udp" # Client discovery
     volumes:
-      - C:\ProgramData\nixtv\Jellyfin\config:/config
-      - C:\ProgramData\nixtv\Jellyfin\cache:/cache
-      - C:\Media:/media:ro
+      - /mnt/c/ProgramData/nixtv/Jellyfin/config:/config
+      - /mnt/c/ProgramData/nixtv/Jellyfin/cache:/cache
+      - /mnt/c/Media:/media:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
@@ -74,7 +74,7 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - C:\ProgramData\nixtv\Ollama:/root/.ollama
+      - /mnt/c/ProgramData/nixtv/Ollama:/root/.ollama
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
 
@@ -88,7 +88,7 @@ services:
     ports:
       - "3000:8080"
     volumes:
-      - C:\ProgramData\nixtv\OpenWebUI:/app/backend/data
+      - /mnt/c/ProgramData/nixtv/OpenWebUI:/app/backend/data
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
@@ -104,7 +104,7 @@ services:
     ports:
       - "9696:9696"
     volumes:
-      - C:\ProgramData\nixtv\Prowlarr:/config
+      - /mnt/c/ProgramData/nixtv/Prowlarr:/config
     environment:
       - PUID=1000
       - PGID=1000
@@ -120,9 +120,9 @@ services:
     ports:
       - "7878:7878"
     volumes:
-      - C:\ProgramData\nixtv\Radarr:/config
-      - C:\Media\Movies:/movies
-      - C:\Media\Downloads:/downloads
+      - /mnt/c/ProgramData/nixtv/Radarr:/config
+      - /mnt/c/Media/Movies:/movies
+      - /mnt/c/Media/Downloads:/downloads
     environment:
       - PUID=1000
       - PGID=1000
@@ -140,9 +140,9 @@ services:
     ports:
       - "8989:8989"
     volumes:
-      - C:\ProgramData\nixtv\Sonarr:/config
-      - C:\Media\TV:/tv
-      - C:\Media\Downloads:/downloads
+      - /mnt/c/ProgramData/nixtv/Sonarr:/config
+      - /mnt/c/Media/TV:/tv
+      - /mnt/c/Media/Downloads:/downloads
     environment:
       - PUID=1000
       - PGID=1000
@@ -160,9 +160,9 @@ services:
     ports:
       - "8686:8686"
     volumes:
-      - C:\ProgramData\nixtv\Lidarr:/config
-      - C:\Media\Music:/music
-      - C:\Media\Downloads:/downloads
+      - /mnt/c/ProgramData/nixtv/Lidarr:/config
+      - /mnt/c/Media/Music:/music
+      - /mnt/c/Media/Downloads:/downloads
     environment:
       - PUID=1000
       - PGID=1000
@@ -180,9 +180,9 @@ services:
     ports:
       - "8787:8787"
     volumes:
-      - C:\ProgramData\nixtv\Readarr:/config
-      - C:\Media\Books:/books
-      - C:\Media\Downloads:/downloads
+      - /mnt/c/ProgramData/nixtv/Readarr:/config
+      - /mnt/c/Media/Books:/books
+      - /mnt/c/Media/Downloads:/downloads
     environment:
       - PUID=1000
       - PGID=1000
@@ -200,9 +200,9 @@ services:
     ports:
       - "6767:6767"
     volumes:
-      - C:\ProgramData\nixtv\Bazarr:/config
-      - C:\Media\Movies:/movies
-      - C:\Media\TV:/tv
+      - /mnt/c/ProgramData/nixtv/Bazarr:/config
+      - /mnt/c/Media/Movies:/movies
+      - /mnt/c/Media/TV:/tv
     environment:
       - PUID=1000
       - PGID=1000
@@ -223,8 +223,8 @@ services:
       - "6881:6881"   # Torrent port
       - "6881:6881/udp"
     volumes:
-      - C:\ProgramData\nixtv\qBittorrent:/config
-      - C:\Media\Downloads:/downloads
+      - /mnt/c/ProgramData/nixtv/qBittorrent:/config
+      - /mnt/c/Media/Downloads:/downloads
     environment:
       - PUID=1000
       - PGID=1000
@@ -241,9 +241,9 @@ services:
     ports:
       - "7575:7575"
     volumes:
-      - C:\ProgramData\nixtv\Homarr\configs:/app/data/configs
-      - C:\ProgramData\nixtv\Homarr\icons:/app/public/icons
-      - C:\ProgramData\nixtv\Homarr\data:/data
+      - /mnt/c/ProgramData/nixtv/Homarr/configs:/app/data/configs
+      - /mnt/c/ProgramData/nixtv/Homarr/icons:/app/public/icons
+      - /mnt/c/ProgramData/nixtv/Homarr/data:/data
     environment:
       - TZ=America/New_York
 
@@ -257,7 +257,7 @@ services:
     ports:
       - "5055:5055"
     volumes:
-      - C:\ProgramData\nixtv\Jellyseerr:/app/config
+      - /mnt/c/ProgramData/nixtv/Jellyseerr:/app/config
     environment:
       - TZ=America/New_York
     depends_on:
@@ -286,7 +286,7 @@ services:
     container_name: recyclarr
     restart: unless-stopped
     volumes:
-      - C:\ProgramData\nixtv\Recyclarr:/config
+      - /mnt/c/ProgramData/nixtv/Recyclarr:/config
     environment:
       - TZ=America/New_York
       - RECYCLARR_CREATE_CONFIG=true
@@ -309,11 +309,11 @@ services:
       - "8265:8265"   # Web UI
       - "8266:8266"   # Server port
     volumes:
-      - C:\ProgramData\nixtv\Tdarr\server:/app/server
-      - C:\ProgramData\nixtv\Tdarr\configs:/app/configs
-      - C:\ProgramData\nixtv\Tdarr\logs:/app/logs
-      - C:\Media:/media
-      - C:\ProgramData\nixtv\Tdarr\transcode_cache:/temp
+      - /mnt/c/ProgramData/nixtv/Tdarr/server:/app/server
+      - /mnt/c/ProgramData/nixtv/Tdarr/configs:/app/configs
+      - /mnt/c/ProgramData/nixtv/Tdarr/logs:/app/logs
+      - /mnt/c/Media:/media
+      - /mnt/c/ProgramData/nixtv/Tdarr/transcode_cache:/temp
     environment:
       - PUID=1000
       - PGID=1000
@@ -337,7 +337,7 @@ services:
     ports:
       - "5454:5454"
     volumes:
-      - C:\ProgramData\nixtv\Notifiarr:/config
+      - /mnt/c/ProgramData/nixtv/Notifiarr:/config
     environment:
       - TZ=America/New_York
 
@@ -351,7 +351,7 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - C:\ProgramData\nixtv\UptimeKuma:/app/data
+      - /mnt/c/ProgramData/nixtv/UptimeKuma:/app/data
 
   # ===========================================================================
   # Watchtower - Auto-update containers
@@ -361,7 +361,7 @@ services:
     container_name: watchtower
     restart: unless-stopped
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - //var/run/podman/podman.sock:/var/run/docker.sock
     environment:
       - TZ=America/New_York
       - WATCHTOWER_CLEANUP=true
