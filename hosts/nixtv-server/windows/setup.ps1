@@ -76,7 +76,7 @@ function Get-Configuration {
                 diskGB = 100
             }
             packages = @(
-                "Docker.DockerDesktop"
+                "RedHat.Podman-Desktop"
                 "Microsoft.PowerShell"
                 "Microsoft.WindowsTerminal"
                 "Git.Git"
@@ -552,64 +552,40 @@ try {
 }
 
 # ===========================================================================
-# DOCKER CONFIGURATION
+# PODMAN CONFIGURATION
 # ===========================================================================
-function Set-DockerAutoStart {
-    Write-Log "Configuring Docker Desktop auto-start..."
+function Set-PodmanConfiguration {
+    Write-Log "Configuring Podman Desktop..."
 
+    # Check if Podman is installed
+    $podman = Get-Command "podman" -ErrorAction SilentlyContinue
+    if (-not $podman) {
+        $podmanPath = "$env:LOCALAPPDATA\Programs\podman-desktop\resources\podman\bin\podman.exe"
+        if (-not (Test-Path $podmanPath)) {
+            Write-Log "  Podman not found - start Podman Desktop first" -Level Warning
+            return
+        }
+    }
+
+    Write-Log "  Podman Desktop installed" -Level Success
+
+    # Podman Desktop auto-start is configured via its own settings
+    # Check if already in startup
     $startupPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
-    $dockerPath = "${env:ProgramFiles}\Docker\Docker\Docker Desktop.exe"
-    $shortcutPath = "$startupPath\Docker Desktop.lnk"
+    $podmanDesktopExe = "$env:LOCALAPPDATA\Programs\podman-desktop\Podman Desktop.exe"
 
-    if (-not (Test-Path $dockerPath)) {
-        Write-Log "  Docker Desktop not found at expected path" -Level Warning
-        return
-    }
-
-    if (Test-Path $shortcutPath) {
-        Write-Log "  Docker auto-start already configured" -Level Success
-        return
-    }
-
-    try {
-        $shell = New-Object -ComObject WScript.Shell
-        $shortcut = $shell.CreateShortcut($shortcutPath)
-        $shortcut.TargetPath = $dockerPath
-        $shortcut.Arguments = "--background"
-        $shortcut.Save()
-        Write-Log "  Docker auto-start configured" -Level Success
-    } catch {
-        Write-Log "  Failed to configure Docker auto-start: $_" -Level Warning
-    }
-}
-
-function Set-DockerSettings {
-    Write-Log "Configuring Docker Desktop settings..."
-
-    $dockerSettingsPath = "$env:APPDATA\Docker\settings.json"
-
-    if (-not (Test-Path $dockerSettingsPath)) {
-        Write-Log "  Docker settings file not found - start Docker Desktop first" -Level Warning
-        return
-    }
-
-    try {
-        $settings = Get-Content $dockerSettingsPath -Raw | ConvertFrom-Json
-
-        # Enable WSL2 backend
-        if ($settings.PSObject.Properties.Name -contains "wslEngineEnabled") {
-            $settings.wslEngineEnabled = $true
+    if (Test-Path "$startupPath\Podman Desktop.lnk") {
+        Write-Log "  Podman Desktop auto-start already configured" -Level Success
+    } elseif (Test-Path $podmanDesktopExe) {
+        try {
+            $shell = New-Object -ComObject WScript.Shell
+            $shortcut = $shell.CreateShortcut("$startupPath\Podman Desktop.lnk")
+            $shortcut.TargetPath = $podmanDesktopExe
+            $shortcut.Save()
+            Write-Log "  Podman Desktop auto-start configured" -Level Success
+        } catch {
+            Write-Log "  Failed to configure auto-start: $_" -Level Warning
         }
-
-        # Enable GPU support if available
-        if ($settings.PSObject.Properties.Name -contains "enableGpuAcceleration") {
-            $settings.enableGpuAcceleration = $true
-        }
-
-        $settings | ConvertTo-Json -Depth 10 | Out-File $dockerSettingsPath -Encoding UTF8
-        Write-Log "  Docker settings updated" -Level Success
-    } catch {
-        Write-Log "  Failed to update Docker settings: $_" -Level Warning
     }
 }
 
@@ -717,8 +693,8 @@ function Test-Installation {
             Test = { (Get-Command wsl -ErrorAction SilentlyContinue) -ne $null }
         },
         @{
-            Name = "Docker"
-            Test = { (Get-Command docker -ErrorAction SilentlyContinue) -ne $null }
+            Name = "Podman"
+            Test = { (Get-Command podman -ErrorAction SilentlyContinue) -ne $null }
         },
         @{
             Name = "Tailscale"
@@ -776,8 +752,8 @@ Next steps:
   1. Log into Tailscale: tailscale login
   2. Add device to Mullvad in Tailscale admin console
   3. Connect to Mullvad: $($Config.paths.appData)\Tailscale\mullvad-connect.ps1 -Country us
-  4. Start Docker Desktop
-  5. Run: docker compose up -d (in this directory)
+  4. Start Podman Desktop
+  5. Run: podman-compose up -d (in this directory)
   6. Build NixOS ISO: nix build .#nixtv-server-iso
   7. Copy ISO to $($Config.paths.vms)\$($Config.vm.name)\nixos.iso
   8. Run: $($Config.paths.vms)\$($Config.vm.name)\create-vm.ps1
@@ -876,10 +852,9 @@ function Main {
     Set-TailscaleDnsLeakPrevention
     New-TailscaleHelperScripts -Config $config
 
-    # Configure Docker
-    Write-Host "`n[8/10] Docker configuration" -ForegroundColor Yellow
-    Set-DockerAutoStart
-    Set-DockerSettings
+    # Configure Podman
+    Write-Host "`n[8/10] Podman configuration" -ForegroundColor Yellow
+    Set-PodmanConfiguration
 
     # Create VM script
     Write-Host "`n[9/10] VM setup script" -ForegroundColor Yellow
