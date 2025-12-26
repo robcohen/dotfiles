@@ -83,38 +83,43 @@ function Get-RandomArtwork {
     $history = Get-ArtworkHistory
     $department = $Config.Departments | Get-Random
 
-    # Query for artworks with images, in selected department, public domain
-    $query = @{
-        "query" = @{
-            "bool" = @{
-                "must" = @(
-                    @{ "term" = @{ "department_id" = $department } }
-                    @{ "term" = @{ "is_public_domain" = $true } }
-                    @{ "exists" = @{ "field" = "image_id" } }
-                    @{ "range" = @{ "thumbnail.width" = @{ "gte" = $Config.MinWidth } } }
-                )
-            }
-        }
-        "fields" = @("id", "title", "artist_title", "image_id", "thumbnail", "department_title")
-        "limit" = 100
-    }
+    # Use simple GET query - more reliable than POST search
+    # Get artworks from department that are public domain with images
+    $page = Get-Random -Minimum 1 -Maximum 50
+    $url = "https://api.artic.edu/api/v1/artworks?department_id=$department&is_public_domain=true&has_image=1&limit=20&page=$page&fields=id,title,artist_title,image_id,thumbnail,department_title"
 
-    $body = $query | ConvertTo-Json -Depth 10
-    $response = Invoke-RestMethod -Uri "https://api.artic.edu/api/v1/artworks/search" `
-        -Method Post -Body $body -ContentType "application/json"
+    $response = Invoke-RestMethod -Uri $url -TimeoutSec 30
 
     if ($response.data.Count -eq 0) {
-        throw "No artworks found matching criteria"
+        # Fallback: get any public domain artwork
+        Write-Log "No results from department, trying general query..." -Level Warning
+        $url = "https://api.artic.edu/api/v1/artworks?is_public_domain=true&has_image=1&limit=50&page=$page&fields=id,title,artist_title,image_id,thumbnail,department_title"
+        $response = Invoke-RestMethod -Uri $url -TimeoutSec 30
     }
 
-    # Filter out recently shown and prefer landscape
+    if ($response.data.Count -eq 0) {
+        throw "No artworks found"
+    }
+
+    # Filter for quality images and exclude history
     $candidates = $response.data | Where-Object {
-        $_.id -notin $history
+        $_.id -notin $history -and
+        $_.image_id -and
+        $_.thumbnail -and
+        $_.thumbnail.width -ge $Config.MinWidth
     }
 
-    if ($Config.PreferLandscape) {
+    # If quality filter too strict, relax it
+    if ($candidates.Count -eq 0) {
+        $candidates = $response.data | Where-Object {
+            $_.image_id -and $_.id -notin $history
+        }
+    }
+
+    # Prefer landscape orientation
+    if ($Config.PreferLandscape -and $candidates.Count -gt 0) {
         $landscape = $candidates | Where-Object {
-            $_.thumbnail.width -gt $_.thumbnail.height
+            $_.thumbnail -and $_.thumbnail.width -gt $_.thumbnail.height
         }
         if ($landscape.Count -gt 0) {
             $candidates = $landscape
@@ -122,7 +127,7 @@ function Get-RandomArtwork {
     }
 
     if ($candidates.Count -eq 0) {
-        $candidates = $response.data  # Fall back to all if history excludes everything
+        $candidates = $response.data | Where-Object { $_.image_id }
     }
 
     $artwork = $candidates | Get-Random
