@@ -39,6 +39,7 @@ $libPath = Join-Path $PSScriptRoot "lib"
 . "$libPath\port-forwarding.ps1"
 . "$libPath\power.ps1"
 . "$libPath\containers.ps1"
+. "$libPath\configs.ps1"
 . "$libPath\vm.ps1"
 
 # ===========================================================================
@@ -181,7 +182,7 @@ function Invoke-Phase2 {
     Write-Host "`n[3/5] Port forwarding" -ForegroundColor Yellow
     Set-PortForwarding -Services $Config.services
 
-    Write-Host "`n[4/5] Starting containers" -ForegroundColor Yellow
+    Write-Host "`n[4/6] Starting containers" -ForegroundColor Yellow
     $composeFile = Get-ComposeFilePath -Config $Config
     if (Test-Path $composeFile) {
         Start-ContainerStack -ComposeFile $composeFile
@@ -190,7 +191,10 @@ function Invoke-Phase2 {
         Write-Log "Copy it from the dotfiles repo or run Install-ComposeFile" -Level Info
     }
 
-    Write-Host "`n[5/5] Verification" -ForegroundColor Yellow
+    Write-Host "`n[5/6] Service configurations" -ForegroundColor Yellow
+    Install-ServiceConfigs -Config $Config
+
+    Write-Host "`n[6/6] Verification" -ForegroundColor Yellow
     Test-Installation
     Show-ContainerStatus
 }
