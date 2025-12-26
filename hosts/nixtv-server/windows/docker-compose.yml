@@ -1,19 +1,27 @@
 # hosts/nixtv-server/windows/docker-compose.yml
-# GPU-accelerated services running on Windows host
+# Media server + AI services running on Windows with Podman
 #
 # Prerequisites:
-#   - Docker Desktop with WSL2 backend
+#   - Podman Desktop with WSL2 backend
 #   - NVIDIA GPU with drivers installed
-#   - NVIDIA Container Toolkit (comes with Docker Desktop now)
+#   - NVIDIA Container Toolkit for Podman
 #
 # Usage:
-#   docker compose up -d
-#   docker compose logs -f
-#   docker compose down
+#   podman-compose up -d
+#   podman-compose logs -f
+#   podman-compose down
 #
-# Access:
-#   - Jellyfin: http://localhost:8096
-#   - Ollama:   http://localhost:11434
+# Web UIs:
+#   - Jellyfin:    http://localhost:8096
+#   - Ollama:      http://localhost:11434
+#   - Open WebUI:  http://localhost:3000
+#   - Radarr:      http://localhost:7878
+#   - Sonarr:      http://localhost:8989
+#   - Prowlarr:    http://localhost:9696
+#   - Lidarr:      http://localhost:8686
+#   - Readarr:     http://localhost:8787
+#   - Bazarr:      http://localhost:6767
+#   - qBittorrent: http://localhost:8080
 
 services:
   # ===========================================================================
@@ -23,6 +31,7 @@ services:
     image: jellyfin/jellyfin:latest
     container_name: jellyfin
     restart: unless-stopped
+    # GPU passthrough for NVIDIA
     deploy:
       resources:
         reservations:
@@ -36,15 +45,15 @@ services:
       - "1900:1900/udp" # DLNA discovery
       - "7359:7359/udp" # Client discovery
     volumes:
-      - D:\AppData\Jellyfin\config:/config
-      - D:\AppData\Jellyfin\cache:/cache
-      - D:\Media:/media:ro
+      - C:\ProgramData\nixtv\Jellyfin\config:/config
+      - C:\ProgramData\nixtv\Jellyfin\cache:/cache
+      - C:\Media:/media:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
 
   # ===========================================================================
-  # Ollama - Local LLM inference
+  # Ollama - Local LLM inference with GPU
   # ===========================================================================
   ollama:
     image: ollama/ollama:latest
@@ -60,7 +69,7 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - D:\AppData\Ollama:/root/.ollama
+      - C:\ProgramData\nixtv\Ollama:/root/.ollama
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
 
@@ -74,48 +83,145 @@ services:
     ports:
       - "3000:8080"
     volumes:
-      - D:\AppData\OpenWebUI:/app/backend/data
+      - C:\ProgramData\nixtv\OpenWebUI:/app/backend/data
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
       - ollama
 
   # ===========================================================================
-  # LocalAI - OpenAI-compatible API (optional alternative to Ollama)
+  # Prowlarr - Indexer manager (configure this first!)
   # ===========================================================================
-  # localai:
-  #   image: localai/localai:latest-aio-gpu-nvidia-cuda-12
-  #   container_name: localai
-  #   restart: unless-stopped
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: 1
-  #             capabilities: [gpu]
-  #   ports:
-  #     - "8080:8080"
-  #   volumes:
-  #     - D:\AppData\LocalAI\models:/models
-  #   environment:
-  #     - NVIDIA_VISIBLE_DEVICES=all
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    ports:
+      - "9696:9696"
+    volumes:
+      - C:\ProgramData\nixtv\Prowlarr:/config
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
 
   # ===========================================================================
-  # Whisper - Speech-to-text (optional)
+  # Radarr - Movie management
   # ===========================================================================
-  # whisper:
-  #   image: onerahmet/openai-whisper-asr-webservice:latest-gpu
-  #   container_name: whisper
-  #   restart: unless-stopped
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: 1
-  #             capabilities: [gpu]
-  #   ports:
-  #     - "9000:9000"
-  #   environment:
-  #     - ASR_MODEL=base
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    ports:
+      - "7878:7878"
+    volumes:
+      - C:\ProgramData\nixtv\Radarr:/config
+      - C:\Media\Movies:/movies
+      - C:\Media\Downloads:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    depends_on:
+      - prowlarr
+
+  # ===========================================================================
+  # Sonarr - TV show management
+  # ===========================================================================
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    ports:
+      - "8989:8989"
+    volumes:
+      - C:\ProgramData\nixtv\Sonarr:/config
+      - C:\Media\TV:/tv
+      - C:\Media\Downloads:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    depends_on:
+      - prowlarr
+
+  # ===========================================================================
+  # Lidarr - Music management
+  # ===========================================================================
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    restart: unless-stopped
+    ports:
+      - "8686:8686"
+    volumes:
+      - C:\ProgramData\nixtv\Lidarr:/config
+      - C:\Media\Music:/music
+      - C:\Media\Downloads:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    depends_on:
+      - prowlarr
+
+  # ===========================================================================
+  # Readarr - Book/audiobook management
+  # ===========================================================================
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    volumes:
+      - C:\ProgramData\nixtv\Readarr:/config
+      - C:\Media\Books:/books
+      - C:\Media\Downloads:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    depends_on:
+      - prowlarr
+
+  # ===========================================================================
+  # Bazarr - Subtitle management
+  # ===========================================================================
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    ports:
+      - "6767:6767"
+    volumes:
+      - C:\ProgramData\nixtv\Bazarr:/config
+      - C:\Media\Movies:/movies
+      - C:\Media\TV:/tv
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    depends_on:
+      - radarr
+      - sonarr
+
+  # ===========================================================================
+  # qBittorrent - Download client
+  # ===========================================================================
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    ports:
+      - "8080:8080"   # Web UI
+      - "6881:6881"   # Torrent port
+      - "6881:6881/udp"
+    volumes:
+      - C:\ProgramData\nixtv\qBittorrent:/config
+      - C:\Media\Downloads:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - WEBUI_PORT=8080
