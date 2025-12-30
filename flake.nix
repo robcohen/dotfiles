@@ -88,6 +88,10 @@
     # Flake-parts for modular flake structure
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "stable-nixpkgs";
+
+    # Disko for declarative disk partitioning
+    disko.url = "github:nix-community/disko";
+    disko.inputs.nixpkgs.follows = "stable-nixpkgs";
   };
 
   # ==========================================================================

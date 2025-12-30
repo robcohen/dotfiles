@@ -43,6 +43,7 @@
     ./programs/imv.nix
     ./programs/yazi.nix
     ./programs/neovim.nix
+    ./programs/claude-code.nix
     ./services/gpg-agent.nix
     ./services/swaync.nix
     ./services/syncthing.nix
@@ -106,6 +107,37 @@
   };
 
   systemd.user.startServices = "sd-switch";
+
+  # Claude Code and MCP configuration
+  dotfiles.claude-code = {
+    enable = true;
+
+    # Environment variables for Claude sessions
+    env = {
+      MCP_TIMEOUT = "10000";
+      MAX_MCP_OUTPUT_TOKENS = "50000";
+    };
+
+    # User-scoped MCP servers (available in all projects)
+    mcpServers = {
+      # GitHub integration - requires GITHUB_TOKEN env var
+      github = {
+        type = "http";
+        url = "https://api.githubcopilot.com/mcp/";
+        headers = {
+          Authorization = "Bearer \${GITHUB_TOKEN}";
+        };
+      };
+
+      # Local filesystem access
+      filesystem = {
+        type = "stdio";
+        command = "npx";
+        args = [ "-y" "@modelcontextprotocol/server-filesystem" "/home/${username}/Documents" "/home/${username}/my-projects" ];
+      };
+    };
+
+  };
 
   # Add simple debugging info
   home.file.".config/home-manager/host-info.txt".text = ''

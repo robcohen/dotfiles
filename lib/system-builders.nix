@@ -12,6 +12,7 @@ let
     sops-nix
     microvm
     rednix
+    disko
     ;
 in
 rec {
@@ -33,7 +34,7 @@ rec {
   # Common specialArgs factory (system-aware)
   # These args are available to all NixOS modules
   mkSpecialArgs = system: {
-    inherit inputs microvm rednix;
+    inherit inputs microvm rednix disko;
     unstable = unstablePkgsFor system;
   };
 

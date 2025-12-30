@@ -5,12 +5,17 @@
   lib,
   unstable,
   inputs,
+  disko,
   ...
 }:
 
 {
   imports = [
+    # Current disk mounts (auto-generated, used for existing installs)
     ./hardware-configuration.nix
+    # Disko module for CLI tools (disko.nix is for fresh installs only)
+    # Fresh install: sudo nix run github:nix-community/disko -- --mode disko ./hosts/snix/disko.nix
+    disko.nixosModules.disko
     ../common/base.nix
     ../common/security.nix
     ../common/tpm.nix
