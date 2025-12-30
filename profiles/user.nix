@@ -108,35 +108,33 @@
 
   systemd.user.startServices = "sd-switch";
 
-  # Claude Code and MCP configuration
+  # Claude Code configuration
+  # NOTE: ~/.claude.json is Claude's state file and should not be managed by Home Manager
   dotfiles.claude-code = {
     enable = true;
-
-    # Environment variables for Claude sessions
     env = {
+      # MCP settings
       MCP_TIMEOUT = "10000";
+      MCP_TOOL_TIMEOUT = "60000";
       MAX_MCP_OUTPUT_TOKENS = "50000";
+
+      # Extended thinking for complex tasks
+      MAX_THINKING_TOKENS = "20000";
+
+      # Output limits
+      CLAUDE_CODE_MAX_OUTPUT_TOKENS = "16000";
+      BASH_MAX_OUTPUT_LENGTH = "50000";
+
+      # Timeouts
+      BASH_DEFAULT_TIMEOUT_MS = "120000";
+      BASH_MAX_TIMEOUT_MS = "600000";
+
+      # Privacy - disable non-essential telemetry
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";
     };
 
-    # User-scoped MCP servers (available in all projects)
-    mcpServers = {
-      # GitHub integration - requires GITHUB_TOKEN env var
-      github = {
-        type = "http";
-        url = "https://api.githubcopilot.com/mcp/";
-        headers = {
-          Authorization = "Bearer \${GITHUB_TOKEN}";
-        };
-      };
-
-      # Local filesystem access
-      filesystem = {
-        type = "stdio";
-        command = "npx";
-        args = [ "-y" "@modelcontextprotocol/server-filesystem" "/home/${username}/Documents" "/home/${username}/my-projects" ];
-      };
-    };
-
+    # MCP servers are added via CLI: run `setup-claude-mcp` from nix develop
+    # For project-specific DB servers (sqlite, postgres), use .mcp.json
   };
 
   # Add simple debugging info

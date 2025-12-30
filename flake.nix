@@ -92,6 +92,12 @@
     # Disko for declarative disk partitioning
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "stable-nixpkgs";
+
+    # Private infrastructure configs (network, Tailscale, router)
+    infra-private = {
+      url = "git+ssh://git@github.com/robcohen/infra-private";
+      flake = true;
+    };
   };
 
   # ==========================================================================

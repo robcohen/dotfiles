@@ -36,6 +36,7 @@
             alias update-system="$PWD/assets/scripts/update-system.sh"
             alias update-home-manager="$PWD/assets/scripts/update-home-manager.sh"
             alias full-update="$PWD/assets/scripts/full-update.sh"
+            alias setup-claude-mcp="$PWD/assets/scripts/setup-claude-mcp.sh"
 
             echo "NixOS Infrastructure Development Environment"
             echo ""
@@ -48,6 +49,7 @@
             echo "  update-system            - Update flake and rebuild NixOS"
             echo "  update-home-manager      - Update Home Manager configuration"
             echo "  full-update              - Run complete system update"
+            echo "  setup-claude-mcp         - Setup Claude Code MCP servers"
             echo ""
             echo "Build ISOs/VMs:"
             echo "  nix build .#slax-live-iso / .#brix-live-iso / .#emergency-iso"
