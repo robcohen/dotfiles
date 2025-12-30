@@ -151,7 +151,7 @@ in {
 
     domain = lib.mkOption {
       type = lib.types.str;
-      example = "wintv.lorikeet-crested.ts.net";
+      example = "wintv.example.ts.net";
       description = "Tailscale domain for this host";
     };
 

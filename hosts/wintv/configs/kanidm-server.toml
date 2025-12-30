@@ -2,7 +2,7 @@
 # Deploy to: C:\ProgramData\wintv\Kanidm\server.toml
 #
 # NOTE: Replace {DOMAIN} with your Tailscale domain before deploying
-# Example: wintv.lorikeet-crested.ts.net
+# Example: wintv.example.ts.net
 
 # The webserver bind address. Kanidm will use HTTPS on this port.
 bindaddress = "[::]:8443"

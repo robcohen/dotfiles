@@ -10,7 +10,7 @@
 #   - Kanidm admin: https://{DOMAIN}:8443 (direct, not proxied)
 #
 # NOTE: Replace {DOMAIN} with your Tailscale domain before deploying
-# Example: wintv.lorikeet-crested.ts.net
+# Example: wintv.example.ts.net
 
 {DOMAIN} {
     tls /certs/{DOMAIN}.crt /certs/{DOMAIN}.key

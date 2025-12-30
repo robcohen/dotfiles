@@ -6,7 +6,7 @@ import base64
 import os
 import sys
 
-HOST = os.getenv("WINRM_HOST", "wintv.lorikeet-crested.ts.net")
+HOST = os.getenv("WINRM_HOST", "wintv.example.ts.net")
 USER = os.getenv("WINRM_USER", "user")
 PASS = os.getenv("WINRM_PASSWORD", "")
 RESULT_DIR = "/home/user/Documents/dotfiles/result"
