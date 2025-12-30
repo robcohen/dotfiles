@@ -188,5 +188,7 @@
     security-audit = "lynis audit system";
     rootkit-check = "sudo lynis audit system --tests-from-group malware";
 
+    # Network
+    lan-mode = "~/Documents/dotfiles/assets/scripts/lan-mode.sh";
   };
 }

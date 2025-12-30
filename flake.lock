@@ -131,11 +131,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1767115891,
-        "narHash": "sha256-WWOCarFuJBQp0Vl0Yr1Vvhwe8HJOWkynr4gt7yIUf3g=",
+        "lastModified": 1767117940,
+        "narHash": "sha256-WuA1frh18r5bp/TXNCOpgCNVNiK+fQa4qV3I3mLtNG0=",
         "ref": "refs/heads/main",
-        "rev": "51eefb394706ac2e9d12755f183d57d37ccf79c8",
-        "revCount": 1,
+        "rev": "1913bf5ff75b20367615a862e45b73070c934623",
+        "revCount": 5,
         "type": "git",
         "url": "ssh://git@github.com/robcohen/infra-private"
       },
