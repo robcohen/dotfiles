@@ -186,7 +186,7 @@ TEMPLATE = """
 
     async function saveHotspot() {
       const ssid = document.getElementById('ap-ssid').value;
-      const password = document.getElementById('ap-password').value;
+      const password = document.getElementById('ap-password').value; // noqa: secret
       await api('hotspot/config', 'POST', {ssid, password});
       alert('Saved');
     }
@@ -341,7 +341,7 @@ def wifi_scan():
 @app.route('/api/wifi/connect', methods=['POST'])
 def wifi_connect():
     data = request.json
-    ssid, password = data.get('ssid'), data.get('password', '')
+    ssid, password = data.get('ssid'), data.get('password', '')  # noqa: secret
     try:
         cmd = ['nmcli', 'dev', 'wifi', 'connect', ssid]
         if password:
@@ -361,12 +361,12 @@ def hotspot_toggle():
         return jsonify({'active': False})
     else:
         # Get password from environment or password file
-        password = os.environ.get('HOTSPOT_PASSWORD', '')
+        password = os.environ.get('HOTSPOT_PASSWORD', '')  # noqa: secret
         password_file = os.environ.get('HOTSPOT_PASSWORD_FILE')
         if password_file and os.path.exists(password_file):
             try:
                 with open(password_file) as f:
-                    password = f.read().strip()
+                    password = f.read().strip()  # noqa: secret
             except IOError as e:
                 app.logger.error(f"Failed to read password file: {e}")
         if len(password) < 8:
@@ -388,7 +388,7 @@ def hotspot_toggle():
 def hotspot_config():
     data = request.json
     ssid = data.get('ssid', 'TravelRouter')
-    password = data.get('password', '')
+    password = data.get('password', '')  # noqa: secret
     if len(password) < 8:
         return jsonify({'success': False, 'error': 'Password required (8+ chars)'})
     ap_name = 'TravelRouter-AP'

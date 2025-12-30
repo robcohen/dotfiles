@@ -46,10 +46,23 @@ repos:
 
       - id: check-sensitive-patterns
         name: Check for sensitive patterns
-        entry: bash -c 'if grep -l -i "password\s*=.*[^#]\|api_key\s*=.*[^#]\|secret\s*=.*[^#]\|token\s*=.*[^#]" "$@" 2>/dev/null | grep -v -E "\.(md|example)$|\.secrets\.baseline|\.pre-commit-config\.yaml"; then echo "Potential credential detected!"; exit 1; fi; exit 0'
+        # Checks for password=, api_key=, secret=, token= patterns
+        # Inline exclusion: add "# noqa: secret" to the line to skip
+        entry: |
+          bash -c 'for file in "$@"; do
+            if grep -i -n "password\s*=\|api_key\s*=\|secret\s*=\|token\s*=" "$file" 2>/dev/null \
+              | grep -v "noqa: secret" \
+              | grep -v -E "^[0-9]+:\s*#" \
+              | grep -q .
+            then
+              echo "$file: Potential credential detected (add # noqa: secret to exclude)"
+              exit 1
+            fi
+          done
+          exit 0' bash
         language: system
         types: [text]
-        exclude: ^(\.env\.example|hosts/|modules/|flake\.nix|\.secrets\.baseline|controld/sync\.sh|tailscale/sync-policy\.sh)
+        exclude: (\.env\.example$|\.secrets\.baseline)
 
       - id: nix-file-validation
         name: Validate Nix files

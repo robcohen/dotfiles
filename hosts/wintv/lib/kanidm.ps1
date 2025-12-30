@@ -108,7 +108,7 @@ function New-KanidmOAuth2Client {
 
         # Get the client secret
         $clientInfo = podman exec kanidm kanidm system oauth2 show-basic-secret $ClientName 2>&1
-        $secret = $clientInfo | Select-String "secret:" | ForEach-Object { $_ -replace '.*secret:\s*', '' }
+        $secret = $clientInfo | Select-String "secret:" | ForEach-Object { $_ -replace '.*secret:\s*', '' } # noqa: secret
 
         if ($secret) {
             Write-Log "  OAuth2 client created successfully" -Level Success
@@ -136,10 +136,10 @@ function New-OAuth2ProxyCookieSecret {
         $bytes = New-Object byte[] 32
         $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
         $rng.GetBytes($bytes)
-        $secret = [Convert]::ToBase64String($bytes)
+        $secret = [Convert]::ToBase64String($bytes) # noqa: secret
 
         Write-Log "  Cookie secret generated" -Level Success
-        Write-Log "  OAUTH2_PROXY_COOKIE_SECRET=$secret" -Level Warning
+        Write-Log "  OAUTH2_PROXY_COOKIE_SECRET=$secret" -Level Warning # noqa: secret
         Write-Log "  Add this to your .env file" -Level Warning
 
         return $secret
@@ -185,8 +185,8 @@ function Show-KanidmSetupInstructions {
 
 7. Update your .env file:
    DOMAIN=$domain
-   OAUTH2_PROXY_CLIENT_SECRET=<secret from step 5>
-   OAUTH2_PROXY_COOKIE_SECRET=<secret from step 6>
+   OAUTH2_PROXY_CLIENT_SECRET=<secret from step 5>  # noqa: secret
+   OAUTH2_PROXY_COOKIE_SECRET=<secret from step 6>  # noqa: secret
 
 8. Create a user account:
    podman exec -it kanidm kanidm login -D idm_admin
@@ -215,7 +215,7 @@ function Initialize-Kanidm {
     }
 
     # Generate cookie secret for oauth2-proxy
-    $cookieSecret = New-OAuth2ProxyCookieSecret
+    $cookieSecret = New-OAuth2ProxyCookieSecret # noqa: secret
     if ($cookieSecret) {
         Write-Log "  Don't forget to add OAUTH2_PROXY_COOKIE_SECRET to your .env file" -Level Warning
     }

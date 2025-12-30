@@ -87,14 +87,14 @@ get_token() {
 
 # Get current policy
 get_current_policy() {
-  local token="$1"
+  local token="$1" # noqa: secret
   curl -s "https://api.tailscale.com/api/v2/tailnet/${TS_TAILNET}/acl" \
     -H "Authorization: Bearer ${token}"
 }
 
 # Validate policy (dry-run)
 validate_policy() {
-  local token="$1"
+  local token="$1" # noqa: secret
   local policy_file="$2"
   echo -e "${YELLOW}Validating policy...${NC}"
 
@@ -129,7 +129,7 @@ validate_policy() {
 
 # Apply policy
 apply_policy() {
-  local token="$1"
+  local token="$1" # noqa: secret
   local policy_file="$2"
   echo -e "${YELLOW}Applying policy...${NC}"
 
@@ -165,7 +165,7 @@ normalize_json() {
 # Show diff between current and new policy
 # Returns 0 if there are changes, 1 if no changes
 show_diff() {
-  local token="$1"
+  local token="$1" # noqa: secret
   local policy_file="$2"
 
   local current
@@ -209,7 +209,7 @@ main() {
   trap "rm -f '$processed_policy'" EXIT
 
   local token
-  token=$(get_token)
+  token=$(get_token) # noqa: secret
   if [[ -z "$token" || "$token" == "null" ]]; then
     echo -e "${RED}Failed to get OAuth token${NC}"
     exit 1

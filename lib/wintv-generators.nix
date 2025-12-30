@@ -13,80 +13,99 @@ let
   # Use nixpkgs YAML generator for proper formatting
   yamlFormat = pkgs.formats.yaml { };
 
-in rec {
+in
+rec {
 
   # ===========================================================================
   # Docker Compose Generator
   # ===========================================================================
-  generateDockerCompose = cfg:
+  generateDockerCompose =
+    cfg:
     let
       # Only include containers explicitly enabled (c.enable defaults to false via mkEnableOption)
       enabledContainers = lib.filterAttrs (_: c: c.enable) cfg.containers;
 
       # Validate that all dependsOn references point to existing containers
       containerNames = lib.attrNames enabledContainers;
-      validateDependsOn = name: container:
+      validateDependsOn =
+        name: container:
         let
-          invalidDeps = lib.filter (dep: !(lib.elem dep containerNames)) (container.dependsOn or []);
+          invalidDeps = lib.filter (dep: !(lib.elem dep containerNames)) (container.dependsOn or [ ]);
         in
-          if invalidDeps != [] then
-            throw "Container '${name}' depends on non-existent containers: ${lib.concatStringsSep ", " invalidDeps}. Available: ${lib.concatStringsSep ", " containerNames}"
-          else true;
+        if invalidDeps != [ ] then
+          throw "Container '${name}' depends on non-existent containers: ${lib.concatStringsSep ", " invalidDeps}. Available: ${lib.concatStringsSep ", " containerNames}"
+        else
+          true;
       # Force evaluation of all dependency checks
       _ = lib.mapAttrs validateDependsOn enabledContainers;
 
       # Convert short volume syntax to long form for Windows compatibility
       # "C:/path:/container:ro" -> { type = "bind"; source = "C:/path"; target = "/container"; read_only = true; }
-      parseVolume = vol:
+      parseVolume =
+        vol:
         let
           # Split on colon but handle Windows drive letters (C:)
           parts = lib.splitString ":" vol;
           numParts = lib.length parts;
           # Validate minimum parts (source:target = 2 for Unix, 3 for Windows with drive letter)
           # If first part is a single letter (drive), combine with second part
-          isWindowsDrive = numParts >= 2 && lib.stringLength (lib.elemAt parts 0) == 1
+          isWindowsDrive =
+            numParts >= 2
+            && lib.stringLength (lib.elemAt parts 0) == 1
             && builtins.match "[A-Za-z]" (lib.elemAt parts 0) != null;
           # Calculate indices with bounds checking
           sourceEndIdx = if isWindowsDrive then 1 else 0;
           targetIdx = if isWindowsDrive then 2 else 1;
           optIdx = if isWindowsDrive then 3 else 2;
           # Safely extract values with fallbacks
-          source = if isWindowsDrive && numParts > 1
-            then "${lib.elemAt parts 0}:${lib.elemAt parts 1}"
-            else if numParts > 0 then lib.elemAt parts 0 else vol;
-          target = if numParts > targetIdx
-            then lib.elemAt parts targetIdx
-            else "/unknown";  # Fallback for malformed volume
+          source =
+            if isWindowsDrive && numParts > 1 then
+              "${lib.elemAt parts 0}:${lib.elemAt parts 1}"
+            else if numParts > 0 then
+              lib.elemAt parts 0
+            else
+              vol;
+          target = if numParts > targetIdx then lib.elemAt parts targetIdx else "/unknown"; # Fallback for malformed volume
           hasOpts = numParts > optIdx;
           opts = if hasOpts then lib.elemAt parts optIdx else "";
         in
-          # Return empty attrs for completely invalid volumes (will be filtered or cause clear error)
-          if numParts < 2 then
-            throw "Invalid volume specification '${vol}': expected format 'source:target[:options]'"
-          else {
+        # Return empty attrs for completely invalid volumes (will be filtered or cause clear error)
+        if numParts < 2 then
+          throw "Invalid volume specification '${vol}': expected format 'source:target[:options]'"
+        else
+          {
             type = "bind";
             inherit source target;
-          } // lib.optionalAttrs (opts == "ro") {
+          }
+          // lib.optionalAttrs (opts == "ro") {
             read_only = true;
           };
 
-      mkService = name: container: {
-        image = container.image;
-        container_name = name;
-        restart = container.restart or "unless-stopped";
-      } // lib.optionalAttrs (container.ports or [] != []) {
-        ports = container.ports;
-      } // lib.optionalAttrs (container.volumes or [] != []) {
-        volumes = map parseVolume container.volumes;
-      } // lib.optionalAttrs (container.environment or {} != {}) {
-        environment = lib.mapAttrsToList (k: v: "${k}=${toString v}") (container.environment or {});
-      } // lib.optionalAttrs (container.gpu or false) {
-        devices = [ "nvidia.com/gpu=all" ];
-      } // lib.optionalAttrs (container.dependsOn or [] != []) {
-        depends_on = container.dependsOn;
-      } // lib.optionalAttrs (container.tmpfs or [] != []) {
-        tmpfs = container.tmpfs;
-      };
+      mkService =
+        name: container:
+        {
+          image = container.image;
+          container_name = name;
+          restart = container.restart or "unless-stopped";
+        }
+        // lib.optionalAttrs (container.ports or [ ] != [ ]) {
+          ports = container.ports;
+        }
+        // lib.optionalAttrs (container.volumes or [ ] != [ ]) {
+          volumes = map parseVolume container.volumes;
+        }
+        // lib.optionalAttrs (container.environment or { } != { }) {
+          environment = lib.mapAttrsToList (k: v: "${k}=${toString v}") (container.environment or { });
+        }
+        // lib.optionalAttrs (container.gpu or false) {
+          devices = [ "nvidia.com/gpu=all" ];
+        }
+        // lib.optionalAttrs (container.dependsOn or [ ] != [ ]) {
+          depends_on = container.dependsOn;
+        }
+        // lib.optionalAttrs (container.tmpfs or [ ] != [ ]) {
+          tmpfs = container.tmpfs;
+        };
 
       compose = {
         # Header comment via x- extension (supported by docker-compose)
@@ -94,12 +113,13 @@ in rec {
         services = lib.mapAttrs mkService enabledContainers;
       };
     in
-      yamlFormat.generate "docker-compose.yml" compose;
+    yamlFormat.generate "docker-compose.yml" compose;
 
   # ===========================================================================
   # WinGet Configuration (DSC) Generator
   # ===========================================================================
-  generateWingetConfig = cfg:
+  generateWingetConfig =
+    cfg:
     let
       # Windows Optional Features
       featureResources = map (feature: {
@@ -110,17 +130,17 @@ in rec {
           Name = feature;
           Ensure = "Present";
         };
-      }) (cfg.windows.features or []);
+      }) (cfg.windows.features or [ ]);
 
       # WinGet Packages
       packageResources = map (pkg: {
         resource = "Microsoft.WinGet.DSC/WinGetPackage";
-        id = "pkg-${lib.replaceStrings ["."] ["-"] (lib.toLower pkg)}";
+        id = "pkg-${lib.replaceStrings [ "." ] [ "-" ] (lib.toLower pkg)}";
         directives.allowPrerelease = true;
         settings = {
           id = pkg;
         };
-      }) (cfg.windows.packages or []);
+      }) (cfg.windows.packages or [ ]);
 
       # Firewall Rules
       firewallResources = lib.mapAttrsToList (name: rule: {
@@ -135,7 +155,7 @@ in rec {
           Protocol = rule.protocol or "TCP";
           Ensure = "Present";
         };
-      }) (cfg.windows.firewall.rules or {});
+      }) (cfg.windows.firewall.rules or { });
 
       config = {
         "$schema" = "https://aka.ms/configuration-dsc-schema/0.2";
@@ -145,12 +165,13 @@ in rec {
         };
       };
     in
-      yamlFormat.generate "configuration.dsc.yaml" config;
+    yamlFormat.generate "configuration.dsc.yaml" config;
 
   # ===========================================================================
   # Kanidm Server Config Generator
   # ===========================================================================
-  generateKanidmConfig = cfg:
+  generateKanidmConfig =
+    cfg:
     pkgs.writeText "kanidm-server.toml" ''
       # Generated by Nix - do not edit manually
       # Source: hosts/wintv/config.nix
@@ -172,7 +193,8 @@ in rec {
   # Prowlarr Config Generator
   # ===========================================================================
   # API key placeholder is replaced at deploy time with derived key
-  generateProwlarrConfig = cfg:
+  generateProwlarrConfig =
+    cfg:
     pkgs.writeText "config.xml" ''
       <Config>
         <BindAddress>*</BindAddress>
@@ -193,7 +215,8 @@ in rec {
   # ===========================================================================
   # Radarr Config Generator
   # ===========================================================================
-  generateRadarrConfig = cfg:
+  generateRadarrConfig =
+    cfg:
     pkgs.writeText "config.xml" ''
       <Config>
         <BindAddress>*</BindAddress>
@@ -214,7 +237,8 @@ in rec {
   # ===========================================================================
   # Sonarr Config Generator
   # ===========================================================================
-  generateSonarrConfig = cfg:
+  generateSonarrConfig =
+    cfg:
     pkgs.writeText "config.xml" ''
       <Config>
         <BindAddress>*</BindAddress>
@@ -235,7 +259,8 @@ in rec {
   # ===========================================================================
   # Lidarr Config Generator
   # ===========================================================================
-  generateLidarrConfig = cfg:
+  generateLidarrConfig =
+    cfg:
     pkgs.writeText "config.xml" ''
       <Config>
         <BindAddress>*</BindAddress>
@@ -256,7 +281,8 @@ in rec {
   # ===========================================================================
   # Readarr Config Generator
   # ===========================================================================
-  generateReadarrConfig = cfg:
+  generateReadarrConfig =
+    cfg:
     pkgs.writeText "config.xml" ''
       <Config>
         <BindAddress>*</BindAddress>
@@ -277,14 +303,15 @@ in rec {
   # ===========================================================================
   # Bazarr Config Generator (YAML format)
   # ===========================================================================
-  generateBazarrConfig = cfg:
+  generateBazarrConfig =
+    cfg:
     let
       config = {
         general = {
           ip = "0.0.0.0";
           port = 6767;
           base_url = "";
-          path_mappings = [];
+          path_mappings = [ ];
           debug = false;
           branch = "master";
           auto_update = false;
@@ -314,12 +341,13 @@ in rec {
         };
       };
     in
-      yamlFormat.generate "config.yaml" config;
+    yamlFormat.generate "config.yaml" config;
 
   # ===========================================================================
   # qBittorrent Config Generator (INI format)
   # ===========================================================================
-  generateQBittorrentConfig = cfg:
+  generateQBittorrentConfig =
+    cfg:
     let
       mediaPath = cfg.paths.media or "C:\\Media";
       downloadPath = "${mediaPath}\\Downloads";
@@ -356,7 +384,8 @@ in rec {
   # ===========================================================================
   # Jellyfin System Config Generator
   # ===========================================================================
-  generateJellyfinSystemConfig = cfg:
+  generateJellyfinSystemConfig =
+    cfg:
     pkgs.writeText "system.xml" ''
       <?xml version="1.0" encoding="utf-8"?>
       <ServerConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -391,7 +420,8 @@ in rec {
   # ===========================================================================
   # Jellyfin Network Config Generator
   # ===========================================================================
-  generateJellyfinNetworkConfig = cfg:
+  generateJellyfinNetworkConfig =
+    cfg:
     pkgs.writeText "network.xml" ''
       <?xml version="1.0" encoding="utf-8"?>
       <NetworkConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -418,7 +448,8 @@ in rec {
   # ===========================================================================
   # Deploy Script Generator
   # ===========================================================================
-  generateDeployScript = cfg:
+  generateDeployScript =
+    cfg:
     let
       # Appliance mode settings
       autoLoginEnabled = cfg.windows.autoLogin.enable or false;
@@ -445,7 +476,14 @@ in rec {
       kodiVideoHdr = cfg.kodi.video.hdr or true;
       kodiVideoRefresh = cfg.kodi.video.refreshRateMatching or "always";
       kodiAudioPassthrough = cfg.kodi.audio.passthrough or true;
-      kodiAudioFormats = cfg.kodi.audio.formats or [ "ac3" "eac3" "truehd" "dts" "dtshd" ];
+      kodiAudioFormats =
+        cfg.kodi.audio.formats or [
+          "ac3"
+          "eac3"
+          "truehd"
+          "dts"
+          "dtshd"
+        ];
       kodiSkin = cfg.kodi.ui.skin or "arctic-horizon-2";
       kodiStartWindow = cfg.kodi.ui.startWindow or "home";
       kodiScreensaverTimeout = cfg.kodi.ui.screensaverTimeout or 5;
@@ -474,7 +512,11 @@ in rec {
       syncDeleteAfterPs = if syncDeleteAfter then psTrue else psFalse;
 
       # +2 for service configs and arr-setup
-      totalSteps = 5 + (if hasApplianceConfig then 1 else 0) + (if kodiEnabled then 1 else 0) + (if rcloneEnabled then 1 else 0);
+      totalSteps =
+        5
+        + (if hasApplianceConfig then 1 else 0)
+        + (if kodiEnabled then 1 else 0)
+        + (if rcloneEnabled then 1 else 0);
     in
     pkgs.writeText "deploy.ps1" ''
       # Generated by Nix - do not edit manually
@@ -737,136 +779,154 @@ in rec {
       }
 
       ${lib.optionalString hasApplianceConfig ''
-      # ===========================================================================
-      # Step ${toString (5 + 1)}: Configure Appliance Mode
-      # ===========================================================================
-      Write-Host ""
-      Write-Host "[${toString (5 + 1)}/${toString totalSteps}] Configuring appliance mode..." -ForegroundColor Yellow
+        # ===========================================================================
+        # Step ${toString (5 + 1)}: Configure Appliance Mode
+        # ===========================================================================
+        Write-Host ""
+        Write-Host "[${toString (5 + 1)}/${toString totalSteps}] Configuring appliance mode..." -ForegroundColor Yellow
 
-      # Source the appliance configuration script
-      $applianceScript = Join-Path $ScriptDir "lib\appliance.ps1"
-      if (Test-Path $applianceScript) {
-          . $applianceScript
+        # Source the appliance configuration script
+        $applianceScript = Join-Path $ScriptDir "lib\appliance.ps1"
+        if (Test-Path $applianceScript) {
+            . $applianceScript
 
-          $applianceConfig = @{
-              AutoLogin = @{
-                  Enable = ${autoLoginEnabledPs}
-                  Username = "${autoLoginUser}"
-              }
-              Kiosk = @{
-                  Enable = ${kioskEnabledPs}
-                  Application = "${kioskApp}"
-                  CustomCommand = "${kioskCustomCmd}"
-              }
-              PodmanSystemService = ${podmanSystemSvcPs}
-          }
+            $applianceConfig = @{
+                AutoLogin = @{
+                    Enable = ${autoLoginEnabledPs}
+                    Username = "${autoLoginUser}"
+                }
+                Kiosk = @{
+                    Enable = ${kioskEnabledPs}
+                    Application = "${kioskApp}"
+                    CustomCommand = "${kioskCustomCmd}"
+                }
+                PodmanSystemService = ${podmanSystemSvcPs}
+            }
 
-          if (-not $DryRun) {
-              Initialize-ApplianceMode -Config $applianceConfig
-          } else {
-              Write-Host "  DRY RUN: Would configure appliance mode" -ForegroundColor Magenta
-              Write-Host "    Auto-login: ${if autoLoginEnabled then "enabled for ${autoLoginUser}" else "disabled"}" -ForegroundColor Magenta
-              Write-Host "    Kiosk app: ${if kioskEnabled then kioskApp else "disabled"}" -ForegroundColor Magenta
-              Write-Host "    Podman service: ${if podmanSystemSvc then "enabled" else "disabled"}" -ForegroundColor Magenta
-          }
-      } else {
-          Write-Host "  WARNING: appliance.ps1 not found in lib/" -ForegroundColor Yellow
-      }
+            if (-not $DryRun) {
+                Initialize-ApplianceMode -Config $applianceConfig
+            } else {
+                Write-Host "  DRY RUN: Would configure appliance mode" -ForegroundColor Magenta
+                Write-Host "    Auto-login: ${
+                  if autoLoginEnabled then "enabled for ${autoLoginUser}" else "disabled"
+                }" -ForegroundColor Magenta
+                Write-Host "    Kiosk app: ${
+                  if kioskEnabled then kioskApp else "disabled"
+                }" -ForegroundColor Magenta
+                Write-Host "    Podman service: ${
+                  if podmanSystemSvc then "enabled" else "disabled"
+                }" -ForegroundColor Magenta
+            }
+        } else {
+            Write-Host "  WARNING: appliance.ps1 not found in lib/" -ForegroundColor Yellow
+        }
       ''}
 
       ${lib.optionalString kodiEnabled ''
-      # ===========================================================================
-      # Step ${toString (5 + (if hasApplianceConfig then 1 else 0) + 1)}: Configure Kodi Media Center
-      # ===========================================================================
-      Write-Host ""
-      Write-Host "[${toString (5 + (if hasApplianceConfig then 1 else 0) + 1)}/${toString totalSteps}] Configuring Kodi..." -ForegroundColor Yellow
+        # ===========================================================================
+        # Step ${toString (5 + (if hasApplianceConfig then 1 else 0) + 1)}: Configure Kodi Media Center
+        # ===========================================================================
+        Write-Host ""
+        Write-Host "[${
+          toString (5 + (if hasApplianceConfig then 1 else 0) + 1)
+        }/${toString totalSteps}] Configuring Kodi..." -ForegroundColor Yellow
 
-      # Source the Kodi configuration script
-      $kodiScript = Join-Path $ScriptDir "lib\kodi.ps1"
-      if (Test-Path $kodiScript) {
-          . $kodiScript
+        # Source the Kodi configuration script
+        $kodiScript = Join-Path $ScriptDir "lib\kodi.ps1"
+        if (Test-Path $kodiScript) {
+            . $kodiScript
 
-          $kodiConfig = @{
-              Jellyfin = @{
-                  Enable = ${kodiJellyfinEnabledPs}
-                  ServerUrl = "${kodiJellyfinUrl}"
-                  SyncMode = "${kodiJellyfinSync}"
-              }
-              Video = @{
-                  Resolution = "${kodiVideoRes}"
-                  Hdr = ${kodiVideoHdrPs}
-                  RefreshRateMatching = "${kodiVideoRefresh}"
-              }
-              Audio = @{
-                  Passthrough = ${kodiAudioPassthroughPs}
-                  Formats = @(${lib.concatMapStringsSep ", " (f: "\"${f}\"") kodiAudioFormats})
-              }
-              UI = @{
-                  Skin = "${kodiSkin}"
-                  StartWindow = "${kodiStartWindow}"
-                  Screensaver = "screensaver.xbmc.builtin.dim"
-                  ScreensaverTimeout = ${toString kodiScreensaverTimeout}
-              }
-              Performance = @{
-                  BufferSize = ${toString kodiBufferSize}
-                  ReadFactor = ${toString kodiReadFactor}
-              }
-          }
+            $kodiConfig = @{
+                Jellyfin = @{
+                    Enable = ${kodiJellyfinEnabledPs}
+                    ServerUrl = "${kodiJellyfinUrl}"
+                    SyncMode = "${kodiJellyfinSync}"
+                }
+                Video = @{
+                    Resolution = "${kodiVideoRes}"
+                    Hdr = ${kodiVideoHdrPs}
+                    RefreshRateMatching = "${kodiVideoRefresh}"
+                }
+                Audio = @{
+                    Passthrough = ${kodiAudioPassthroughPs}
+                    Formats = @(${lib.concatMapStringsSep ", " (f: "\"${f}\"") kodiAudioFormats})
+                }
+                UI = @{
+                    Skin = "${kodiSkin}"
+                    StartWindow = "${kodiStartWindow}"
+                    Screensaver = "screensaver.xbmc.builtin.dim"
+                    ScreensaverTimeout = ${toString kodiScreensaverTimeout}
+                }
+                Performance = @{
+                    BufferSize = ${toString kodiBufferSize}
+                    ReadFactor = ${toString kodiReadFactor}
+                }
+            }
 
-          if (-not $DryRun) {
-              Initialize-Kodi -Config $kodiConfig
-          } else {
-              Write-Host "  DRY RUN: Would configure Kodi" -ForegroundColor Magenta
-              Write-Host "    Jellyfin: ${kodiJellyfinUrl}" -ForegroundColor Magenta
-              Write-Host "    Skin: ${kodiSkin}" -ForegroundColor Magenta
-              Write-Host "    Video: ${kodiVideoRes} HDR=${if kodiVideoHdr then "yes" else "no"}" -ForegroundColor Magenta
-              Write-Host "    Audio passthrough: ${if kodiAudioPassthrough then "enabled" else "disabled"}" -ForegroundColor Magenta
-          }
-      } else {
-          Write-Host "  WARNING: kodi.ps1 not found in lib/" -ForegroundColor Yellow
-      }
+            if (-not $DryRun) {
+                Initialize-Kodi -Config $kodiConfig
+            } else {
+                Write-Host "  DRY RUN: Would configure Kodi" -ForegroundColor Magenta
+                Write-Host "    Jellyfin: ${kodiJellyfinUrl}" -ForegroundColor Magenta
+                Write-Host "    Skin: ${kodiSkin}" -ForegroundColor Magenta
+                Write-Host "    Video: ${kodiVideoRes} HDR=${
+                  if kodiVideoHdr then "yes" else "no"
+                }" -ForegroundColor Magenta
+                Write-Host "    Audio passthrough: ${
+                  if kodiAudioPassthrough then "enabled" else "disabled"
+                }" -ForegroundColor Magenta
+            }
+        } else {
+            Write-Host "  WARNING: kodi.ps1 not found in lib/" -ForegroundColor Yellow
+        }
       ''}
 
       ${lib.optionalString rcloneEnabled ''
-      # ===========================================================================
-      # Step ${toString (5 + (if hasApplianceConfig then 1 else 0) + (if kodiEnabled then 1 else 0) + 1)}: Configure Rclone Cloud Storage
-      # ===========================================================================
-      Write-Host ""
-      Write-Host "[${toString (5 + (if hasApplianceConfig then 1 else 0) + (if kodiEnabled then 1 else 0) + 1)}/${toString totalSteps}] Configuring rclone cloud storage..." -ForegroundColor Yellow
+        # ===========================================================================
+        # Step ${
+          toString (5 + (if hasApplianceConfig then 1 else 0) + (if kodiEnabled then 1 else 0) + 1)
+        }: Configure Rclone Cloud Storage
+        # ===========================================================================
+        Write-Host ""
+        Write-Host "[${
+          toString (5 + (if hasApplianceConfig then 1 else 0) + (if kodiEnabled then 1 else 0) + 1)
+        }/${toString totalSteps}] Configuring rclone cloud storage..." -ForegroundColor Yellow
 
-      # Source the rclone configuration script
-      $rcloneScript = Join-Path $ScriptDir "lib\rclone.ps1"
-      if (Test-Path $rcloneScript) {
-          . $rcloneScript
+        # Source the rclone configuration script
+        $rcloneScript = Join-Path $ScriptDir "lib\rclone.ps1"
+        if (Test-Path $rcloneScript) {
+            . $rcloneScript
 
-          $rcloneConfig = @{
-              PutIO = @{
-                  Enable = ${putioEnabledPs}
-                  MountDrive = "${putioMountDrive}"
-                  UnionDrive = "${putioUnionDrive}"
-              }
-              Sync = @{
-                  Enable = ${syncEnabledPs}
-                  Destination = "${syncDestination}"
-                  IntervalMinutes = ${toString syncIntervalMinutes}
-                  MinAge = "${syncMinAge}"
-                  DeleteAfterSync = ${syncDeleteAfterPs}
-              }
-          }
+            $rcloneConfig = @{
+                PutIO = @{
+                    Enable = ${putioEnabledPs}
+                    MountDrive = "${putioMountDrive}"
+                    UnionDrive = "${putioUnionDrive}"
+                }
+                Sync = @{
+                    Enable = ${syncEnabledPs}
+                    Destination = "${syncDestination}"
+                    IntervalMinutes = ${toString syncIntervalMinutes}
+                    MinAge = "${syncMinAge}"
+                    DeleteAfterSync = ${syncDeleteAfterPs}
+                }
+            }
 
-          if (-not $DryRun) {
-              Initialize-Rclone -Config $rcloneConfig
-          } else {
-              Write-Host "  DRY RUN: Would configure rclone" -ForegroundColor Magenta
-              Write-Host "    Put.io mount: ${putioMountDrive}:\" -ForegroundColor Magenta
-              Write-Host "    Union mount: ${putioUnionDrive}:\ (local + remote)" -ForegroundColor Magenta
-              Write-Host "    Sync to: ${syncDestination}" -ForegroundColor Magenta
-              Write-Host "    Sync interval: ${toString syncIntervalMinutes} min" -ForegroundColor Magenta
-              Write-Host "    Delete after sync: ${if syncDeleteAfter then "yes" else "no"}" -ForegroundColor Magenta
-          }
-      } else {
-          Write-Host "  WARNING: rclone.ps1 not found in lib/" -ForegroundColor Yellow
-      }
+            if (-not $DryRun) {
+                Initialize-Rclone -Config $rcloneConfig
+            } else {
+                Write-Host "  DRY RUN: Would configure rclone" -ForegroundColor Magenta
+                Write-Host "    Put.io mount: ${putioMountDrive}:\" -ForegroundColor Magenta
+                Write-Host "    Union mount: ${putioUnionDrive}:\ (local + remote)" -ForegroundColor Magenta
+                Write-Host "    Sync to: ${syncDestination}" -ForegroundColor Magenta
+                Write-Host "    Sync interval: ${toString syncIntervalMinutes} min" -ForegroundColor Magenta
+                Write-Host "    Delete after sync: ${
+                  if syncDeleteAfter then "yes" else "no"
+                }" -ForegroundColor Magenta
+            }
+        } else {
+            Write-Host "  WARNING: rclone.ps1 not found in lib/" -ForegroundColor Yellow
+        }
       ''}
 
       # ===========================================================================
@@ -887,34 +947,41 @@ in rec {
       Write-Host "  Open WebUI:   http://$Domain:3000"
       Write-Host "  Kanidm:       https://$Domain:8443"
       ${lib.optionalString hasApplianceConfig ''
-      Write-Host ""
-      Write-Host "Appliance mode:" -ForegroundColor Cyan
-      Write-Host "  Auto-login:     ${if autoLoginEnabled then "Enabled (${autoLoginUser})" else "Disabled"}"
-      Write-Host "  Kiosk app:      ${if kioskEnabled then kioskApp else "Disabled"}"
-      Write-Host "  Podman service: ${if podmanSystemSvc then "System service (starts at boot)" else "User process"}"
+        Write-Host ""
+        Write-Host "Appliance mode:" -ForegroundColor Cyan
+        Write-Host "  Auto-login:     ${
+          if autoLoginEnabled then "Enabled (${autoLoginUser})" else "Disabled"
+        }"
+        Write-Host "  Kiosk app:      ${if kioskEnabled then kioskApp else "Disabled"}"
+        Write-Host "  Podman service: ${
+          if podmanSystemSvc then "System service (starts at boot)" else "User process"
+        }"
       ''}
       ${lib.optionalString rcloneEnabled ''
-      Write-Host ""
-      Write-Host "Rclone cloud storage:" -ForegroundColor Cyan
-      Write-Host "  Put.io mount:   ${putioMountDrive}:\\"
-      Write-Host "  Union mount:    ${putioUnionDrive}:\\ (local + remote merged)"
-      Write-Host "  Sync dest:      ${syncDestination}"
-      Write-Host "  Sync interval:  Every ${toString syncIntervalMinutes} minutes"
-      Write-Host "  Auto-delete:    ${if syncDeleteAfter then "Files removed from put.io after sync" else "Files kept on put.io"}"
-      Write-Host ""
-      Write-Host "NOTE: Run 'rclone config' first to set up put.io OAuth!" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "Rclone cloud storage:" -ForegroundColor Cyan
+        Write-Host "  Put.io mount:   ${putioMountDrive}:\\"
+        Write-Host "  Union mount:    ${putioUnionDrive}:\\ (local + remote merged)"
+        Write-Host "  Sync dest:      ${syncDestination}"
+        Write-Host "  Sync interval:  Every ${toString syncIntervalMinutes} minutes"
+        Write-Host "  Auto-delete:    ${
+          if syncDeleteAfter then "Files removed from put.io after sync" else "Files kept on put.io"
+        }"
+        Write-Host ""
+        Write-Host "NOTE: Run 'rclone config' first to set up put.io OAuth!" -ForegroundColor Yellow
       ''}
     '';
 
   # ===========================================================================
   # Build Complete Package
   # ===========================================================================
-  buildWintvConfig = cfg:
+  buildWintvConfig =
+    cfg:
     let
       # Path to wintv lib scripts in the source tree
       wintvLibPath = ../hosts/wintv/lib;
     in
-    pkgs.runCommand "wintv-config" {} ''
+    pkgs.runCommand "wintv-config" { } ''
       mkdir -p $out/lib
       mkdir -p $out/configs/{Prowlarr,Radarr,Sonarr,Lidarr,Readarr,Bazarr,qBittorrent,Jellyfin}
 

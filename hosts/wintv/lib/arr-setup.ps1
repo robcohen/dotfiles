@@ -130,7 +130,7 @@ function Add-DownloadClient {
         [string]$QBitHost = "localhost",
         [int]$QBitPort = 8080,
         [string]$QBitUser = "admin",
-        [string]$QBitPassword = ""
+        [string]$QBitPassword = "" # noqa: secret
     )
 
     $headers = @{
@@ -171,7 +171,7 @@ function Add-DownloadClient {
             @{ name = "port"; value = $QBitPort }
             @{ name = "useSsl"; value = $false }
             @{ name = "username"; value = $QBitUser }
-            @{ name = "password"; value = $QBitPassword }
+            @{ name = "password"; value = $QBitPassword } # noqa: secret
             @{ name = "movieCategory"; value = $category }
             @{ name = "tvCategory"; value = $category }
             @{ name = "musicCategory"; value = $category }
@@ -257,7 +257,7 @@ function Initialize-JellyfinUsers {
         [string]$AdminPassword,
 
         [string]$RegularUser = "user",
-        [string]$RegularPassword = "user"
+        [string]$RegularPassword = "user" # noqa: secret
     )
 
     Write-Host "  Configuring Jellyfin users..." -ForegroundColor Yellow
@@ -294,7 +294,7 @@ function Initialize-JellyfinUsers {
         # Create admin user
         $adminBody = @{
             Name = "admin"
-            Password = $AdminPassword
+            Password = $AdminPassword # noqa: secret
         } | ConvertTo-Json
 
         Invoke-RestMethod -Uri "$JellyfinUrl/Startup/User" -Method Post -Body $adminBody -ContentType "application/json" | Out-Null
@@ -321,16 +321,16 @@ function Initialize-JellyfinUsers {
         }
 
         $authResponse = Invoke-RestMethod -Uri "$JellyfinUrl/Users/AuthenticateByName" -Method Post -Body $authBody -ContentType "application/json" -Headers $authHeaders
-        $accessToken = $authResponse.AccessToken
+        $accessToken = $authResponse.AccessToken # noqa: secret
 
         # Create regular user
         $userHeaders = @{
-            "X-Emby-Authorization" = "MediaBrowser Client=`"WinTV Setup`", Device=`"PowerShell`", DeviceId=`"wintv-setup`", Version=`"1.0`", Token=`"$accessToken`""
+            "X-Emby-Authorization" = "MediaBrowser Client=`"WinTV Setup`", Device=`"PowerShell`", DeviceId=`"wintv-setup`", Version=`"1.0`", Token=`"$accessToken`"" # noqa: secret
         }
 
         $userBody = @{
             Name = $RegularUser
-            Password = $RegularPassword
+            Password = $RegularPassword # noqa: secret
         } | ConvertTo-Json
 
         Invoke-RestMethod -Uri "$JellyfinUrl/Users/New" -Method Post -Body $userBody -ContentType "application/json" -Headers $userHeaders | Out-Null
@@ -392,7 +392,7 @@ function Initialize-ArrStack {
 
     # Configure download clients
     Write-Host "  Configuring download clients..." -ForegroundColor Yellow
-    $qbitPassword = $env:ADMIN_PASSWORD
+    $qbitPassword = $env:ADMIN_PASSWORD # noqa: secret
     Add-DownloadClient -ServiceUrl $radarrUrl -ApiKey $apiKeys.Radarr -ServiceType "Radarr" -QBitPassword $qbitPassword
     Add-DownloadClient -ServiceUrl $sonarrUrl -ApiKey $apiKeys.Sonarr -ServiceType "Sonarr" -QBitPassword $qbitPassword
     Add-DownloadClient -ServiceUrl $lidarrUrl -ApiKey $apiKeys.Lidarr -ServiceType "Lidarr" -QBitPassword $qbitPassword

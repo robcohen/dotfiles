@@ -33,7 +33,7 @@
   programs.zsh.enable = true;
 
   users.users.user = let
-    hasSopsPassword = config ? sops && config.sops.secrets ? "user/hashedPassword";
+    hasSopsPassword = config ? sops && config.sops.secrets ? "user/hashedPassword"; # noqa: secret
     envPasswordHash = builtins.getEnv "USER_PASSWORD_HASH";
   in {
     isNormalUser = true;
@@ -42,7 +42,7 @@
     # Password priority: 1) SOPS secret, 2) env var hash, 3) no password (SSH only)
     hashedPasswordFile = lib.mkIf hasSopsPassword
       config.sops.secrets."user/hashedPassword".path;
-    initialHashedPassword = lib.mkIf (!hasSopsPassword && envPasswordHash != "")
+    initialHashedPassword = lib.mkIf (!hasSopsPassword && envPasswordHash != "") # noqa: secret
       envPasswordHash;
     # Note: If neither SOPS nor env var is set, user has no password (SSH key required)
     openssh.authorizedKeys.keys = [

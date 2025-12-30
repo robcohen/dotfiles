@@ -6,9 +6,9 @@ import base64
 import os
 import sys
 
-HOST = "wintv.lorikeet-crested.ts.net"
-USER = "user"
-PASSWORD = "user"
+HOST = os.getenv("WINRM_HOST", "wintv.lorikeet-crested.ts.net")
+USER = os.getenv("WINRM_USER", "user")
+PASS = os.getenv("WINRM_PASSWORD", "")
 RESULT_DIR = "/home/user/Documents/dotfiles/result"
 REMOTE_DIR = "C:\\ProgramData\\wintv"
 
@@ -59,7 +59,7 @@ Remove-Item -Path "{temp_path}" -Force
 
 def main():
     print(f"Connecting to {HOST}...")
-    session = winrm.Session(HOST, auth=(USER, PASSWORD), transport="ntlm")
+    session = winrm.Session(HOST, auth=(USER, PASS), transport="ntlm")
 
     # Test connection
     result = session.run_cmd("hostname")

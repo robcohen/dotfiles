@@ -7,7 +7,7 @@ let
   userHome = config.users.users.${cfg.username}.home or "/home/${cfg.username}";
 
   # Helper for standard root-owned secrets
-  mkRootSecret = extra: {
+  mkRootSecret = extra: { # noqa: secret
     owner = "root";
     group = "root";
     mode = "0400";

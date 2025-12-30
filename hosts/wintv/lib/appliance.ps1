@@ -36,7 +36,7 @@ function Set-AutoLogin {
     Set-ItemProperty -Path $regPath -Name "DefaultDomainName" -Value $env:COMPUTERNAME
 
     # Prompt for password if not already configured
-    $existingPassword = Get-ItemProperty -Path $regPath -Name "DefaultPassword" -ErrorAction SilentlyContinue
+    $existingPassword = Get-ItemProperty -Path $regPath -Name "DefaultPassword" -ErrorAction SilentlyContinue # noqa: secret
     if (-not $existingPassword) {
         Write-Host ""
         Write-Host "  NOTE: You need to set the password for auto-login." -ForegroundColor Cyan

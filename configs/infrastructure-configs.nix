@@ -2,6 +2,16 @@
 # Standard configurations that can be imported by infrastructure repos
 { pkgs, lib, ... }:
 
+let
+  # Common environment variables (defined here so direnvTemplate can reference it)
+  environmentVariables = {
+    KUBECONFIG = "$HOME/.kube/config";
+    TALOSCONFIG = "$HOME/.talos/config";
+    TERRAFORM_LOG = "WARN";
+    HELM_CACHE_HOME = "$HOME/.cache/helm";
+    ARGOCD_OPTS = "--insecure";
+  };
+in
 {
   # Standard kubectl configuration template
   kubectlConfig = {
@@ -78,14 +88,8 @@
     argocd = "argocd --insecure";
   };
 
-  # Common environment variables
-  environmentVariables = {
-    KUBECONFIG = "$HOME/.kube/config";
-    TALOSCONFIG = "$HOME/.talos/config";
-    TERRAFORM_LOG = "WARN";
-    HELM_CACHE_HOME = "$HOME/.cache/helm";
-    ARGOCD_OPTS = "--insecure";
-  };
+  # Re-export environment variables for consumers
+  inherit environmentVariables;
 
   # Standard direnv template
   direnvTemplate = ''

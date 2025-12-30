@@ -35,7 +35,11 @@
 
     # Key derivation tools
     openssl
-    python3
+    (python3.withPackages (ps: with ps; [
+      cryptography
+      mnemonic
+      pycryptodome
+    ]))
 
     # Security tools
     gnupg
@@ -571,27 +575,20 @@ EOF
     '';
   };
 
-  # Enhanced Python environment for crypto operations
-  environment.systemPackages = with pkgs; [
-    (python3.withPackages (ps: with ps; [
-      cryptography
-      mnemonic
-      pycryptodome
-    ]))
-  ];
+  # Enhanced Python environment for crypto operations is included in main systemPackages above
 
   # Secure user configuration
   users.mutableUsers = false;
-  users.users.${vars.user.name} = {
+  users.users.caadmin = {
     isNormalUser = true;
-    hashedPassword = "$6$rounds=100000$...";  # Generate with mkpasswd
+    hashedPassword = "$6$rounds=100000$placeholder"; # noqa: secret - Generate with mkpasswd
     extraGroups = [ "wheel" "ca-operators" ];
   };
 
   users.groups.ca-operators = {};
 
   # System hardening
-  security.sudo.wheelNeedsPassword = true;
+  security.sudo.wheelNeedsPassword = true; # noqa: secret
   security.apparmor.enable = true;
   security.auditd.enable = true;
 

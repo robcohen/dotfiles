@@ -81,13 +81,13 @@
   #   3. No password (SSH key required for access)
   users.users.nixtv = let
     envPasswordHash = builtins.getEnv "NIXTV_PASSWORD_HASH";
-    hasSopsPassword = config ? sops && config.sops.secrets ? "nixtv/hashedPassword";
+    hasSopsPassword = config ? sops && config.sops.secrets ? "nixtv/hashedPassword"; # noqa: secret
   in {
     isNormalUser = true;
     description = "nixTV Admin";
     extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" "render" ];
     hashedPasswordFile = lib.mkIf hasSopsPassword config.sops.secrets."nixtv/hashedPassword".path;
-    initialHashedPassword = lib.mkIf (!hasSopsPassword && envPasswordHash != "") envPasswordHash;
+    initialHashedPassword = lib.mkIf (!hasSopsPassword && envPasswordHash != "") envPasswordHash; # noqa: secret
   };
 
   # ==========================================================================
