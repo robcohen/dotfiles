@@ -22,7 +22,7 @@ Windows host running Podman containers for media services, AI/LLM, and identity 
                          │ deploy.ps1 -Apply
                          ▼
 ┌─────────────────────────────────────────────────────────┐
-│  Windows Host (wintv.lorikeet-crested.ts.net)           │
+│  Windows Host (wintv.example.ts.net)           │
 │  └─ Podman containers with GPU passthrough              │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -180,7 +180,7 @@ tailscale set --advertise-tags=tag:personal
 ### 4. Generate TLS Certificates
 
 ```powershell
-$domain = "wintv.lorikeet-crested.ts.net"
+$domain = "wintv.example.ts.net"
 tailscale cert --cert-file "C:\ProgramData\wintv\certs\$domain.crt" `
                --key-file "C:\ProgramData\wintv\certs\$domain.key" $domain
 ```

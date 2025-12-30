@@ -6,6 +6,9 @@
 #   - Container services (media, AI, identity)
 #   - Configuration files
 #
+# Site-specific values (domain, etc.) are in:
+#   infra-private/personal/sites/700-river-st/wintv/values.nix
+#
 # Build with: nix build .#wintv-config
 # Deploy with: ./result/deploy.ps1
 
@@ -27,7 +30,8 @@ in {
     enable = true;
 
     hostname = "wintv";
-    domain = "wintv.lorikeet-crested.ts.net";
+    # TODO: Import from infra-private or set via environment
+    domain = "wintv.example.ts.net"; # Override in site-specific values
     timezone = "America/New_York";
 
     paths = {

@@ -13,7 +13,7 @@
 #   podman-compose down
 #
 # Access (via Tailscale HTTPS):
-#   https://wintv.lorikeet-crested.ts.net/
+#   https://wintv.example.ts.net/
 #
 # Routes:
 #   /jellyfin    - Jellyfin
