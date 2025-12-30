@@ -10,7 +10,7 @@ function Set-FirewallRules {
 
     foreach ($serviceName in $Services.PSObject.Properties.Name) {
         $service = $Services.$serviceName
-        $ruleName = "nixtv-$serviceName"
+        $ruleName = "wintv-$serviceName"
 
         # Remove old rule if it exists (may have wrong settings)
         $existing = Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
@@ -45,7 +45,7 @@ function Set-DnsLeakPreventionRules {
     # Block DNS (port 53) except through Tailscale
     $rules = @(
         @{
-            Name = "nixtv-block-dns-udp"
+            Name = "wintv-block-dns-udp"
             DisplayName = "Block DNS UDP (except Tailscale)"
             Direction = "Outbound"
             Protocol = "UDP"
@@ -54,7 +54,7 @@ function Set-DnsLeakPreventionRules {
             Profile = "Any"
         },
         @{
-            Name = "nixtv-block-dns-tcp"
+            Name = "wintv-block-dns-tcp"
             DisplayName = "Block DNS TCP (except Tailscale)"
             Direction = "Outbound"
             Protocol = "TCP"
@@ -63,7 +63,7 @@ function Set-DnsLeakPreventionRules {
             Profile = "Any"
         },
         @{
-            Name = "nixtv-allow-tailscale-dns"
+            Name = "wintv-allow-tailscale-dns"
             DisplayName = "Allow Tailscale MagicDNS"
             Direction = "Outbound"
             Protocol = "UDP"

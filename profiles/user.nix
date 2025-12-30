@@ -1,14 +1,9 @@
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, inputs, unstable, hostname, username ? "user", ... }:
 
-let
-  # Simple hostname detection with fallback
-  detectedHostname = "brix";  # Hardcode for now to avoid infinite recursion
+# Note: `unstable` is passed via extraSpecialArgs from flake.nix
+# No need to re-import it here
 
-  unstable = import inputs.unstable-nixpkgs {
-    system = pkgs.stdenv.hostPlatform.system;
-    config.allowUnfree = true;
-  };
-in {
+{
   imports = [
     ./host-specific.nix
     ./packages.nix
@@ -62,21 +57,43 @@ in {
     overlays = [ ];
     config = {
       allowUnfree = true;
-      allowUnfreePredicate = _: true;
+      # Curated list of allowed unfree packages (more secure than allowing all)
+      allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+        # Gaming
+        "steam"
+        "steam-original"
+        "steam-run"
+        # Media
+        "spotify"
+        # Communication
+        "slack"
+        "discord"
+        "zoom"
+        # Productivity
+        "obsidian"
+        "1password"
+        "1password-cli"
+        # Hardware
+        "ledger-live-desktop"
+        # Fonts
+        "joypixels"
+        # NVIDIA (for GPU support)
+        "nvidia-x11"
+        "nvidia-settings"
+        "cuda"
+        "cudatoolkit"
+      ];
     };
   };
 
-  # Pass config to other modules
+  # Pass hostname to submodules that need it
   _module.args = {
-    hostname = detectedHostname;
-    hostConfig = {};  # Simplified - no complex host config needed
-    hostFeatures = ["development"];
-    hostType = "desktop";
+    inherit hostname;
   };
 
   home = {
-    username = "user";  # Hardcoded for now - SOPS secrets are system-level
-    homeDirectory = "/home/user";
+    inherit username;
+    homeDirectory = "/home/${username}";
     stateVersion = "23.11";
   };
 
@@ -92,8 +109,8 @@ in {
 
   # Add simple debugging info
   home.file.".config/home-manager/host-info.txt".text = ''
-    Host: ${detectedHostname}
-    Type: desktop
+    Host: ${hostname}
+    User: ${username}
     State Version: 23.11
   '';
 
@@ -132,8 +149,8 @@ in {
   # Shell aliases
   home.shellAliases = {
     # Home Manager
-    hm-switch = "home-manager switch --flake ~/Documents/dotfiles/#user@${detectedHostname}";
-    hm-news = "home-manager news --flake ~/Documents/dotfiles/#user@${detectedHostname}";
+    hm-switch = "home-manager switch --flake ~/Documents/dotfiles/#${username}@${hostname}";
+    hm-news = "home-manager news --flake ~/Documents/dotfiles/#${username}@${hostname}";
     hm-gens = "home-manager generations";
 
     # Security

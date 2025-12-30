@@ -1,4 +1,4 @@
-# hosts/nixtv-server/windows/docker-compose.yml
+# hosts/wintv/docker-compose.yml
 # Media server + AI services running on Windows with Podman
 #
 # Prerequisites:
@@ -12,23 +12,102 @@
 #   podman-compose logs -f
 #   podman-compose down
 #
-# Web UIs (via Tailscale only):
-#   - Homarr:      http://nixtv-win:7575  (Dashboard - start here!)
-#   - Jellyfin:    http://nixtv-win:8096
-#   - Jellyseerr:  http://nixtv-win:5055
-#   - Ollama:      http://nixtv-win:11434
-#   - Open WebUI:  http://nixtv-win:3000
-#   - Radarr:      http://nixtv-win:7878
-#   - Sonarr:      http://nixtv-win:8989
-#   - Prowlarr:    http://nixtv-win:9696
-#   - Lidarr:      http://nixtv-win:8686
-#   - Readarr:     http://nixtv-win:8787
-#   - Bazarr:      http://nixtv-win:6767
-#   - qBittorrent: http://nixtv-win:8080
-#   - Tdarr:       http://nixtv-win:8265
-#   - Uptime Kuma: http://nixtv-win:3001
+# Access (via Tailscale HTTPS):
+#   https://wintv.lorikeet-crested.ts.net/
+#
+# Routes:
+#   /jellyfin    - Jellyfin
+#   /radarr      - Radarr
+#   /sonarr      - Sonarr
+#   /prowlarr    - Prowlarr
+#   /lidarr      - Lidarr
+#   /readarr     - Readarr
+#   /bazarr      - Bazarr
+#   /qbittorrent - qBittorrent
+#   /chat        - Open WebUI
+#   /ollama      - Ollama API
+#   /tdarr       - Tdarr
+#
+# Authentication:
+#   All routes protected by oauth2-proxy forward auth
+#   Login at: https://{DOMAIN}/oauth2/sign_in
+#   Kanidm admin: https://{DOMAIN}:8443
 
 services:
+  # ===========================================================================
+  # Caddy - Reverse proxy with Tailscale HTTPS
+  # ===========================================================================
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - /mnt/c/ProgramData/wintv/Caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /mnt/c/ProgramData/wintv/certs:/certs:ro
+      - /mnt/c/ProgramData/wintv/Caddy/data:/data
+      - /mnt/c/ProgramData/wintv/Caddy/config:/config
+    environment:
+      - TZ=${TZ:-America/New_York}
+    depends_on:
+      - oauth2-proxy
+
+  # ===========================================================================
+  # Kanidm - Identity provider (Rust-based, OIDC/OAuth2)
+  # ===========================================================================
+  kanidm:
+    image: kanidm/server:latest
+    container_name: kanidm
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+    volumes:
+      - /mnt/c/ProgramData/wintv/Kanidm:/data
+      - /mnt/c/ProgramData/wintv/certs:/data/certs:ro
+    tmpfs:
+      - /run/kanidm:rw,size=10m
+    environment:
+      - TZ=${TZ:-America/New_York}
+
+  # ===========================================================================
+  # oauth2-proxy - Forward auth for apps without OIDC support
+  # ===========================================================================
+  # NOTE: No external port exposure - Caddy accesses via docker network (oauth2-proxy:4180)
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:latest
+    container_name: oauth2-proxy
+    restart: unless-stopped
+    # Port 4180 only accessible within docker network (by Caddy)
+    expose:
+      - "4180"
+    environment:
+      - OAUTH2_PROXY_PROVIDER=oidc
+      - OAUTH2_PROXY_PROVIDER_DISPLAY_NAME=Kanidm
+      - OAUTH2_PROXY_CLIENT_ID=oauth2-proxy
+      - OAUTH2_PROXY_CLIENT_SECRET=${OAUTH2_PROXY_CLIENT_SECRET}
+      - OAUTH2_PROXY_REDIRECT_URL=https://${DOMAIN}/oauth2/callback
+      - OAUTH2_PROXY_OIDC_ISSUER_URL=https://kanidm:8443/oauth2/openid/oauth2-proxy
+      - OAUTH2_PROXY_EMAIL_DOMAINS=*
+      - OAUTH2_PROXY_COOKIE_SECRET=${OAUTH2_PROXY_COOKIE_SECRET}
+      - OAUTH2_PROXY_COOKIE_SECURE=true
+      - OAUTH2_PROXY_COOKIE_DOMAINS=.${DOMAIN}
+      - OAUTH2_PROXY_UPSTREAMS=static://200
+      # Bind only to container network interface (not exposed externally)
+      - OAUTH2_PROXY_HTTP_ADDRESS=:4180
+      - OAUTH2_PROXY_REVERSE_PROXY=true
+      - OAUTH2_PROXY_SET_XAUTHREQUEST=true
+      - OAUTH2_PROXY_PASS_ACCESS_TOKEN=true
+      - OAUTH2_PROXY_CODE_CHALLENGE_METHOD=S256
+      - OAUTH2_PROXY_SKIP_PROVIDER_BUTTON=true
+      # SSL verification skip is acceptable here: container-to-container traffic
+      # within the same trusted docker network. The cert hostname mismatch (kanidm
+      # container name vs external domain) requires this for internal OIDC communication.
+      - OAUTH2_PROXY_SSL_INSECURE_SKIP_VERIFY=true
+    depends_on:
+      - kanidm
+
   # ===========================================================================
   # Jellyfin - Media streaming with GPU transcoding
   # ===========================================================================
@@ -36,22 +115,16 @@ services:
     image: jellyfin/jellyfin:latest
     container_name: jellyfin
     restart: unless-stopped
-    # GPU passthrough for NVIDIA (uncomment after configuring CDI)
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu, video]
+    devices:
+      - nvidia.com/gpu=all
     ports:
       - "8096:8096"     # Web UI
       - "8920:8920"     # HTTPS (optional)
       - "1900:1900/udp" # DLNA discovery
       - "7359:7359/udp" # Client discovery
     volumes:
-      - /mnt/c/ProgramData/nixtv/Jellyfin/config:/config
-      - /mnt/c/ProgramData/nixtv/Jellyfin/cache:/cache
+      - /mnt/c/ProgramData/wintv/Jellyfin/config:/config
+      - /mnt/c/ProgramData/wintv/Jellyfin/cache:/cache
       - /mnt/c/Media:/media:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
@@ -64,18 +137,12 @@ services:
     image: ollama/ollama:latest
     container_name: ollama
     restart: unless-stopped
-    # GPU passthrough (uncomment after configuring CDI)
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu, compute]
+    devices:
+      - nvidia.com/gpu=all
     ports:
       - "11434:11434"
     volumes:
-      - /mnt/c/ProgramData/nixtv/Ollama:/root/.ollama
+      - /mnt/c/ProgramData/wintv/Ollama:/root/.ollama
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
 
@@ -89,7 +156,7 @@ services:
     ports:
       - "3000:8080"
     volumes:
-      - /mnt/c/ProgramData/nixtv/OpenWebUI:/app/backend/data
+      - /mnt/c/ProgramData/wintv/OpenWebUI:/app/backend/data
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
@@ -105,7 +172,7 @@ services:
     ports:
       - "9696:9696"
     volumes:
-      - /mnt/c/ProgramData/nixtv/Prowlarr:/config
+      - /mnt/c/ProgramData/wintv/Prowlarr:/config
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
@@ -121,7 +188,7 @@ services:
     ports:
       - "7878:7878"
     volumes:
-      - /mnt/c/ProgramData/nixtv/Radarr:/config
+      - /mnt/c/ProgramData/wintv/Radarr:/config
       - /mnt/c/Media/Movies:/movies
       - /mnt/c/Media/Downloads:/downloads
     environment:
@@ -141,7 +208,7 @@ services:
     ports:
       - "8989:8989"
     volumes:
-      - /mnt/c/ProgramData/nixtv/Sonarr:/config
+      - /mnt/c/ProgramData/wintv/Sonarr:/config
       - /mnt/c/Media/TV:/tv
       - /mnt/c/Media/Downloads:/downloads
     environment:
@@ -161,7 +228,7 @@ services:
     ports:
       - "8686:8686"
     volumes:
-      - /mnt/c/ProgramData/nixtv/Lidarr:/config
+      - /mnt/c/ProgramData/wintv/Lidarr:/config
       - /mnt/c/Media/Music:/music
       - /mnt/c/Media/Downloads:/downloads
     environment:
@@ -181,7 +248,7 @@ services:
     ports:
       - "8787:8787"
     volumes:
-      - /mnt/c/ProgramData/nixtv/Readarr:/config
+      - /mnt/c/ProgramData/wintv/Readarr:/config
       - /mnt/c/Media/Books:/books
       - /mnt/c/Media/Downloads:/downloads
     environment:
@@ -201,7 +268,7 @@ services:
     ports:
       - "6767:6767"
     volumes:
-      - /mnt/c/ProgramData/nixtv/Bazarr:/config
+      - /mnt/c/ProgramData/wintv/Bazarr:/config
       - /mnt/c/Media/Movies:/movies
       - /mnt/c/Media/TV:/tv
     environment:
@@ -224,7 +291,7 @@ services:
       - "6881:6881"   # Torrent port
       - "6881:6881/udp"
     volumes:
-      - /mnt/c/ProgramData/nixtv/qBittorrent:/config
+      - /mnt/c/ProgramData/wintv/qBittorrent:/config
       - /mnt/c/Media/Downloads:/downloads
     environment:
       - PUID=${PUID:-1000}
@@ -233,33 +300,19 @@ services:
       - WEBUI_PORT=8080
 
   # ===========================================================================
-  # Homarr - Dashboard for all services
+  # Seerr - Media request management (Jellyseerr/Overseerr unified)
   # ===========================================================================
-  homarr:
-    image: ghcr.io/ajnart/homarr:latest
-    container_name: homarr
-    restart: unless-stopped
-    ports:
-      - "7575:7575"
-    volumes:
-      - /mnt/c/ProgramData/nixtv/Homarr/configs:/app/data/configs
-      - /mnt/c/ProgramData/nixtv/Homarr/icons:/app/public/icons
-      - /mnt/c/ProgramData/nixtv/Homarr/data:/data
-    environment:
-      - TZ=${TZ:-America/New_York}
-
-  # ===========================================================================
-  # Jellyseerr - Media request management
-  # ===========================================================================
-  jellyseerr:
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
+  seerr:
+    image: ghcr.io/hotio/seerr:latest
+    container_name: seerr
     restart: unless-stopped
     ports:
       - "5055:5055"
     volumes:
-      - /mnt/c/ProgramData/nixtv/Jellyseerr:/app/config
+      - /mnt/c/ProgramData/wintv/Seerr:/app/config
     environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
       - TZ=${TZ:-America/New_York}
     depends_on:
       - jellyfin
@@ -287,7 +340,7 @@ services:
     container_name: recyclarr
     restart: unless-stopped
     volumes:
-      - /mnt/c/ProgramData/nixtv/Recyclarr:/config
+      - /mnt/c/ProgramData/wintv/Recyclarr:/config
     environment:
       - TZ=${TZ:-America/New_York}
       - RECYCLARR_CREATE_CONFIG=true
@@ -299,23 +352,17 @@ services:
     image: ghcr.io/haveagitgat/tdarr:latest
     container_name: tdarr
     restart: unless-stopped
-    # GPU passthrough (uncomment after configuring CDI)
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu, video]
+    devices:
+      - nvidia.com/gpu=all
     ports:
       - "8265:8265"   # Web UI
       - "8266:8266"   # Server port
     volumes:
-      - /mnt/c/ProgramData/nixtv/Tdarr/server:/app/server
-      - /mnt/c/ProgramData/nixtv/Tdarr/configs:/app/configs
-      - /mnt/c/ProgramData/nixtv/Tdarr/logs:/app/logs
+      - /mnt/c/ProgramData/wintv/Tdarr/server:/app/server
+      - /mnt/c/ProgramData/wintv/Tdarr/configs:/app/configs
+      - /mnt/c/ProgramData/wintv/Tdarr/logs:/app/logs
       - /mnt/c/Media:/media
-      - /mnt/c/ProgramData/nixtv/Tdarr/transcode_cache:/temp
+      - /mnt/c/ProgramData/wintv/Tdarr/transcode_cache:/temp
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
@@ -339,7 +386,7 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - /mnt/c/ProgramData/nixtv/UptimeKuma:/app/data
+      - /mnt/c/ProgramData/wintv/UptimeKuma:/app/data
 
   # ===========================================================================
   # Watchtower - Auto-update containers

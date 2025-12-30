@@ -61,7 +61,7 @@ let
 
   # Productivity packages
   productivityPackages = with pkgs; [
-    rymdport anki nil rclone
+    rymdport anki nil rclone google-chrome
   ] ++ (with unstable; [
     gh onlyoffice-desktopeditors thunderbird firefox tor-browser
     warp bitwarden-desktop obsidian ledger-live-desktop kdePackages.okular

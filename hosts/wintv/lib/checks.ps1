@@ -1,4 +1,4 @@
-# lib/checks.ps1 - System checks for nixtv setup
+# lib/checks.ps1 - System checks for wintv setup
 
 function Test-DiskSpace {
     param(

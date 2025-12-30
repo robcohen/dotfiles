@@ -321,8 +321,8 @@ in
           networking.hostName = "rednix";
           networking.firewall.enable = false;
 
-          # Default initial password - change after first login
-          users.users.root.hashedInitialPassword = "$6$B1HNnRIUoSsVzzy6$yNdMVww7RlgbTyEStdAvuhmk3ljmC18brGf1Gnwl2I4FlJGB0AcPDTosSdSD8Rp2hcQMu4PdlnMqFtbJjBn5U1";
+          # Ephemeral VM - autologin to root, no password needed
+          # This VM is destroyed after each use, so no password is necessary
           services.getty.autologinUser = "root";
 
           environment.systemPackages = with pkgs; [

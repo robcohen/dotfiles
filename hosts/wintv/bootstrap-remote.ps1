@@ -1,4 +1,4 @@
-# hosts/nixtv-server/windows/bootstrap-remote.ps1
+# hosts/wintv/bootstrap-remote.ps1
 # Bootstrap script to enable WinRM/PSRemoting
 #
 # Run this LOCALLY on the Windows machine first (as Administrator):
@@ -46,8 +46,12 @@ Start-Service WinRM
 Write-Host "  WinRM service started and set to automatic" -ForegroundColor Green
 
 # Configure WinRM settings
-winrm quickconfig -quiet 2>$null
-Write-Host "  WinRM quickconfig applied" -ForegroundColor Green
+$winrmResult = winrm quickconfig -quiet 2>&1
+if ($LASTEXITCODE -ne 0 -and $winrmResult -notmatch "already running") {
+    Write-Host "  WinRM quickconfig warning: $winrmResult" -ForegroundColor Yellow
+} else {
+    Write-Host "  WinRM quickconfig applied" -ForegroundColor Green
+}
 
 # ===========================================================================
 # Configure TrustedHosts (for non-domain environments)
@@ -71,8 +75,12 @@ $httpListener = Get-WSManInstance -ResourceURI winrm/config/Listener -Enumerate 
 if ($httpListener) {
     Write-Host "  HTTP listener already configured on port 5985" -ForegroundColor Green
 } else {
-    New-WSManInstance -ResourceURI winrm/config/Listener -SelectorSet @{Address="*"; Transport="HTTP"} 2>$null
-    Write-Host "  HTTP listener created on port 5985" -ForegroundColor Green
+    $listenerResult = New-WSManInstance -ResourceURI winrm/config/Listener -SelectorSet @{Address="*"; Transport="HTTP"} 2>&1
+    if ($listenerResult -is [System.Management.Automation.ErrorRecord]) {
+        Write-Host "  HTTP listener creation failed: $listenerResult" -ForegroundColor Yellow
+    } else {
+        Write-Host "  HTTP listener created on port 5985" -ForegroundColor Green
+    }
 }
 
 # For HTTPS, we'd need a certificate - skip for now but note it

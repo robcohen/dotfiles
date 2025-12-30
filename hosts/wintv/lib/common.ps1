@@ -1,6 +1,6 @@
-# lib/common.ps1 - Common utilities for nixtv setup scripts
+# lib/common.ps1 - Common utilities for wintv setup scripts
 
-$Script:LogDir = "$env:LOCALAPPDATA\nixtv-setup"
+$Script:LogDir = "$env:LOCALAPPDATA\wintv-setup"
 $Script:LogFile = "$Script:LogDir\setup-$(Get-Date -Format 'yyyy-MM-dd-HHmmss').log"
 $Script:RebootRequired = $false
 
@@ -40,7 +40,7 @@ function Get-Configuration {
         $defaultConfig = @{
             paths = @{
                 media = "C:\Media"
-                appData = "C:\ProgramData\nixtv"
+                appData = "C:\ProgramData\wintv"
                 vms = "C:\VMs"
             }
             podman = @{
@@ -58,7 +58,6 @@ function Get-Configuration {
                 "Python.Python.3.12"
             )
             services = @{
-                homarr = @{ port = 7575; protocol = "TCP" }
                 jellyfin = @{ port = 8096; protocol = "TCP" }
                 jellyseerr = @{ port = 5055; protocol = "TCP" }
                 ollama = @{ port = 11434; protocol = "TCP" }
@@ -99,4 +98,56 @@ function Get-ScriptRoot {
 
 function Get-LogFile {
     return $Script:LogFile
+}
+
+# ===========================================================================
+# API Key Generation
+# ===========================================================================
+
+function Get-DerivedApiKey {
+    <#
+    .SYNOPSIS
+        Generates a deterministic API key from a base password and service name.
+
+    .DESCRIPTION
+        Uses SHA256 to derive a 32-character hex API key that is:
+        - Deterministic (same inputs = same output)
+        - Unique per service
+        - Suitable for arr stack services
+
+    .PARAMETER ServiceName
+        The name of the service (e.g., "prowlarr", "radarr")
+
+    .EXAMPLE
+        $key = Get-DerivedApiKey -ServiceName "prowlarr"
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$ServiceName
+    )
+
+    if (-not $env:ADMIN_PASSWORD) {
+        throw "ADMIN_PASSWORD environment variable is not set. Source your .env file first."
+    }
+
+    $input = "$env:ADMIN_PASSWORD-$ServiceName"
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($input)
+    $hash = [System.Security.Cryptography.SHA256]::HashData($bytes)
+    return [BitConverter]::ToString($hash).Replace("-","").Substring(0,32).ToLower()
+}
+
+function Get-AllApiKeys {
+    <#
+    .SYNOPSIS
+        Returns a hashtable of all derived API keys for arr stack services.
+    #>
+    return @{
+        Prowlarr = Get-DerivedApiKey "prowlarr"
+        Radarr = Get-DerivedApiKey "radarr"
+        Sonarr = Get-DerivedApiKey "sonarr"
+        Lidarr = Get-DerivedApiKey "lidarr"
+        Readarr = Get-DerivedApiKey "readarr"
+        Bazarr = Get-DerivedApiKey "bazarr"
+        Jellyfin = Get-DerivedApiKey "jellyfin"
+    }
 }

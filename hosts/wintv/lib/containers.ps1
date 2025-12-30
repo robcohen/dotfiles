@@ -163,7 +163,7 @@ function Install-ComposeFile {
     }
 
     # Download from GitHub
-    $repoUrl = "https://raw.githubusercontent.com/user/dotfiles/main/hosts/nixtv-server/windows/docker-compose.yml"
+    $repoUrl = "https://raw.githubusercontent.com/user/dotfiles/main/hosts/wintv/docker-compose.yml"
 
     try {
         Invoke-WebRequest -Uri $repoUrl -OutFile $destPath -UseBasicParsing

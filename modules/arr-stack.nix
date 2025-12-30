@@ -190,8 +190,6 @@ in
     );
 
     # Packages
-    environment.systemPackages = with pkgs; [
-      qbittorrent-nox
-    ];
+    environment.systemPackages = [ pkgs.qbittorrent-nox ];
   };
 }

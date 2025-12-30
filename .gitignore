@@ -55,5 +55,9 @@ Thumbs.db
 *.tmp
 *.temp
 
+# Backup files
+*.bak
+*.old
+
 # Legacy
 ACC*

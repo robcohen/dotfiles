@@ -5,7 +5,15 @@
     overlays = [];
     config = {
       allowUnfree = true;
+      # Insecure packages - track for removal
+      # See: https://github.com/NixOS/nixpkgs/issues (search for package name)
+      # Review periodically and remove when fixed upstream
       permittedInsecurePackages = [
+        # Required by: ledger-live-desktop
+        # Issue: ECDSA timing side-channel vulnerability (CVE-2024-23342)
+        # Tracking: https://github.com/LedgerHQ/ledger-live/issues/7458
+        # Target: Remove when ledger-live >= 2.90.0 (expected Q1 2025)
+        # Last checked: 2024-12-29
         "python3.12-ecdsa-0.19.1"
       ];
     };
@@ -24,15 +32,23 @@
 
   programs.zsh.enable = true;
 
-  users.users.user = {
+  users.users.user = let
+    hasSopsPassword = config ? sops && config.sops.secrets ? "user/hashedPassword";
+    envPasswordHash = builtins.getEnv "USER_PASSWORD_HASH";
+  in {
     isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [ "wheel" "networkmanager" "input" "video" ];
-    # Use sops secret for password if available, with fallback for VM/ISO/appliance builds
-    hashedPasswordFile = lib.mkIf (config ? sops && config.sops.secrets ? "user/hashedPassword")
+    # Password priority: 1) SOPS secret, 2) env var hash, 3) no password (SSH only)
+    hashedPasswordFile = lib.mkIf hasSopsPassword
       config.sops.secrets."user/hashedPassword".path;
-    # Fallback: allow initial password for builds without sops (change on first boot)
-    initialPassword = lib.mkIf (!(config ? sops && config.sops.secrets ? "user/hashedPassword")) "changeme";
+    initialHashedPassword = lib.mkIf (!hasSopsPassword && envPasswordHash != "")
+      envPasswordHash;
+    # Note: If neither SOPS nor env var is set, user has no password (SSH key required)
+    openssh.authorizedKeys.keys = [
+      # Phone (Termux)
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINrIkZyfMS54UscUqtoQoHYf+VIXPyM5fRt5frgGE7sI u0_a194@localhost"
+    ];
   };
 
   i18n.defaultLocale = "en_US.UTF-8";

@@ -1,5 +1,5 @@
-# hosts/nixtv-server/windows/setup.ps1
-# Windows host setup for nixtv-server
+# hosts/wintv/setup.ps1
+# Windows host setup for wintv
 #
 # Run as Administrator:
 #   Set-ExecutionPolicy Bypass -Scope Process -Force
@@ -41,6 +41,9 @@ $libPath = Join-Path $PSScriptRoot "lib"
 . "$libPath\containers.ps1"
 . "$libPath\configs.ps1"
 . "$libPath\vm.ps1"
+. "$libPath\gpu.ps1"
+. "$libPath\caddy.ps1"
+. "$libPath\kanidm.ps1"
 
 # ===========================================================================
 # SUMMARY
@@ -51,6 +54,9 @@ function Show-Summary {
     Write-Host "`n" + "=" * 60 -ForegroundColor Cyan
     Write-Host "  SETUP COMPLETE" -ForegroundColor Green
     Write-Host "=" * 60 -ForegroundColor Cyan
+
+    $domain = Get-TailscaleDomain
+    if (-not $domain) { $domain = "wintv.YOUR-TAILNET.ts.net" }
 
     Write-Host @"
 
@@ -64,30 +70,32 @@ Next steps:
 
     Write-Host @"
   1. Log into Tailscale: tailscale login
-  2. Add device to Mullvad in Tailscale admin console
-  3. Connect to Mullvad: $($Config.paths.appData)\Tailscale\mullvad-connect.ps1 -Country us
-  4. Check services: http://localhost:7575 (Homarr dashboard)
+  2. Enable HTTPS in Tailscale admin console (DNS > HTTPS Certificates)
+  3. Add device to Mullvad in Tailscale admin console (optional)
+  4. Check services: https://$domain/ (Dashboard)
 
 Tailscale helper scripts:
   - $($Config.paths.appData)\Tailscale\mullvad-connect.ps1
   - $($Config.paths.appData)\Tailscale\mullvad-disconnect.ps1
   - $($Config.paths.appData)\Tailscale\mullvad-status.ps1
 
-Services available at:
-  - Homarr:      http://localhost:7575  (Dashboard - start here!)
-  - Jellyfin:    http://localhost:8096
-  - Jellyseerr:  http://localhost:5055
-  - Ollama:      http://localhost:11434
-  - Open WebUI:  http://localhost:3000
-  - Radarr:      http://localhost:7878
-  - Sonarr:      http://localhost:8989
-  - Prowlarr:    http://localhost:9696
-  - Lidarr:      http://localhost:8686
-  - Readarr:     http://localhost:8787
-  - Bazarr:      http://localhost:6767
-  - qBittorrent: http://localhost:8080
-  - Tdarr:       http://localhost:8265
-  - Uptime Kuma: http://localhost:3001
+Services via Caddy reverse proxy (HTTPS):
+  https://$domain/
+  - /jellyfin    Jellyfin
+  - /radarr      Radarr
+  - /sonarr      Sonarr
+  - /prowlarr    Prowlarr
+  - /lidarr      Lidarr
+  - /readarr     Readarr
+  - /bazarr      Bazarr
+  - /qbittorrent qBittorrent
+  - /ollama      Ollama API
+  - /chat        Open WebUI
+  - /tdarr       Tdarr
+
+Direct port access (via Tailscale):
+  - Seerr:       https://$domain:5055
+  - Uptime Kuma: https://$domain:3001
 
 Logs saved to: $(Get-LogFile)
 "@
@@ -173,16 +181,19 @@ function Invoke-Phase1 {
 function Invoke-Phase2 {
     param($Config)
 
-    Write-Host "`n[1/5] Podman configuration" -ForegroundColor Yellow
+    Write-Host "`n[1/8] Podman configuration" -ForegroundColor Yellow
     Set-PodmanConfiguration
 
-    Write-Host "`n[2/5] Starting Podman machine" -ForegroundColor Yellow
+    Write-Host "`n[2/8] Starting Podman machine" -ForegroundColor Yellow
     Start-PodmanMachine
 
-    Write-Host "`n[3/5] Port forwarding" -ForegroundColor Yellow
+    Write-Host "`n[3/8] GPU support" -ForegroundColor Yellow
+    Initialize-GpuSupport -Config $Config
+
+    Write-Host "`n[4/8] Port forwarding" -ForegroundColor Yellow
     Set-PortForwarding -Services $Config.services
 
-    Write-Host "`n[4/6] Starting containers" -ForegroundColor Yellow
+    Write-Host "`n[5/8] Starting containers" -ForegroundColor Yellow
     $composeFile = Get-ComposeFilePath -Config $Config
     if (Test-Path $composeFile) {
         Start-ContainerStack -ComposeFile $composeFile
@@ -191,10 +202,16 @@ function Invoke-Phase2 {
         Write-Log "Copy it from the dotfiles repo or run Install-ComposeFile" -Level Info
     }
 
-    Write-Host "`n[5/6] Service configurations" -ForegroundColor Yellow
+    Write-Host "`n[6/8] Service configurations" -ForegroundColor Yellow
     Install-ServiceConfigs -Config $Config
 
-    Write-Host "`n[6/6] Verification" -ForegroundColor Yellow
+    Write-Host "`n[7/9] Caddy reverse proxy" -ForegroundColor Yellow
+    Initialize-Caddy -Config $Config
+
+    Write-Host "`n[8/9] Kanidm identity provider" -ForegroundColor Yellow
+    Initialize-Kanidm -Config $Config
+
+    Write-Host "`n[9/9] Verification" -ForegroundColor Yellow
     Test-Installation
     Show-ContainerStatus
 }
@@ -217,7 +234,7 @@ function Main {
 
     Initialize-Logging
 
-    Write-Log "Starting nixtv-server Windows setup..." -Level Info
+    Write-Log "Starting wintv Windows setup..." -Level Info
     Write-Log "Config: $ConfigPath"
 
     # Initialize and load environment variables

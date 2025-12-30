@@ -75,12 +75,19 @@
   networking.hostName = "nixtv-player";
 
   # Admin user
-  users.users.nixtv = {
+  # Password options (in order of preference):
+  #   1. SOPS secret at "nixtv/hashedPassword" if configured
+  #   2. NIXTV_PASSWORD_HASH env var at build time: `mkpasswd -m sha-512`
+  #   3. No password (SSH key required for access)
+  users.users.nixtv = let
+    envPasswordHash = builtins.getEnv "NIXTV_PASSWORD_HASH";
+    hasSopsPassword = config ? sops && config.sops.secrets ? "nixtv/hashedPassword";
+  in {
     isNormalUser = true;
     description = "nixTV Admin";
     extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" "render" ];
-    # Default initial password - change on first login
-    hashedInitialPassword = "$6$Au0H3uGP4Kn1SFvk$7p9u5smKlvqfaARXzUcoWkWYwQMFJgXZ.Wc/QPSeuRmC5TrZO0oFmG0JSqKGZzcHEhj6hWkmShWl2l7WyhmMu.";
+    hashedPasswordFile = lib.mkIf hasSopsPassword config.sops.secrets."nixtv/hashedPassword".path;
+    initialHashedPassword = lib.mkIf (!hasSopsPassword && envPasswordHash != "") envPasswordHash;
   };
 
   # ==========================================================================

@@ -10,6 +10,8 @@ let
     system = pkgs.stdenv.hostPlatform.system;
   };
 
+  chromiumPackage = unstable.ungoogled-chromium;
+
   # Helper to fetch extensions from Chrome Web Store
   fetchChromeExtension = { id, version, sha256 }: {
     inherit id version;
@@ -43,9 +45,14 @@ let
   };
 
 in {
+  # Playwright MCP browser executable path
+  home.sessionVariables = {
+    PLAYWRIGHT_MCP_EXECUTABLE_PATH = "${chromiumPackage}/bin/chromium";
+  };
+
   programs.chromium = {
     enable = true;
-    package = unstable.ungoogled-chromium;
+    package = chromiumPackage;
     commandLineArgs = [
       # WebRTC leak prevention - most restrictive setting
       "--webrtc-ip-handling-policy=default_public_interface_only"
@@ -60,6 +67,9 @@ in {
     extensions = [
       chromium-web-store
       # bitwarden loaded as unpacked extension below
+      # Claude in Chrome - install via chromium-web-store (requires Pro/Max/Team subscription)
+      # Extension ID: fcoeoabgfenejglbffodgkkbkcdhcgfn
+      # https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn
     ];
   };
 
@@ -130,6 +140,7 @@ in {
     extensions = {
       pinned_extensions = [
         "ccekafbpibgjbnpbojfdepdjolfflbmd"  # Bitwarden (unpacked)
+        "fcoeoabgfenejglbffodgkkbkcdhcgfn"  # Claude in Chrome
       ];
     };
   };

@@ -1,6 +1,22 @@
 { pkgs, lib, config, ... }:
 
+let
+  cfg = config.security.tpm2;
+  # Default TPM handle for SSH key storage
+  # Changing this requires re-initializing TPM keys
+  primaryHandle = cfg.primaryKeyHandle or "0x81000001";
+in
 {
+  options.security.tpm2.primaryKeyHandle = lib.mkOption {
+    type = lib.types.str;
+    default = "0x81000001";
+    description = ''
+      TPM persistent handle for the primary key used for SSH key storage.
+      Changing this requires re-running tpm-init to create a new primary key.
+    '';
+  };
+
+  config = {
   # TPM 2.0 support
   security.tpm2 = {
     enable = true;
@@ -24,6 +40,8 @@
 
       set -euo pipefail
 
+      HANDLE="${primaryHandle}"
+
       usage() {
           echo "Usage: $0 [--force]"
           echo ""
@@ -32,7 +50,7 @@
           echo "Options:"
           echo "  --force    Recreate primary key even if it exists"
           echo ""
-          echo "This creates a primary key at handle 0x81000001 for storing SSH keys"
+          echo "This creates a primary key at handle $HANDLE for storing SSH keys"
           exit 1
       }
 
@@ -49,19 +67,19 @@
       export TPM2TOOLS_TCTI="device:/dev/tpmrm0"
 
       # Check if primary key already exists
-      if tpm2_readpublic -c 0x81000001 >/dev/null 2>&1 && [[ "$FORCE" != "true" ]]; then
-          echo "✅ TPM primary key already exists at handle 0x81000001"
+      if tpm2_readpublic -c "$HANDLE" >/dev/null 2>&1 && [[ "$FORCE" != "true" ]]; then
+          echo "TPM primary key already exists at handle $HANDLE"
           echo "   Use --force to recreate"
           exit 0
       fi
 
       # Clear existing handle if forced
       if [[ "$FORCE" == "true" ]]; then
-          echo "🗑️  Removing existing primary key..."
-          tpm2_evictcontrol -C o -c 0x81000001 2>/dev/null || true
+          echo "Removing existing primary key..."
+          tpm2_evictcontrol -C o -c "$HANDLE" 2>/dev/null || true
       fi
 
-      echo "🔐 Creating TPM primary key..."
+      echo "Creating TPM primary key..."
 
       # Suppress tabrmd warnings by using direct device access
       export TPM2TOOLS_TCTI="device:/dev/tpmrm0"
@@ -70,14 +88,14 @@
       tpm2_createprimary -C o -g sha256 -G ecc256 -c /tmp/primary.ctx \
           -a "fixedtpm|fixedparent|sensitivedataorigin|userwithauth|restricted|decrypt" 2>/dev/null
 
-      # Make it persistent at handle 0x81000001
-      tpm2_evictcontrol -C o -c /tmp/primary.ctx 0x81000001 2>/dev/null
+      # Make it persistent at configured handle
+      tpm2_evictcontrol -C o -c /tmp/primary.ctx "$HANDLE" 2>/dev/null
 
       # Clean up
       rm -f /tmp/primary.ctx
 
-      echo "✅ TPM initialized successfully"
-      echo "   Primary key handle: 0x81000001"
+      echo "TPM initialized successfully"
+      echo "   Primary key handle: $HANDLE"
       echo "   Ready for SSH key storage"
     '';
     mode = "0755";
@@ -222,4 +240,5 @@
     ln -sf /etc/scripts/tpm-init /usr/local/bin/tpm-init
     ln -sf /etc/scripts/tpm-keys /usr/local/bin/tpm-keys
   '';
+  };  # Close config block
 }

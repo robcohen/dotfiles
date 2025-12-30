@@ -1,18 +1,78 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 {
-  # SSH hardening
+  options.security.autoUpgrade.flakeUrl = lib.mkOption {
+    type = lib.types.str;
+    default = "github:robcxyz/dotfiles";
+    description = "Flake URL for automatic security updates";
+  };
+
+  config = {
+  # SSH hardening - best practices
   services.openssh = {
     enable = true;
+    # Only Ed25519 host keys (modern, secure, fast)
+    hostKeys = [
+      {
+        path = "/etc/ssh/ssh_host_ed25519_key";
+        type = "ed25519";
+      }
+    ];
     settings = {
+      # Authentication
       PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
       PermitRootLogin = "no";
-      Protocol = 2;
-      X11Forwarding = false;
+      PubkeyAuthentication = true;
+      AuthenticationMethods = "publickey";
       MaxAuthTries = 3;
+      MaxSessions = 10;
+      PermitEmptyPasswords = false;
+
+      # Session
+      X11Forwarding = false;
+      AllowTcpForwarding = false;
+      AllowAgentForwarding = false;
+      AllowStreamLocalForwarding = false;
+      GatewayPorts = "no";
+      PermitTunnel = "no";
       ClientAliveInterval = 300;
       ClientAliveCountMax = 2;
+      TCPKeepAlive = false;  # Use ClientAlive instead (encrypted)
+      LoginGraceTime = 30;
+
+      # Modern cryptography only
+      Ciphers = [
+        "chacha20-poly1305@openssh.com"
+        "aes256-gcm@openssh.com"
+        "aes128-gcm@openssh.com"
+      ];
+      Macs = [
+        "hmac-sha2-512-etm@openssh.com"
+        "hmac-sha2-256-etm@openssh.com"
+      ];
+      KexAlgorithms = [
+        "sntrup761x25519-sha512@openssh.com"  # Post-quantum hybrid
+        "curve25519-sha256"
+        "curve25519-sha256@libssh.org"
+        "diffie-hellman-group16-sha512"
+        "diffie-hellman-group18-sha512"
+      ];
+
+      # Logging
+      LogLevel = "VERBOSE";
+
+      # Misc hardening
+      StrictModes = true;
+      UseDns = false;
+      PermitUserEnvironment = false;
+      Compression = false;
+      PrintLastLog = true;
     };
+    # Restrict SSH to users in wheel group
+    extraConfig = ''
+      AllowGroups wheel
+    '';
   };
 
   # Firewall configuration
@@ -41,7 +101,7 @@
   system.autoUpgrade = {
     enable = true;
     allowReboot = false;
-    flake = "github:robcxyz/dotfiles";
+    flake = config.security.autoUpgrade.flakeUrl;
   };
 
   # AppArmor security framework (relaxed configuration)
@@ -77,4 +137,5 @@
   security.pam.loginLimits = [
     { domain = "*"; type = "hard"; item = "maxlogins"; value = "3"; }
   ];
+  };  # Close config block
 }

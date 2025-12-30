@@ -33,8 +33,8 @@ in {
     kubernetes = pkgs.mkShell {
       name = "kubernetes-development";
 
+      # Note: stern is already included in kubernetesTools (k8sExtended)
       packages = infraTools.kubernetesTools ++ [
-        pkgs.stern  # Log streaming
         pkgs.dive   # Container image analysis
       ];
 

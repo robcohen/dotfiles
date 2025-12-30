@@ -1,6 +1,17 @@
 { config, pkgs, lib, ... }:
 
+let
+  cfg = config.services.displayManager.sddm;
+  defaultWallpaper = ../../assets/backgrounds/nix-wallpaper-dracula.png;
+in
 {
+  options.services.displayManager.sddm.wallpaper = lib.mkOption {
+    type = lib.types.path;
+    default = defaultWallpaper;
+    description = "Path to SDDM login screen wallpaper";
+  };
+
+  config = {
   # Beautiful SDDM Display Manager Configuration
   # This is system-level configuration for the login screen
 
@@ -44,27 +55,27 @@
   };
 
   # Install the beautiful Catppuccin SDDM theme
-  environment.systemPackages = with pkgs; [
-    (catppuccin-sddm.override {
+  environment.systemPackages = [
+    (pkgs.catppuccin-sddm.override {
       flavor = "mocha";
       accent = "maroon";
       font = "JetBrains Mono Nerd Font";
       fontSize = "12";
-      background = "${../../assets/backgrounds/nix-wallpaper-dracula.png}";
+      background = "${cfg.wallpaper}";
       loginBackground = true;
     })
-    catppuccin-cursors.mochaDark
+    pkgs.catppuccin-cursors.mochaDark
   ];
 
   # Set up wallpaper for SDDM login screen
-  environment.etc."nixos/wallpapers/sddm-wallpaper.png".source =
-    ../../assets/backgrounds/nix-wallpaper-dracula.png;
+  environment.etc."nixos/wallpapers/sddm-wallpaper.png".source = cfg.wallpaper;
 
   # Ensure required fonts are available system-wide for SDDM
-  fonts.packages = with pkgs; [
-    jetbrains-mono
-    noto-fonts
-    noto-fonts-color-emoji
+  fonts.packages = [
+    pkgs.jetbrains-mono
+    pkgs.noto-fonts
+    pkgs.noto-fonts-color-emoji
     pkgs.nerd-fonts.jetbrains-mono
   ];
+  };  # Close config block
 }

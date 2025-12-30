@@ -57,7 +57,9 @@
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="8087", ATTR{idProduct}=="0033", ATTR{power/autosuspend}="-1"
 
     # General Bluetooth class device rules
-    ACTION=="add", SUBSYSTEM=="bluetooth", RUN+="${pkgs.coreutils}/bin/chmod 666 /dev/rfkill"
+    # Use 660 (owner+group) instead of 666 (world-writable) for rfkill security
+    # Set group to 'networkmanager' which users are typically in for network control
+    ACTION=="add", SUBSYSTEM=="bluetooth", RUN+="${pkgs.coreutils}/bin/chgrp networkmanager /dev/rfkill", RUN+="${pkgs.coreutils}/bin/chmod 660 /dev/rfkill"
     ACTION=="add", ATTR{class}=="e0*", ATTR{authorized}="1"
 
     # MT7925-specific rules are in modules/hardware/mt7925.nix
@@ -292,9 +294,8 @@
   # Network monitoring
   services.vnstat.enable = true; # Network usage statistics
 
-  # Security auditing
-  # TODO: Re-enable after configuring comprehensive AppArmor profiles to avoid audit_log_subj_ctx errors
-  security.auditd.enable = false; # System call auditing - temporarily disabled
+  # Security auditing - disabled to avoid audit_log_subj_ctx errors without AppArmor profiles
+  security.auditd.enable = false;
 
   services.usbmuxd.enable = true;
 

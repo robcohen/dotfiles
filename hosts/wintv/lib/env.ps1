@@ -151,7 +151,7 @@ function Set-EnvVariable {
 }
 
 function Show-EnvVariables {
-    Write-Log "Current nixtv environment variables:"
+    Write-Log "Current wintv environment variables:"
 
     $envVars = @(
         "TZ", "PUID", "PGID",

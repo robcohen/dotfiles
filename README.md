@@ -138,10 +138,49 @@ nix build .#emergency-iso
 nix build .#slax-vm
 nix build .#brix-vm
 
-# QCOW2 images
-nix build .#slax-qcow2
-nix build .#brix-qcow2
+# nixtv-player
+nix build .#nixtv-player-iso
+nix build .#nixtv-player-vm
 ```
+
+### Credential Management for ISOs/VMs
+
+ISOs and VMs use environment variables at build time to configure credentials, avoiding hardcoded passwords in the repository.
+
+**Priority system** (highest to lowest):
+1. SOPS secrets (for deployed systems)
+2. Environment variables at build time
+3. No password (SSH key required)
+
+**Generate a password hash:**
+```bash
+nix-shell -p mkpasswd --run 'mkpasswd -m sha-512'
+```
+
+**Build examples:**
+```bash
+# Emergency ISO with password authentication
+EMERGENCY_PASSWORD_HASH="$(mkpasswd -m sha-512)" nix build .#emergency-iso
+
+# Emergency ISO with SSH key (recommended)
+EMERGENCY_SSH_KEY="ssh-ed25519 AAAA..." nix build .#emergency-iso
+
+# nixtv-player ISO with admin password
+NIXTV_PASSWORD_HASH="$(mkpasswd -m sha-512)" nix build .#nixtv-player-iso
+
+# Standard host build with user password
+USER_PASSWORD_HASH="$(mkpasswd -m sha-512)" sudo nixos-rebuild switch --flake .#slax
+```
+
+**Available environment variables:**
+| Variable | Used By | Description |
+|----------|---------|-------------|
+| `USER_PASSWORD_HASH` | All hosts (base.nix) | Password for 'user' account |
+| `NIXTV_PASSWORD_HASH` | nixtv-player | Password for 'nixtv' admin account |
+| `EMERGENCY_PASSWORD_HASH` | emergency-iso | Root password for recovery ISO |
+| `EMERGENCY_SSH_KEY` | emergency-iso | Root SSH public key (disables password login) |
+
+For production deployments, use SOPS secrets instead. See [docs/SOPS-SETUP.md](docs/SOPS-SETUP.md).
 
 ## 🔄 Updates
 

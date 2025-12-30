@@ -14,14 +14,14 @@ function New-VMCreationScript {
 
     $vmScript = @"
 # Run this after downloading NixOS ISO
-# Download: nix build .#nixtv-server-iso
+# Download: nix build .#nixtv-player-iso
 
 #Requires -RunAsAdministrator
 
-`$VMName = "nixtv-server"
+`$VMName = "wintv-vm"
 `$VMPath = "$vmPath"
 `$ISOPath = "`$VMPath\nixos.iso"  # Copy ISO here
-`$VHDPath = "`$VMPath\nixtv-server.vhdx"
+`$VHDPath = "`$VMPath\wintv-vm.vhdx"
 `$MemoryGB = 8
 `$CPUCount = 4
 `$DiskGB = 100
@@ -42,7 +42,7 @@ if (Get-VM -Name `$VMName -ErrorAction SilentlyContinue) {
 # Check ISO exists
 if (-not (Test-Path `$ISOPath)) {
     Write-Host "ERROR: ISO not found at `$ISOPath" -ForegroundColor Red
-    Write-Host "Build ISO with: nix build .#nixtv-server-iso"
+    Write-Host "Build ISO with: nix build .#nixtv-player-iso"
     Write-Host "Then copy to: `$ISOPath"
     exit 1
 }
