@@ -80,52 +80,9 @@ in
         slax-live-iso = mkLiveISO "${self}/hosts/slax/configuration.nix";
         brix-live-iso = mkLiveISO "${self}/hosts/brix/configuration.nix";
 
-        nixtv-player-iso = nixos-generators.nixosGenerate {
-          inherit system;
-          specialArgs = mkSpecialArgs;
-          modules = [
-            "${self}/hosts/nixtv-player/configuration.nix"
-            (
-              { lib, ... }:
-              {
-                services.cage.enable = lib.mkForce false;
-                services.displayManager.autoLogin.enable = lib.mkForce false;
-                boot.loader.timeout = lib.mkForce 10;
-              }
-            )
-          ];
-          format = "iso";
-        };
-
         # VM images for each host
         slax-vm = mkImage "${self}/hosts/slax/configuration.nix" "vm";
         brix-vm = mkImage "${self}/hosts/brix/configuration.nix" "vm";
-
-        nixtv-player-vm =
-          (stable-nixpkgs.lib.nixosSystem {
-            inherit system;
-            specialArgs = mkSpecialArgs;
-            modules = [
-              "${stable-nixpkgs}/nixos/modules/virtualisation/qemu-vm.nix"
-              "${self}/hosts/nixtv-player/configuration.nix"
-              (
-                { lib, pkgs, ... }:
-                {
-                  virtualisation = {
-                    memorySize = 2048;
-                    cores = 2;
-                    graphics = true;
-                  };
-                  services.cage.enable = lib.mkForce false;
-                  services.xserver = {
-                    enable = true;
-                    desktopManager.kodi.enable = true;
-                    displayManager.lightdm.enable = true;
-                  };
-                }
-              )
-            ];
-          }).config.system.build.vm;
 
         # Generic emergency recovery ISO
         # =======================================================================

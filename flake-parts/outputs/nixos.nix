@@ -1,5 +1,6 @@
 # NixOS system configurations
-# Defines all host configurations using mkNixosConfig
+# Defines WORKSTATION configurations using mkNixosConfig
+# Infrastructure hosts (ca-offline, nixtv-player, nas-*) are in infra-private
 { inputs, self, ... }:
 
 let
@@ -15,14 +16,6 @@ in
       brix = mkNixosConfig { hostConfig = "${self}/hosts/brix/configuration.nix"; };
 
       snix = mkNixosConfig { hostConfig = "${self}/hosts/snix/configuration.nix"; };
-
-      # nixtv-player is a dedicated appliance - no microvm needed
-      nixtv-player = mkNixosConfig {
-        hostConfig = "${self}/hosts/nixtv-player/configuration.nix";
-        extraModules = [
-          { microvm.host.enable = false; } # Override microvm from mkNixosConfig
-        ];
-      };
     };
   };
 }

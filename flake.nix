@@ -130,6 +130,7 @@
         # Top-level outputs
         ./flake-parts/outputs/nixos.nix
         ./flake-parts/outputs/home-manager.nix
+        ./flake-parts/outputs/exports.nix
       ];
     };
 }
