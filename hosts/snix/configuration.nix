@@ -23,6 +23,7 @@
     ../common/swap.nix
     ../../modules/tailscale-mullvad.nix
     ../../modules/hardware/mt7925.nix
+    ../../modules/hardware/thunderbolt-dock.nix
     ../../modules/virtualization.nix
   ];
 
@@ -40,6 +41,9 @@
 
   # MediaTek MT7925 WiFi/Bluetooth - see modules/hardware/mt7925.nix for details
   hardware.mediatek.mt7925.enable = true;
+
+  # Thunderbolt/USB4 dock support (CalDigit TS5 Plus)
+  hardware.thunderboltDock.enable = true;
 
   networking.hostName = "snix";
   networking.networkmanager = {

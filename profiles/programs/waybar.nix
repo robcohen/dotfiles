@@ -15,7 +15,7 @@
 
         modules-left = [ "hyprland/workspaces" ];
         modules-center = [ "hyprland/window" ];
-        modules-right = [ "tray" "custom/vpn" "custom/notifications" "idle_inhibitor" "bluetooth" "custom/weather" "custom/performance" "pulseaudio" "battery" "custom/power" "clock" ];
+        modules-right = [ "tray" "custom/dns" "custom/vpn" "custom/notifications" "idle_inhibitor" "bluetooth" "custom/weather" "custom/performance" "pulseaudio" "battery" "custom/power" "clock" ];
 
         "hyprland/workspaces" = {
           disable-scroll = true;
@@ -37,9 +37,7 @@
             default = "󰊠";
             active = "󰮯";
           };
-          persistent-workspaces = {
-            "*" = 5;
-          };
+          # Dynamic workspaces - no persistent slots
         };
 
 
@@ -228,6 +226,154 @@
           escape = true;
         };
 
+        "custom/dns" = {
+          format = "{}";
+          interval = 30;  # Pulse check every 30 seconds
+          return-type = "json";
+          exec = "${pkgs.writeShellScript "dns-status" ''
+            CONFIG_DIR="$HOME/.config/waybar"
+            STATE_FILE="$CONFIG_DIR/dns-mode"
+            HEALTH_FILE="$CONFIG_DIR/dns-health"
+            mkdir -p "$CONFIG_DIR"
+
+            # Detect actual DNS state on first run or if state file missing
+            if [ ! -f "$STATE_FILE" ]; then
+              CURRENT_DNS=$(${pkgs.systemd}/bin/resolvectl dns tailscale0 2>/dev/null | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -1)
+              case "$CURRENT_DNS" in
+                100.100.100.100) echo "close" > "$STATE_FILE" ;;
+                9.9.9.9) echo "open" > "$STATE_FILE" ;;
+                194.242.2.*) echo "mull" > "$STATE_FILE" ;;
+                *) echo "close" > "$STATE_FILE" ;;  # Default
+              esac
+            fi
+
+            MODE=$(cat "$STATE_FILE")
+
+            # Check if lan-mode maintenance is active (no exit node)
+            LAN_MODE=""
+            EXIT_NODE=$(${pkgs.tailscale}/bin/tailscale status --json 2>/dev/null | ${pkgs.jq}/bin/jq -r 'to_entries[] | select(.value.ExitNode == true) | .value.HostName // empty' 2>/dev/null || true)
+            if [ -z "$EXIT_NODE" ]; then
+              LAN_MODE=" [LAN]"
+            fi
+
+            # Pulse check: test DNS resolution
+            HEALTH="ok"
+            HEALTH_INFO=""
+            START=$(date +%s%3N)
+            if ${pkgs.dnsutils}/bin/dig +short +timeout=2 +tries=1 example.com @100.100.100.100 >/dev/null 2>&1; then
+              END=$(date +%s%3N)
+              LATENCY=$((END - START))
+              HEALTH_INFO="Latency: ''${LATENCY}ms"
+              echo "ok:$LATENCY" > "$HEALTH_FILE"
+            else
+              HEALTH="fail"
+              HEALTH_INFO="DNS resolution failed!"
+              echo "fail:0" > "$HEALTH_FILE"
+            fi
+
+            # Get current DNS servers for tooltip
+            CURRENT_SERVERS=$(${pkgs.systemd}/bin/resolvectl dns tailscale0 2>/dev/null | sed 's/.*: //' || echo "unknown")
+
+            case "$MODE" in
+              "close")
+                if [ "$HEALTH" = "fail" ]; then
+                  echo "{\"text\": \"󰒃 Close ⚠\", \"tooltip\": \"DNS: Fail-Closed$LAN_MODE\n$HEALTH_INFO\nServers: $CURRENT_SERVERS\n\nClick: cycle mode | Right-click: test\", \"class\": \"dns-fail\"}"
+                else
+                  echo "{\"text\": \"󰒃 Close\", \"tooltip\": \"DNS: Fail-Closed$LAN_MODE\nOnly Tailscale DNS (Control D)\n$HEALTH_INFO\nServers: $CURRENT_SERVERS\n\nClick: cycle mode | Right-click: test\", \"class\": \"dns-close\"}"
+                fi
+                ;;
+              "open")
+                if [ "$HEALTH" = "fail" ]; then
+                  echo "{\"text\": \"󰪥 Open ⚠\", \"tooltip\": \"DNS: Fail-Open$LAN_MODE\n$HEALTH_INFO\nServers: $CURRENT_SERVERS\n\nClick: cycle mode | Right-click: test\", \"class\": \"dns-fail\"}"
+                else
+                  echo "{\"text\": \"󰪥 Open\", \"tooltip\": \"DNS: Fail-Open$LAN_MODE\nTailscale + Quad9 fallback (malware blocking)\n$HEALTH_INFO\nServers: $CURRENT_SERVERS\n\nClick: cycle mode | Right-click: test\", \"class\": \"dns-open\"}"
+                fi
+                ;;
+              "mull")
+                if [ "$HEALTH" = "fail" ]; then
+                  echo "{\"text\": \"󰫠 Mull ⚠\", \"tooltip\": \"DNS: Mullvad$LAN_MODE\n$HEALTH_INFO\nServers: $CURRENT_SERVERS\n\nClick: cycle mode | Right-click: test\", \"class\": \"dns-fail\"}"
+                else
+                  echo "{\"text\": \"󰫠 Mull\", \"tooltip\": \"DNS: Mullvad Direct$LAN_MODE\nMullvad DNS (ad/tracker/malware blocking)\n$HEALTH_INFO\nServers: $CURRENT_SERVERS\n\nClick: cycle mode | Right-click: test\", \"class\": \"dns-mull\"}"
+                fi
+                ;;
+            esac
+          ''}";
+          on-click = "${pkgs.writeShellScript "dns-cycle" ''
+            CONFIG_DIR="$HOME/.config/waybar"
+            STATE_FILE="$CONFIG_DIR/dns-mode"
+            mkdir -p "$CONFIG_DIR"
+
+            # Initialize if needed
+            if [ ! -f "$STATE_FILE" ]; then
+              echo "close" > "$STATE_FILE"
+            fi
+
+            MODE=$(cat "$STATE_FILE")
+
+            # Cycle: close -> open -> mull -> close
+            case "$MODE" in
+              "close")
+                echo "open" > "$STATE_FILE"
+                # Quad9 as fallback (malware blocking, still VPN tunneled)
+                sudo ${pkgs.systemd}/bin/resolvectl dns tailscale0 100.100.100.100 9.9.9.9 149.112.112.112
+                ${pkgs.libnotify}/bin/notify-send -t 3000 "󰪥 DNS: Open" "Quad9 fallback enabled (malware blocking)"
+                ;;
+              "open")
+                echo "mull" > "$STATE_FILE"
+                # Mullvad DNS with ad/tracker/malware blocking
+                sudo ${pkgs.systemd}/bin/resolvectl dns tailscale0 194.242.2.4
+                ${pkgs.libnotify}/bin/notify-send -t 3000 "󰫠 DNS: Mullvad" "Ad/tracker/malware blocking enabled"
+                ;;
+              "mull")
+                echo "close" > "$STATE_FILE"
+                # Tailscale only (Control D)
+                sudo ${pkgs.systemd}/bin/resolvectl dns tailscale0 100.100.100.100
+                ${pkgs.libnotify}/bin/notify-send -t 3000 "󰒃 DNS: Closed" "Tailscale DNS only (fail-closed)"
+                ;;
+            esac
+
+            # Signal waybar to refresh immediately
+            pkill -RTMIN+9 waybar
+          ''}";
+          on-click-right = "${pkgs.writeShellScript "dns-test" ''
+            # Run comprehensive DNS test
+            RESULT=""
+            PASS=0
+            FAIL=0
+
+            test_dns() {
+              local name=$1
+              local server=$2
+              local start=$(date +%s%3N)
+              if ${pkgs.dnsutils}/bin/dig +short +timeout=2 +tries=1 example.com @"$server" >/dev/null 2>&1; then
+                local end=$(date +%s%3N)
+                local latency=$((end - start))
+                RESULT="$RESULT\n✓ $name: ''${latency}ms"
+                PASS=$((PASS + 1))
+              else
+                RESULT="$RESULT\n✗ $name: FAILED"
+                FAIL=$((FAIL + 1))
+              fi
+            }
+
+            ${pkgs.libnotify}/bin/notify-send -t 2000 "󰔟 Testing DNS..." "Please wait..."
+
+            test_dns "Tailscale (Control D)" "100.100.100.100"
+            test_dns "Quad9" "9.9.9.9"
+            test_dns "Mullvad" "194.242.2.4"
+            test_dns "Cloudflare" "1.1.1.1"
+
+            SUMMARY="Passed: $PASS | Failed: $FAIL"
+
+            if [ $FAIL -eq 0 ]; then
+              ${pkgs.libnotify}/bin/notify-send -t 8000 "✓ DNS Test Complete" "$SUMMARY$(echo -e "$RESULT")"
+            else
+              ${pkgs.libnotify}/bin/notify-send -u critical -t 10000 "⚠ DNS Issues Detected" "$SUMMARY$(echo -e "$RESULT")"
+            fi
+          ''}";
+          signal = 9;
+        };
+
         "custom/vpn" = {
           format = "{}";
           interval = 60;
@@ -294,6 +440,7 @@
       #scratchpad,
       #window,
       #tray,
+      #custom-dns,
       #custom-vpn,
       #custom-notifications,
       #idle_inhibitor,
@@ -397,6 +544,35 @@
 
       #custom-notifications:hover {
         background: rgba(203, 166, 247, 0.2);
+      }
+
+      #custom-dns {
+        color: #89b4fa;
+      }
+
+      #custom-dns.dns-close {
+        color: #f38ba8;
+        background: rgba(243, 139, 168, 0.15);
+        border-color: rgba(243, 139, 168, 0.4);
+      }
+
+      #custom-dns.dns-open {
+        color: #a6e3a1;
+        background: rgba(166, 227, 161, 0.15);
+        border-color: rgba(166, 227, 161, 0.4);
+      }
+
+      #custom-dns.dns-mull {
+        color: #f9e2af;
+        background: rgba(249, 226, 175, 0.15);
+        border-color: rgba(249, 226, 175, 0.4);
+      }
+
+      #custom-dns.dns-fail {
+        color: #f38ba8;
+        background: rgba(243, 139, 168, 0.25);
+        border-color: rgba(243, 139, 168, 0.6);
+        animation: pulse 1s infinite;
       }
 
       #custom-vpn.connected {
@@ -516,6 +692,7 @@
       /* Hover effects */
       #workspaces,
       #tray,
+      #custom-dns,
       #idle_inhibitor,
       #pulseaudio,
       #bluetooth,
@@ -528,6 +705,7 @@
       }
 
       #tray:hover,
+      #custom-dns:hover,
       #idle_inhibitor:hover,
       #pulseaudio:hover,
       #bluetooth:hover,

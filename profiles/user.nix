@@ -108,6 +108,12 @@
 
   systemd.user.startServices = "sd-switch";
 
+  # Git configuration
+  dotfiles.git = {
+    name = "robcohen";
+    email = "robcohen@users.noreply.github.com";
+  };
+
   # Claude Code configuration
   # NOTE: ~/.claude.json is Claude's state file and should not be managed by Home Manager
   dotfiles.claude-code = {

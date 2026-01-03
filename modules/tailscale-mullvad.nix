@@ -114,6 +114,15 @@
     '';
   };
 
+  # Allow users in wheel group to change DNS without password (for waybar DNS switcher)
+  security.sudo.extraRules = [{
+    groups = [ "wheel" ];
+    commands = [{
+      command = "${pkgs.systemd}/bin/resolvectl dns *";
+      options = [ "NOPASSWD" ];
+    }];
+  }];
+
   # Helper scripts
   environment.systemPackages = with pkgs; [
     (writeShellScriptBin "mullvad-connect" ''

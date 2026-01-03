@@ -26,6 +26,7 @@ let
     ffmpeg v4l-utils home-assistant-cli pdftk seahorse
     grc wget unzip  # Removed duplicated tools: eza, bat, htop, btop, ripgrep, ranger, wl-clipboard (in base.nix)
     hyprlock hypridle  # Screen locking and idle management
+    hyprnome  # GNOME-like workspace navigation
   ];
 
   # Development packages (conditional)

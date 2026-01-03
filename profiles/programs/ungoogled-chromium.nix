@@ -54,6 +54,8 @@ in {
     enable = true;
     package = chromiumPackage;
     commandLineArgs = [
+      # Open popups as tabs - fixes OAuth flows that break due to Origin: null
+      "--popups-to-tabs"
       # WebRTC leak prevention - most restrictive setting
       "--webrtc-ip-handling-policy=default_public_interface_only"
       "--force-webrtc-ip-handling-policy"
@@ -107,7 +109,7 @@ in {
 
     # Disable various tracking
     enable_do_not_track = true;
-    enable_referrers = false;
+    enable_referrers = true;
 
     # WebRTC settings for privacy
     webrtc = {

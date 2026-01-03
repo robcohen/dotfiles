@@ -8,7 +8,7 @@
       general = {
         lock_cmd = "pidof hyprlock || hyprlock";  # Avoid starting multiple hyprlock instances
         before_sleep_cmd = "loginctl lock-session";  # Lock before suspend
-        after_sleep_cmd = "hyprctl dispatch dpms on";  # Turn on display after suspend
+        after_sleep_cmd = "hyprctl dispatch dpms on && hyprctl keyword monitor HDMI-A-1,3840x2160@60,-2560x0,1.5";  # Turn on display and reinitialize HDMI monitor after suspend
         ignore_dbus_inhibit = false;  # Respect idle inhibitors (e.g., video playback)
       };
 
@@ -28,7 +28,7 @@
         {
           timeout = 360;
           on-timeout = "hyprctl dispatch dpms off";
-          on-resume = "hyprctl dispatch dpms on";
+          on-resume = "hyprctl dispatch dpms on && hyprctl keyword monitor HDMI-A-1,3840x2160@60,-2560x0,1.5";
         }
         # Suspend after 15 minutes
         {

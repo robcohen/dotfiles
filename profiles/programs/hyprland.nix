@@ -16,19 +16,8 @@
         ",preferred,auto,auto"
       ];
 
-      # Bind workspaces to monitors (prevents shuffling on hotplug)
-      workspace = [
-        "1, monitor:eDP-1, default:true"
-        "2, monitor:eDP-1"
-        "3, monitor:eDP-1"
-        "4, monitor:eDP-1"
-        "5, monitor:eDP-1"
-        "6, monitor:HDMI-A-1, default:true"
-        "7, monitor:HDMI-A-1"
-        "8, monitor:HDMI-A-1"
-        "9, monitor:HDMI-A-1"
-        "10, monitor:HDMI-A-1"
-      ];
+      # Unified workspaces (GNOME-like) - no per-monitor binding
+      # All monitors switch together using hyprnome
 
       # Input configuration
       input = {
@@ -123,7 +112,7 @@
         force_default_wallpaper = 0;
         animate_manual_resizes = true;
         animate_mouse_windowdragging = true;
-        enable_swallow = true;
+        enable_swallow = false;
         swallow_regex = "^(Alacritty)$";
         focus_on_activate = true;
         vfr = true;
@@ -217,9 +206,15 @@
         "$mainMod ALT, 1, focusmonitor, eDP-1"  # Focus laptop screen
         "$mainMod ALT, 2, focusmonitor, HDMI-A-1"  # Focus external monitor
 
-        # Scroll through existing workspaces with mainMod + scroll
-        "$mainMod, mouse_down, workspace, e+1"
-        "$mainMod, mouse_up, workspace, e-1"
+        # GNOME-like workspace navigation with hyprnome
+        "$mainMod, Tab, exec, hyprnome"
+        "$mainMod SHIFT, Tab, exec, hyprnome --previous"
+        "$mainMod CTRL, Tab, exec, hyprnome --move"
+        "$mainMod CTRL SHIFT, Tab, exec, hyprnome --move --previous"
+
+        # Scroll through workspaces with mainMod + scroll (using hyprnome)
+        "$mainMod, mouse_down, exec, hyprnome"
+        "$mainMod, mouse_up, exec, hyprnome --previous"
 
         # Screenshot bindings (hyprshot)
         ", Print, exec, hyprshot -m region"           # Region screenshot
