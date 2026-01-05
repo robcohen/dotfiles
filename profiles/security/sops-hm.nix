@@ -5,12 +5,13 @@
 #   - SOPS secrets decryption for Home Manager
 #   - Environment variables from secrets
 #
-# Secrets are stored in ~/.secrets/secrets.yaml (encrypted with age)
+# Uses the same secrets file as NixOS: ~/.secrets/secrets.yaml
+# Age key at standard sops location: ~/.config/sops/age/keys.txt
 # Decrypted secrets available at ~/.config/sops-nix/secrets/
 #
 # To add a new secret:
 #   1. Add it to this module's sops.secrets
-#   2. Encrypt it: sops ~/.secrets/secrets.yaml
+#   2. Edit: sops ~/.secrets/secrets.yaml
 #   3. Reference via config.sops.secrets.<name>.path
 #
 {
@@ -31,13 +32,13 @@ in
     secretsFile = lib.mkOption {
       type = lib.types.str;
       default = "${secretsDir}/secrets.yaml";
-      description = "Path to the SOPS secrets file";
+      description = "Path to the SOPS secrets file (runtime path)";
     };
 
     ageKeyFile = lib.mkOption {
       type = lib.types.str;
-      default = "${secretsDir}/age-key.txt";
-      description = "Path to the age private key for decryption";
+      default = "${config.home.homeDirectory}/.config/sops/age/keys.txt";
+      description = "Path to the age private key for decryption (standard sops location)";
     };
   };
 
@@ -46,15 +47,43 @@ in
     sops = {
       defaultSopsFile = cfg.secretsFile;
       defaultSopsFormat = "yaml";
+      # Skip build-time validation - secrets file is at runtime path
+      # (same approach as NixOS sops module)
+      validateSopsFiles = false;
 
       age.keyFile = cfg.ageKeyFile;
 
       # Define secrets - these will be decrypted to ~/.config/sops-nix/secrets/
       secrets = {
+        # User identity (for git, etc.)
+        "user/name" = { };
+        "user/email" = { };
         # Infrastructure URLs (private, not truly secret)
         "services/ollama/baseURL" = { };
       };
     };
+
+    # Generate git config from sops secrets at activation time
+    home.activation.generateGitConfig = lib.hm.dag.entryAfter [ "sops-nix" ] ''
+      SECRETS_BASE="$HOME/.config/sops-nix/secrets"
+      GIT_CONFIG_DIR="$HOME/.config/git"
+      GIT_CONFIG_LOCAL="$GIT_CONFIG_DIR/config.local"
+
+      mkdir -p "$GIT_CONFIG_DIR"
+
+      if [[ -f "$SECRETS_BASE/user/name" ]] && [[ -f "$SECRETS_BASE/user/email" ]]; then
+        USER_NAME="$(cat "$SECRETS_BASE/user/name")"
+        USER_EMAIL="$(cat "$SECRETS_BASE/user/email")"
+
+        cat > "$GIT_CONFIG_LOCAL" << EOF
+# Generated from SOPS secrets - do not edit manually
+[user]
+    name = $USER_NAME
+    email = $USER_EMAIL
+EOF
+        chmod 600 "$GIT_CONFIG_LOCAL"
+      fi
+    '';
 
     # Export secrets as environment variables via session script
     # This runs at shell startup and exports decrypted values
@@ -81,7 +110,7 @@ in
       [[ -f ~/.config/sops-nix/load-secrets.sh ]] && source ~/.config/sops-nix/load-secrets.sh
     '';
 
-    programs.zsh.initExtra = lib.mkIf config.programs.zsh.enable ''
+    programs.zsh.initContent = lib.mkIf config.programs.zsh.enable ''
       # Load SOPS secrets as environment variables
       [[ -f ~/.config/sops-nix/load-secrets.sh ]] && source ~/.config/sops-nix/load-secrets.sh
     '';

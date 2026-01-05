@@ -34,7 +34,7 @@
   '';
 
   # Shell integration to show infrastructure environment status
-  programs.zsh.initExtra = ''
+  programs.zsh.initContent = ''
     # Show infrastructure environment indicator
     if [[ -n "$DIRENV_INFRA" ]]; then
       export PS1_SUFFIX="🏗️  "

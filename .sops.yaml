@@ -1,9 +1,11 @@
 keys:
+  # User key (snix) - ~/.config/sops/age/keys.txt
   - &snix age1y348p6q290u7szhcdh8ser8vd2uuea0vfc3edd3ejnxhywjdzvxsg2uvcg
+  # Host key (snix_host) - /var/lib/sops-nix/key.txt (derived from SSH host key)
   - &snix_host age18dnrmm4h3ayp68h8ltqwunj9dvky5wt7wp2watdhm6r6jk5e65pq7vgvqq
 
 creation_rules:
-  # Private secrets in ~/.secrets/
+  # Secrets at ~/.secrets/ (used by both NixOS and Home Manager)
   - path_regex: .*/\.secrets/.*\.yaml$
     key_groups:
       - age:

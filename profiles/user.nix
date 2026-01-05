@@ -123,11 +123,8 @@
 
   systemd.user.startServices = "sd-switch";
 
-  # Git configuration
-  dotfiles.git = {
-    name = "robcohen";
-    email = "robcohen@users.noreply.github.com";
-  };
+  # Git configuration - user.name and user.email come from SOPS secrets
+  # Edit with: sops ~/.secrets/secrets.yaml (user/name, user/email)
 
   # Claude Code configuration
   # NOTE: ~/.claude.json is Claude's state file and should not be managed by Home Manager

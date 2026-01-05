@@ -11,18 +11,6 @@ let
 in
 {
   options.dotfiles.git = {
-    name = lib.mkOption {
-      type = lib.types.str;
-      default = "user";
-      description = "Git user name for commits";
-    };
-
-    email = lib.mkOption {
-      type = lib.types.str;
-      default = "user@users.noreply.github.com";
-      description = "Git email for commits";
-    };
-
     signingKey = lib.mkOption {
       type = lib.types.str;
       default = "~/.ssh/id_ed25519.pub";
@@ -35,10 +23,14 @@ in
       enable = true;
       package = pkgs.gitFull;
 
+      # Include local config generated from SOPS secrets (user.name, user.email)
+      includes = [
+        { path = "~/.config/git/config.local"; }
+      ];
+
       settings = {
         user = {
-          name = cfg.name;
-          email = cfg.email;
+          # name and email come from ~/.config/git/config.local (generated from SOPS)
           signingkey = cfg.signingKey;
         };
         core.editor = "\${EDITOR:-vim}";
@@ -52,10 +44,13 @@ in
     };
 
     # Create SSH allowed signers file for local verification
-    home.activation.createAllowedSigners = lib.hm.dag.entryAfter ["writeBoundary"] ''
-      if [[ -f ${cfg.signingKey} ]]; then
-        echo "${cfg.email} $(cat ${cfg.signingKey})" > ~/.ssh/allowed_signers
-        chmod 644 ~/.ssh/allowed_signers
+    # Reads email from SOPS secret at activation time
+    home.activation.createAllowedSigners = lib.hm.dag.entryAfter [ "writeBoundary" "sops-nix" ] ''
+      SECRETS_BASE="$HOME/.config/sops-nix/secrets"
+      if [[ -f "$SECRETS_BASE/user/email" ]] && [[ -f ${cfg.signingKey} ]]; then
+        USER_EMAIL="$(cat "$SECRETS_BASE/user/email")"
+        echo "$USER_EMAIL $(cat ${cfg.signingKey})" > "$HOME/.ssh/allowed_signers"
+        chmod 644 "$HOME/.ssh/allowed_signers"
       fi
     '';
   };
