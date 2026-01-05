@@ -27,9 +27,6 @@
       mt7925 = "${self}/modules/hardware/mt7925.nix";
       thunderbolt-dock = "${self}/modules/hardware/thunderbolt-dock.nix";
 
-      # Platform-specific (Windows config generation)
-      wintv = "${self}/modules/wintv.nix";
-
       # Bundle: all standard NixOS modules
       default = {
         imports = [
@@ -82,17 +79,9 @@
     # =========================================================================
     # Usage:
     #   dotfiles.lib.constants
-    #   dotfiles.lib.mkWintvGenerators { inherit pkgs; }
     lib = {
       # Host constants and defaults
       constants = import "${self}/lib/constants.nix";
-
-      # WinTV config generators (for Windows host)
-      mkWintvGenerators = { pkgs }:
-        import "${self}/lib/wintv-generators.nix" {
-          lib = pkgs.lib;
-          inherit pkgs;
-        };
     };
   };
 }

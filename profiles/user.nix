@@ -1,4 +1,13 @@
-{ config, pkgs, lib, inputs, unstable, hostname, username ? "user", ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  unstable,
+  hostname,
+  username ? "user",
+  ...
+}:
 
 # Note: `unstable` is passed via extraSpecialArgs from flake.nix
 # No need to re-import it here
@@ -44,6 +53,10 @@
     ./programs/yazi.nix
     ./programs/neovim.nix
     ./programs/claude-code.nix
+    ./programs/opencode.nix
+    ./programs/gemini-cli.nix
+    ./programs/codex-cli.nix
+    ./programs/grok-cli.nix
     ./services/gpg-agent.nix
     ./services/swaync.nix
     ./services/syncthing.nix
@@ -59,31 +72,33 @@
     config = {
       allowUnfree = true;
       # Curated list of allowed unfree packages (more secure than allowing all)
-      allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-        # Gaming
-        "steam"
-        "steam-original"
-        "steam-run"
-        # Media
-        "spotify"
-        # Communication
-        "slack"
-        "discord"
-        "zoom"
-        # Productivity
-        "obsidian"
-        "1password"
-        "1password-cli"
-        # Hardware
-        "ledger-live-desktop"
-        # Fonts
-        "joypixels"
-        # NVIDIA (for GPU support)
-        "nvidia-x11"
-        "nvidia-settings"
-        "cuda"
-        "cudatoolkit"
-      ];
+      allowUnfreePredicate =
+        pkg:
+        builtins.elem (lib.getName pkg) [
+          # Gaming
+          "steam"
+          "steam-original"
+          "steam-run"
+          # Media
+          "spotify"
+          # Communication
+          "slack"
+          "discord"
+          "zoom"
+          # Productivity
+          "obsidian"
+          "1password"
+          "1password-cli"
+          # Hardware
+          "ledger-live-desktop"
+          # Fonts
+          "joypixels"
+          # NVIDIA (for GPU support)
+          "nvidia-x11"
+          "nvidia-settings"
+          "cuda"
+          "cudatoolkit"
+        ];
     };
   };
 
@@ -116,8 +131,10 @@
 
   # Claude Code configuration
   # NOTE: ~/.claude.json is Claude's state file and should not be managed by Home Manager
+  # NOTE: Project-specific permissions go in .claude/settings.local.json (gitignored)
   dotfiles.claude-code = {
     enable = true;
+
     env = {
       # MCP settings
       MCP_TIMEOUT = "10000";
@@ -139,8 +156,121 @@
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";
     };
 
+    # Global permissions - tools allowed across all projects
+    permissions.allow = [
+      # Common shell commands
+      "Bash(ls:*)"
+      "Bash(du:*)"
+      "Bash(find:*)"
+      "Bash(grep:*)"
+      "Bash(jq:*)"
+      "Bash(curl:*)"
+      "Bash(ssh:*)"
+
+      # System info
+      "Bash(dmesg:*)"
+      "Bash(lspci:*)"
+      "Bash(boltctl list:*)"
+
+      # Nix tooling
+      "Bash(nix-shell:*)"
+      "Bash(pre-commit run:*)"
+
+      # Web access
+      "WebSearch"
+      "WebFetch(domain:github.com)"
+      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ];
+
     # MCP servers are added via CLI: run `setup-claude-mcp` from nix develop
     # For project-specific DB servers (sqlite, postgres), use .mcp.json
+  };
+
+  # SOPS secrets for Home Manager (private infrastructure URLs, etc.)
+  # Secrets stored in ~/.secrets/secrets.yaml, decrypted at shell startup
+  # Add secrets with: sops ~/.secrets/secrets.yaml
+  dotfiles.sops-hm.enable = true;
+
+  # OpenCode configuration (open-source Claude Code alternative)
+  # NOTE: API keys via env vars: ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.
+  # NOTE: Or use `opencode auth login` for OAuth
+  dotfiles.opencode = {
+    enable = true;
+
+    # Remote Ollama provider (URL from SOPS secret -> OLLAMA_BASE_URL env var)
+    providers.ollama = {
+      npm = "@ai-sdk/openai-compatible";
+      name = "Ollama";
+      options.baseURL = "\${OLLAMA_BASE_URL}";
+      models = {
+        "qwen2.5-coder:14b" = {
+          name = "Qwen 2.5 Coder 14B";
+          tools = true;
+          options.num_ctx = 32768;
+        };
+        "deepseek-coder-v2" = {
+          name = "DeepSeek Coder V2";
+          tools = true;
+          options.num_ctx = 16384;
+        };
+      };
+    };
+  };
+
+  # Gemini CLI configuration
+  # NOTE: Auth via `gemini auth login` (OAuth) or GEMINI_API_KEY env var
+  # NOTE: Free tier: 60 req/min, 1000 req/day
+  dotfiles.gemini-cli = {
+    enable = true;
+    # MCP servers can be added here if needed
+  };
+
+  # OpenAI Codex CLI configuration
+  # NOTE: API key via OPENAI_API_KEY env var
+  dotfiles.codex-cli = {
+    enable = true;
+
+    # Prevent leaking sensitive env vars to subprocesses
+    shellEnvironmentPolicy = {
+      inheritEnv = "core";
+      exclude = [
+        "ANTHROPIC_API_KEY"
+        "OPENAI_API_KEY"
+        "GEMINI_API_KEY"
+        "XAI_API_KEY"
+        "GITHUB_TOKEN"
+        "AWS_*"
+        "AZURE_*"
+        "*_SECRET*"
+        "*_KEY"
+        "*_TOKEN"
+      ];
+    };
+
+    # Enable useful features
+    features = {
+      shell_snapshot = true;
+    };
+
+    # Remote Ollama as alternative provider (URL from SOPS secret)
+    modelProviders.ollama = {
+      name = "Ollama";
+      base_url = "\${OLLAMA_BASE_URL}";
+    };
+  };
+
+  # Grok CLI configuration (xAI)
+  # NOTE: API key via XAI_API_KEY env var (keys start with "xai-")
+  # NOTE: Get key from https://console.x.ai/
+  dotfiles.grok-cli = {
+    enable = true;
+    defaultModel = "grok-3-latest";
+    models = [
+      "grok-3-latest"
+      "grok-3-fast"
+      "grok-3-mini-fast"
+    ];
   };
 
   # Add simple debugging info
@@ -150,17 +280,19 @@
     State Version: 23.11
   '';
 
-
   # Add .local/bin and node_modules/bin to PATH
-  home.sessionPath = [ "$HOME/.local/bin" "$HOME/node_modules/.bin" ];
+  home.sessionPath = [
+    "$HOME/.local/bin"
+    "$HOME/node_modules/.bin"
+  ];
 
   # Security tools
   home.packages = with pkgs; [
-    age               # Modern encryption
-    sops              # Secrets operations
-    lynis             # Security auditing tool
-    vulnix            # Nix vulnerability scanner
-    nmap              # Network scanner
+    age # Modern encryption
+    sops # Secrets operations
+    lynis # Security auditing tool
+    vulnix # Nix vulnerability scanner
+    nmap # Network scanner
   ];
 
   # Simple security scripts
@@ -180,7 +312,6 @@
     '';
     executable = true;
   };
-
 
   # Shell aliases
   home.shellAliases = {

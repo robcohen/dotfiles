@@ -25,22 +25,15 @@ let
     travel-router = ./travel-router.nix;
   };
 
-  # Platform-specific modules (excluded from `all`)
-  platformModules = {
-    wintv = ./wintv.nix;
-  };
-
   # All NixOS-compatible modules (auto-generated)
   nixosModules = coreModules // serviceModules // networkingModules;
 in
   # Export individual modules
   nixosModules
-  // platformModules
   // {
     # Hardware modules (separate namespace)
     inherit hardware;
 
     # Import all NixOS modules as a list (auto-generated from above)
-    # Note: wintv excluded as it's Windows-only
     all = builtins.attrValues nixosModules ++ hardware.all;
   }

@@ -42,25 +42,6 @@
               touch $out
             '';
 
-        yaml-syntax =
-          pkgs.runCommand "check-yaml-syntax"
-            {
-              buildInputs = [
-                pkgs.yq-go
-                pkgs.findutils
-              ];
-            }
-            ''
-              cd ${self}
-              # Validate YAML syntax in docker-compose and config files
-              for f in $(find hosts/wintv -name "*.yml" -o -name "*.yaml" 2>/dev/null); do
-                yq eval '.' "$f" > /dev/null || {
-                  echo "YAML syntax error in: $f"
-                  exit 1
-                }
-              done
-              touch $out
-            '';
       };
     };
 }

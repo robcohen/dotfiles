@@ -6,6 +6,7 @@
   unstable,
   inputs,
   disko,
+  nix-amd-npu,
   ...
 }:
 
@@ -25,7 +26,12 @@
     ../../modules/hardware/mt7925.nix
     ../../modules/hardware/thunderbolt-dock.nix
     ../../modules/virtualization.nix
+    # AMD Ryzen AI NPU support
+    nix-amd-npu.nixosModules.default
   ];
+
+  # AMD Ryzen AI NPU (Krackan)
+  hardware.amd-npu.enable = true;
 
   # Virtualization
   virtualization.vms = {

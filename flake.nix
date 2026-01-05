@@ -98,6 +98,10 @@
       url = "git+ssh://git@github.com/robcohen/infra-private";
       flake = true;
     };
+
+    # AMD NPU support (Ryzen AI)
+    nix-amd-npu.url = "github:robcohen/nix-amd-npu";
+    nix-amd-npu.inputs.nixpkgs.follows = "unstable-nixpkgs";
   };
 
   # ==========================================================================

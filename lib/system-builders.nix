@@ -13,6 +13,7 @@ let
     microvm
     rednix
     disko
+    nix-amd-npu
     ;
 in
 rec {
@@ -34,7 +35,7 @@ rec {
   # Common specialArgs factory (system-aware)
   # These args are available to all NixOS modules
   mkSpecialArgs = system: {
-    inherit inputs microvm rednix disko;
+    inherit inputs microvm rednix disko nix-amd-npu;
     unstable = unstablePkgsFor system;
   };
 

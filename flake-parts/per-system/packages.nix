@@ -1,5 +1,5 @@
 # Package outputs
-# ISOs, VMs, and wintv-config
+# ISOs and VMs
 {
   inputs,
   self,
@@ -24,14 +24,6 @@ in
       ...
     }:
     let
-      # WinTV configuration generators
-      wintvGenerators = import "${self}/lib/wintv-generators.nix" {
-        lib = pkgs.lib;
-        inherit pkgs;
-      };
-
-      wintvConfig = (import "${self}/hosts/wintv/config.nix" { lib = pkgs.lib; }).wintv;
-
       # Function to generate ISO/VM for any host
       mkImage =
         hostConfig: format:
@@ -69,13 +61,6 @@ in
     in
     {
       packages = {
-        # =======================================================================
-        # WinTV - Declarative Windows + Podman configuration
-        # =======================================================================
-        # Build: nix build .#wintv-config
-        # Deploy: Copy result/ to Windows and run .\deploy.ps1 -Apply
-        wintv-config = wintvGenerators.buildWintvConfig wintvConfig;
-
         # Live ISOs for each host
         slax-live-iso = mkLiveISO "${self}/hosts/slax/configuration.nix";
         brix-live-iso = mkLiveISO "${self}/hosts/brix/configuration.nix";

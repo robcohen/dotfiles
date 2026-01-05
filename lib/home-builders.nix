@@ -7,7 +7,7 @@
 }:
 
 let
-  inherit (inputs) home-manager;
+  inherit (inputs) home-manager sops-nix;
   inherit (systemBuilders) pkgsFor mkSpecialArgs;
   constants = import ./constants.nix;
 in
@@ -34,6 +34,10 @@ rec {
           ;
         hostConfig = { }; # Placeholder for compatibility
       };
-      modules = [ "${self}/profiles/user.nix" ] ++ extraModules;
+      modules = [
+        sops-nix.homeManagerModules.sops
+        "${self}/profiles/user.nix"
+      ]
+      ++ extraModules;
     };
 }

@@ -1,4 +1,11 @@
-{ config, pkgs, lib, hostType, hostFeatures, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  hostType,
+  hostFeatures,
+  ...
+}:
 
 {
   imports = [
@@ -7,12 +14,13 @@
     ./system-monitoring.nix
     ./bip39-user-tools.nix
     ./bip39-unified-keys.nix
+    ./sops-hm.nix
   ];
 
   # Core security packages
   home.packages = with pkgs; [
-    age               # Modern encryption
-    sops              # Secrets operations
+    age # Modern encryption
+    sops # Secrets operations
   ];
 
   # Security shell aliases
